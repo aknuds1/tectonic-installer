@@ -7,6 +7,7 @@ INSTALLER_BIN = $(TOP_DIR)/installer/bin/$(shell uname | tr '[:upper:]' '[:lower
 TF_DOCS := $(shell which terraform-docs 2> /dev/null)
 TF_EXAMPLES := $(shell which terraform-examples 2> /dev/null)
 TF_CMD = TERRAFORM_CONFIG=$(TOP_DIR)/.terraformrc terraform
+export TF_VAR_tectonic_cluster_name = $(CLUSTER)
 
 $(info Using build directory [${BUILD_DIR}])
 
