@@ -45,3 +45,9 @@ variable "tectonic_aws_region" {
   default = "eu-west-1"
   description = "The target AWS region for DNS."
 }
+
+variable "tectonic_aws_profile" {
+  type = "string"
+  default = "default"
+  description = "AWS profile name as set in the shared credentials file."
+}

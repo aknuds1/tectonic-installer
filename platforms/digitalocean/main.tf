@@ -4,6 +4,7 @@ provider "digitalocean" {
 
 provider "aws" {
   region = "${var.tectonic_aws_region}"
+  profile = "${var.tectonic_aws_profile}"
 }
 
 module "etcd" {
