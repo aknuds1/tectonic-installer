@@ -21,13 +21,13 @@ installer-env: $(INSTALLER_BIN) terraformrc.example
 localconfig:
 	mkdir -p $(BUILD_DIR)
 
-$(BUILD_DIR)/.terraform:
+terraform-get:
 	cd $(BUILD_DIR) && $(TF_CMD) get $(TOP_DIR)/platforms/$(PLATFORM)
 
-plan: installer-env $(BUILD_DIR)/.terraform
+plan: installer-env terraform-get
 	cd $(BUILD_DIR) && $(TF_CMD) plan $(TOP_DIR)/platforms/$(PLATFORM)
 
-apply: installer-env $(BUILD_DIR)/.terraform
+apply: installer-env terraform-get
 	cd $(BUILD_DIR) && $(TF_CMD) apply $(TOP_DIR)/platforms/$(PLATFORM)
 
 destroy: installer-env ${BUILD_DIR}/.terraform
@@ -113,4 +113,4 @@ structure-check:
 canonical-syntax:
 	terraform fmt -list .
 
-.PHONY: make clean terraform terraform-dev structure-check canonical-syntax docs examples
+.PHONY: make clean terraform terraform-dev structure-check canonical-syntax docs examples terraform-get
