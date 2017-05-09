@@ -39,3 +39,9 @@ variable "tectonic_do_extra_tags" {
   type = "list"
   default = []
 }
+
+variable "tectonic_aws_region" {
+  type = "string"
+  default = "eu-west-1"
+  description = "The target AWS region for DNS."
+}

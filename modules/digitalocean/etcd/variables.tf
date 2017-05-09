@@ -26,3 +26,7 @@ variable "container_image" {
 variable "ssh_keys" {
   type = "list"
 }
+
+variable "dns_zone_id" {
+  type = "string"
+}
