@@ -11,4 +11,5 @@ module "etcd" {
   cluster_name = "${var.tectonic_cluster_name}"
   base_domain = "${var.tectonic_base_domain}"
   ssh_keys = "${var.tectonic_do_ssh_keys}"
+  extra_tags = "${var.tectonic_do_extra_tags}"
 }

@@ -34,3 +34,8 @@ variable "tectonic_do_region" {
   default = "nyc1"
   description = "The region to start in."
 }
+
+variable "tectonic_do_extra_tags" {
+  type = "list"
+  default = []
+}

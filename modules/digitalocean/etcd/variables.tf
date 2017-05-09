@@ -15,8 +15,8 @@ variable "droplet_size" {
 }
 
 variable "extra_tags" {
-  type = "map"
-  default = {}
+  type = "list"
+  default = []
 }
 
 variable "container_image" {
