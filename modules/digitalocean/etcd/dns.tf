@@ -17,7 +17,7 @@ resource "aws_route53_record" "etcd_srv_client" {
 }
 
 resource "aws_route53_record" "etc_a_nodes" {
-  count = 1
+  count = "${var.droplet_count}"
   type = "A"
   ttl = "60"
   zone_id = "${var.dns_zone_id}"
