@@ -129,13 +129,14 @@ class TF_PowerOn extends React.Component {
       </div>;
     }
 
+    const tfButtonClasses = classNames("btn btn-flat", {disabled: terraformRunning, 'btn-warning': tfError, 'btn-info': !tfError});
     const tfButtons = <div className="row">
       <div className="col-xs-12">
-        <button className={classNames("btn btn-default", {disabled: terraformRunning})} onClick={() => this.destroy()}>
-          <i className="fa fa-trash"></i>&nbsp;&nbsp;Destroy cluster
+        <button className={tfButtonClasses} onClick={() => this.destroy()}>
+          <i className="fa fa-trash"></i>&nbsp;&nbsp;Destroy Cluster
         </button>&nbsp;&nbsp;&nbsp;&nbsp;
-        <button className={classNames("btn btn-default", {disabled: terraformRunning})} onClick={() => this.retry()}>
-          <i className="fa fa-exclamation-triangle"></i>&nbsp;&nbsp;Retry Terraform apply
+        <button className={tfButtonClasses} onClick={() => this.retry()}>
+          <i className="fa fa-exclamation-triangle"></i>&nbsp;&nbsp;Retry Terraform Apply
         </button>
       </div>
     </div>;
@@ -186,7 +187,7 @@ class TF_PowerOn extends React.Component {
               { !terraformRunning && tfError &&
                 <Alert severity="error" noIcon>
                   <b>{_.startCase(action)} Failed</b>. Your installation is blocked. To continue:
-                  <ol>
+                  <ol style={{ paddingLeft: 30, paddingTop: 10, paddingBottom: 10 }}>
                     <li>Save your logs for debugging purposes.</li>
                     <li>Destroy your cluster to clear anything that may have been created.</li>
                     <li>Reapply Terraform.</li>
