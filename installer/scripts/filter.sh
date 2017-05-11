@@ -1,6 +1,6 @@
 #!/bin/bash
 # filter hides lines with words over MAX chars
 
-MAX=${MAX:-500}
-sed -e "s/[a-zA-Z0-9\/+]\{${MAX},\}/***OMITTED***/g"
+MAX=${MAX:-24}
+sed -e "s/[^\ ]\{${MAX},\}/***OMITTED***/g"
 
