@@ -26,3 +26,11 @@ variable "container_image" {
 variable "ssh_keys" {
   type = "list"
 }
+
+variable "droplet_region" {
+  type = "string"
+}
+
+variable "droplet_image" {
+  type = "string"
+}
