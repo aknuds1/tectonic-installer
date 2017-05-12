@@ -12,5 +12,4 @@ module "etcd" {
   base_domain = "${var.tectonic_base_domain}"
   ssh_keys = "${var.tectonic_do_ssh_keys}"
   extra_tags = "${var.tectonic_do_extra_tags}"
-  dns_zone_id = "${var.tectonic_base_domain}"
 }

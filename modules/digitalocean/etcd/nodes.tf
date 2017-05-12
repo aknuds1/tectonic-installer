@@ -5,6 +5,6 @@ resource "digitalocean_droplet" "etcd_node" {
   region = "fra1"
   size = "${var.droplet_size}"
   ssh_keys = ["${var.ssh_keys}"]
-  #tags = ["${var.extra_tags}"]
+  tags = ["${var.extra_tags}"]
   user_data = "${data.ignition_config.etcd.*.rendered[count.index]}"
 }
