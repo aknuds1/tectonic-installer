@@ -27,10 +27,6 @@ variable "user_data" {
   type = "string"
 }
 
-variable "dns_zone_id" {
-  type = "string"
-}
-
 variable "base_domain" {
   type = "string"
 }

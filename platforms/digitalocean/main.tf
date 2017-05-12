@@ -43,6 +43,5 @@ module "masters" {
   ssh_keys = "${var.tectonic_do_ssh_keys}"
   extra_tags = "${var.tectonic_do_extra_tags}"
   user_data = "${module.ignition-masters.ignition}"
-  dns_zone_id = "${aws_route53_zone.tectonic-int.zone_id}"
   base_domain = "${var.tectonic_base_domain}"
 }

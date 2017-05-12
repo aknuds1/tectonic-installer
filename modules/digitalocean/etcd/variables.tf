@@ -26,7 +26,7 @@ variable "container_image" {
 variable "ssh_keys" {
   type = "list"
 }
-
+s
 variable "droplet_region" {
   type = "string"
 }
@@ -34,7 +34,6 @@ variable "droplet_region" {
 variable "droplet_image" {
   type = "string"
 }
-
 variable "droplet_region" {
   type = "string"
 }
