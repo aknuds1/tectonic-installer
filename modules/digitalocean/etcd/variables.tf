@@ -34,10 +34,3 @@ variable "droplet_region" {
 variable "droplet_image" {
   type = "string"
 }
-variable "droplet_region" {
-  type = "string"
-}
-
-variable "droplet_image" {
-  type = "string"
-}
