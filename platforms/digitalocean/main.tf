@@ -2,6 +2,10 @@ provider "digitalocean" {
   token = "${var.tectonic_do_token}"
 }
 
+provider "aws" {
+  region = "${var.tectonic_aws_region}"
+}
+
 module "etcd" {
   source = "../../modules/digitalocean/etcd"
 
