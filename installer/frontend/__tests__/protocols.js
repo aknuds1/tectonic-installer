@@ -57,7 +57,7 @@ beforeEach(() => {
   dispatch = jest.fn();
 });
 
-const readExample = example => JSON.parse(fs.readFileSync(path.resolve(__dirname, `../../examples/${example}`), 'utf8'));
+const readExample = example => JSON.parse(fs.readFileSync(path.resolve(__dirname, `examples/${example}`), 'utf8'));
 
 /* eslint-disable max-nested-callbacks */
 describe('progress file example', () => {
