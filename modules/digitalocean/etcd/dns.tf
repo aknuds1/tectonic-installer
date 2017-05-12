@@ -1,26 +1,5 @@
-resource "aws_route53_record" "etcd_srv_discover" {
-  count = 1
-  name = "_etcd-server._tcp"
-  type = "SRV"
-  zone_id = "${var.dns_zone_id}"
-  records = ["${formatlist("0 0 2380 %s", aws_route53_record.etc_a_nodes.*.fqdn)}"]
-  ttl = "300"
-}
-
-resource "aws_route53_record" "etcd_srv_client" {
-  count = 1
-  name = "_etcd-client._tcp"
-  type = "SRV"
-  zone_id = "${var.dns_zone_id}"
-  records = ["${formatlist("0 0 2379 %s", aws_route53_record.etc_a_nodes.*.fqdn)}"]
-  ttl = "60"
-}
-
-resource "aws_route53_record" "etc_a_nodes" {
+resource "digitalocean_domain" "etc_a_nodes" {
   count = "${var.droplet_count}"
-  type = "A"
-  ttl = "60"
-  zone_id = "${var.dns_zone_id}"
-  name = "${var.cluster_name}-etcd-${count.index}"
-  records = ["${digitalocean_droplet.etcd_node.*.ipv4_address[count.index]}"]
+  name       = "${var.cluster_name}-etcd-${count.index}.${var.base_domain}"
+  ip_address = "${digitalocean_droplet.etcd_node.*.ipv4_address[count.index]}"
 }
