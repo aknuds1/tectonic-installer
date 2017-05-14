@@ -30,7 +30,7 @@ plan: installer-env terraform-get
 apply: installer-env terraform-get
 	cd $(BUILD_DIR) && $(TF_CMD) apply $(TOP_DIR)/platforms/$(PLATFORM)
 
-destroy: installer-env ${BUILD_DIR}/.terraform
+destroy: installer-env terraform-get
 	cd $(BUILD_DIR) && $(TF_CMD) destroy -force $(TOP_DIR)/platforms/$(PLATFORM)
 
 payload:
