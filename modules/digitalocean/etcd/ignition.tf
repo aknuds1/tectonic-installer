@@ -39,7 +39,7 @@ data "template_file" "etcd-cluster" {
   template = "${file("${path.module}/resources/etcd-cluster.tpl")}"
   count = "${var.droplet_count}"
   vars = {
-    etcd-name = "${var.cluster_name}-etcd-${count.index}" 
+    etcd-name = "${var.cluster_name}-etcd-${count.index}"
     etcd-address = "${var.cluster_name}-etcd-${count.index}.${var.base_domain}"
   }
 }
