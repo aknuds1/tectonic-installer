@@ -39,8 +39,3 @@ variable "tectonic_do_extra_tags" {
   type = "list"
   default = []
 }
-
-variable "tectonic_do_droplet_image" {
-  type = "string"
-  default = "coreos-stable"
-}
