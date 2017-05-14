@@ -63,7 +63,7 @@ ExecStart=/usr/lib/coreos/etcd-wrapper \
   --initial-advertise-peer-urls=http://${var.cluster_name}-etcd-${count.index}.${var.base_domain}:2380 \
   --listen-client-urls=http://0.0.0.0:2379 \
   --listen-peer-urls=http://0.0.0.0:2380 \
-  --initial-cluster="${join("," , data.template_file.etcd-cluster.*.rendered)}" 
+  --initial-cluster="${join("," , data.template_file.etcd-cluster.*.rendered)}"
 EOF
     },
   ]
