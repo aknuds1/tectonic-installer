@@ -96,6 +96,7 @@ data "ignition_systemd_unit" "init-assets" {
 data "ignition_systemd_unit" "bootkube" {
   name = "bootkube.service"
   content = "${var.bootkube_service}"
+  enable = false
 }
 
 # data "ignition_systemd_unit" "tectonic" {

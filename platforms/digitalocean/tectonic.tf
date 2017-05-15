@@ -1,7 +1,7 @@
 module "bootkube" {
   source = "../../modules/bootkube"
   
-  cloud_provider = "digitalocean"
+  cloud_provider = ""
   kube_apiserver_url = "https://${module.masters.api_external_fqdn}:443"
   oidc_issuer_url = "https://${module.masters.api_external_fqdn}/identity"
   # Platform-independent variables wiring, do not modify.
@@ -121,6 +121,8 @@ resource "null_resource" "first_master" {
     inline = [
       "sudo unzip -o -d /opt/tectonic/ $HOME/tectonic.zip",
       "rm $HOME/tectonic.zip",
+      "sudo systemctl enable bootkube",
+      "sudo systemctl start bootkube",
     ]
   }
 }
