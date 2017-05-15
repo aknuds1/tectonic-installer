@@ -26,7 +26,7 @@ variable "tectonic_do_droplet_image" {
 variable "tectonic_do_master_droplet_size" {
   type = "string"
   description = "Instance size for the master node(s). Example: `512mb`."
-  default = "512mb"
+  default = "1gb"
 }
 
 variable "tectonic_do_droplet_region" {
