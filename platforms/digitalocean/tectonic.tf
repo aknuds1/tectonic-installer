@@ -71,7 +71,7 @@ data "archive_file" "assets" {
 
 # Copy kubeconfig to master nodes
 resource "null_resource" "master_nodes" {
-  count = "${length(module.masters.node_addresses)}"
+  count = 1
   # Re-provision on changes to masters
   triggers {
     master_address = "${element(module.masters.node_addresses, count.index)}",
@@ -81,6 +81,7 @@ resource "null_resource" "master_nodes" {
     type = "ssh"
     host = "${element(module.masters.node_addresses, count.index)}"
     user = "core"
+    private_key = "${file("${var.tectonic_do_ssh_key_path}")}"
     timeout = "1m"
   }
   
@@ -96,28 +97,30 @@ resource "null_resource" "master_nodes" {
   }
 }
 
-# # Copy assets to first master node
-# resource "null_resource" "first_master" {
-#   # Re-provision on changes to first master node
-#   triggers {
-#     master_address = "${module.masters.first_node_address}"
-#   }
-# 
-#   connection {
-#     type = "ssh"
-#     host = "${module.masters.first_node_address}"
-#     user = "core"
-#     timeout = "60m"
-#   }
-#   
-#   provisioner "file" {
-#     source = "${data.archive_file.assets.output_path}"
-#     destination = "$HOME/tectonic.zip"
-#   }
-# 
-#   provisioner "remote-exec" {
-#     inline = [
-#       "sudo mv /home/core/tectonic.zip /opt/tectonic/",
-#     ]
-#   }
-# }
+# Copy assets to first master node
+resource "null_resource" "first_master" {
+  # Re-provision on changes to first master node
+  triggers {
+    master_address = "${module.masters.first_node_address}"
+  }
+
+  connection {
+    type = "ssh"
+    host = "${module.masters.first_node_address}"
+    user = "core"
+    private_key = "${file("${var.tectonic_do_ssh_key_path}")}"
+    timeout = "1m"
+  }
+  
+  provisioner "file" {
+    source = "${data.archive_file.assets.output_path}"
+    destination = "$HOME/tectonic.zip"
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "sudo unzip -o -d /opt/tectonic/ $HOME/tectonic.zip",
+      "rm $HOME/tectonic.zip",
+    ]
+  }
+}

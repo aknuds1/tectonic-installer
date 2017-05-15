@@ -324,3 +324,9 @@ variable "tectonic_experimental" {
 If set to true, experimental Tectonic assets are being deployed.
 EOF
 }
+
+variable "tectonic_do_ssh_key_path" {
+  description = <<EOF
+The path to the private SSH key used to authenticate towards DigitalOcean.
+EOF
+}
