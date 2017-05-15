@@ -26,7 +26,6 @@ data "ignition_systemd_unit" "locksmithd" {
   count = 1
   name = "locksmithd.service"
   enable = true
-
   dropin = [
     {
       name = "40-etcd-lock.conf"
@@ -48,11 +47,9 @@ data "ignition_systemd_unit" "etcd3" {
   count = "${var.droplet_count}"
   name = "etcd-member.service"
   enable = true
-
   dropin = [
     {
       name = "40-etcd-cluster.conf"
-
       content = <<EOF
 [Service]
 Environment="ETCD_IMAGE=${var.container_image}"
