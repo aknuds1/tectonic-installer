@@ -33,7 +33,6 @@ data "ignition_systemd_unit" "locksmithd" {
 
 data "template_file" "kubelet" {
   template = "${file("${path.module}/resources/services/kubelet.service")}"
-
   vars {
     cluster_dns_ip = "${var.kube_dns_service_ip}"
     node_label = "${var.kubelet_node_label}"
@@ -66,7 +65,6 @@ data "ignition_file" "max-user-watches" {
   filesystem = "root"
   path = "/etc/sysctl.d/max-user-watches.conf"
   mode = "420"
-
   content {
     content = "fs.inotify.max_user_watches=16184"
   }
@@ -74,7 +72,6 @@ data "ignition_file" "max-user-watches" {
 
 data "template_file" "init-assets" {
   template = "${file("${path.module}/resources/init-assets.sh")}"
-
   vars {
     kubelet_image_url = "${element(split(":", var.container_images["hyperkube"]), 0)}"
     kubelet_image_tag = "${element(split(":", var.container_images["hyperkube"]), 1)}"
@@ -85,7 +82,6 @@ data "ignition_file" "init-assets" {
   filesystem = "root"
   path = "/opt/tectonic/init-assets.sh"
   mode = "555"
-
   content {
     content = "${data.template_file.init-assets.rendered}"
   }
