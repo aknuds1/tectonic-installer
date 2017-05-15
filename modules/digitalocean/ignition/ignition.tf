@@ -1,6 +1,7 @@
 data "ignition_config" "main" {
   files = [
-    "${data.ignition_file.max-user-watches.id}"
+    "${data.ignition_file.max-user-watches.id}",
+    "${data.ignition_file.init-assets.id}",
   ]
 
   systemd = [

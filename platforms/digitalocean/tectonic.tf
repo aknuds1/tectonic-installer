@@ -1,10 +1,9 @@
 module "bootkube" {
   source = "../../modules/bootkube"
-
+  
   cloud_provider = "digitalocean"
-  # kube_apiserver_url = "https://${module.masters.api_external_fqdn}:443"
-  kube_apiserver_url = "https://127.0.0.1:443"
-  oidc_issuer_url = "https://127.0.0.1/identity"
+  kube_apiserver_url = "https://${module.masters.api_external_fqdn}:443"
+  oidc_issuer_url = "https://${module.masters.api_external_fqdn}/identity"
   # Platform-independent variables wiring, do not modify.
   container_images = "${var.tectonic_container_images}"
   ca_cert = "${var.tectonic_ca_cert}"
