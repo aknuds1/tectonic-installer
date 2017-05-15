@@ -43,7 +43,6 @@ tectonic_cluster_cidr = "10.2.0.0/16"
 // If used in a cloud-environment, this will be prepended to `tectonic_base_domain` resulting in the URL to the Tectonic console.
 // 
 // Note: This field MUST be set manually prior to creating the cluster.
-// Warning: Special characters in the name like '.' may cause errors on OpenStack platforms due to resource name constraints.
 tectonic_cluster_name = ""
 
 // (optional) The path of the file containing the CA certificate for TLS communication with etcd.
@@ -93,7 +92,7 @@ tectonic_kube_etcd_service_ip = "10.3.0.15"
 
 // The path to the tectonic licence file.
 // 
-// Note: This field MUST be set manually prior to creating the cluster unless `tectonic_vanilla_k8s` is set to `true`.
+// Note: This field MUST be set manually prior to creating the cluster.
 tectonic_license_path = ""
 
 // The number of master nodes to be created.
@@ -108,12 +107,14 @@ tectonic_openstack_flavor_id = ""
 // Specifies the OS image of the VM.
 tectonic_openstack_image_id = ""
 
-// The name of the network to connect to OpenStack compute instances.
-tectonic_openstack_network_name = "public"
+// (optional) The network name as given in `openstack network list`.
+// Specifies the name of the network to use for compute instances.
+// If not provided, defaults to "public"
+// tectonic_openstack_network_name = "public"
 
 // The path the pull secret file in JSON format.
 // 
-// Note: This field MUST be set manually prior to creating the cluster unless `tectonic_vanilla_k8s` is set to `true`.
+// Note: This field MUST be set manually prior to creating the cluster.
 tectonic_pull_secret_path = ""
 
 // This declares the IP range to assign Kubernetes service cluster IPs in CIDR notation.
