@@ -63,3 +63,9 @@ variable "tectonic_do_worker_swap" {
   description = "Amount of swap memory for worker nodes"
   default = "1024m"
 }
+
+variable "tectonic_do_etcd_swap" {
+  type = "string"
+  description = "Amount of swap memory for etcd nodes"
+  default = "1024m"
+}

@@ -4,6 +4,8 @@ data "ignition_config" "etcd" {
   systemd = [
     "${data.ignition_systemd_unit.locksmithd.id}",
     "${data.ignition_systemd_unit.etcd3.*.id[count.index]}",
+    "${module.swap.service_id}",
+    "${module.sshguard.service_id}",
   ]
 
   files = [
@@ -64,4 +66,14 @@ ExecStart=/usr/lib/coreos/etcd-wrapper \
 EOF
     },
   ]
+}
+
+module "swap" {
+  source = "../swap"
+  
+  swap_size = "${var.swap_size}"
+}
+
+module "sshguard" {
+  source = "../../sshguard"
 }

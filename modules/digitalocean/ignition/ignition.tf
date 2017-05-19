@@ -11,8 +11,8 @@ data "ignition_config" "main" {
     "${data.ignition_systemd_unit.kubelet-env.id}",
     "${data.ignition_systemd_unit.init-assets.id}",
     "${data.ignition_systemd_unit.bootkube.id}",
-    "${data.ignition_systemd_unit.sshguard.id}",
-    "${data.ignition_systemd_unit.swap.id}",
+    "${module.swap.service_id}",
+    "${module.sshguard.service_id}",
     # "${data.ignition_systemd_unit.tectonic.id}",
   ]
 }
@@ -101,23 +101,14 @@ data "ignition_systemd_unit" "bootkube" {
   enable = false
 }
 
-data "ignition_systemd_unit" "sshguard" {
-  name = "sshguard.service"
-  enable = true
-  content = "${file("${path.module}/resources/services/sshguard.service")}"
+module "sshguard" {
+  source = "../../sshguard"
 }
 
-data "template_file" "swap" {
-  template = "${file("${path.module}/resources/services/swap.service")}"
-  vars {
-    swap_size = "${var.swap_size}"
-  }
-}
-
-data "ignition_systemd_unit" "swap" {
-  name = "swap.service"
-  enable = "${var.swap_size != "" ? true : false}"
-  content = "${data.template_file.swap.rendered}"
+module "swap" {
+  source = "../swap"
+  
+  swap_size = "${var.swap_size}"
 }
 
 # data "ignition_systemd_unit" "tectonic" {

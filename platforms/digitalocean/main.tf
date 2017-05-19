@@ -16,6 +16,7 @@ module "etcd" {
   extra_tags = "${var.tectonic_do_extra_tags}"
   droplet_region = "${var.tectonic_do_droplet_region}"
   droplet_image = "${var.tectonic_do_droplet_image}"
+  swap_size = "${var.tectonic_do_etcd_swap}"
 }
 
 module "ignition-masters" {
