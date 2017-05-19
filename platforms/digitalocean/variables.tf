@@ -31,8 +31,8 @@ variable "tectonic_do_master_droplet_size" {
 
 variable "tectonic_do_droplet_region" {
   type = "string"
-  description = "Region for the droplets."
   default = "nyc1"
+  description = "The droplet region."
 }
 
 variable "tectonic_do_etcd_droplet_size" {
