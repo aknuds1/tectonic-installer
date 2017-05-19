@@ -26,7 +26,6 @@ data "ignition_systemd_unit" "locksmithd" {
   count = 1
   name = "locksmithd.service"
   enable = true
-
   dropin = [
     {
       name = "40-etcd-lock.conf"
@@ -39,7 +38,7 @@ data "template_file" "etcd-cluster" {
   template = "${file("${path.module}/resources/etcd-cluster.tpl")}"
   count = "${var.droplet_count}"
   vars = {
-    etcd-name = "${var.cluster_name}-etcd-${count.index}" 
+    etcd-name = "${var.cluster_name}-etcd-${count.index}"
     etcd-address = "${var.cluster_name}-etcd-${count.index}.${var.base_domain}"
   }
 }
@@ -48,11 +47,9 @@ data "ignition_systemd_unit" "etcd3" {
   count = "${var.droplet_count}"
   name = "etcd-member.service"
   enable = true
-
   dropin = [
     {
       name = "40-etcd-cluster.conf"
-
       content = <<EOF
 [Service]
 Environment="ETCD_IMAGE=${var.container_image}"
@@ -63,7 +60,7 @@ ExecStart=/usr/lib/coreos/etcd-wrapper \
   --initial-advertise-peer-urls=http://${var.cluster_name}-etcd-${count.index}.${var.base_domain}:2380 \
   --listen-client-urls=http://0.0.0.0:2379 \
   --listen-peer-urls=http://0.0.0.0:2380 \
-  --initial-cluster="${join("," , data.template_file.etcd-cluster.*.rendered)}" 
+  --initial-cluster="${join("," , data.template_file.etcd-cluster.*.rendered)}"
 EOF
     },
   ]
