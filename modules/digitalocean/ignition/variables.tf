@@ -23,6 +23,11 @@ variable "bootkube_service" {
   description = "The content of the bootkube systemd service unit"
 }
 
+variable "swap_size" {
+  type = "string"
+  description = "The amount of swap memory to enable"
+}
+
 # variable "tectonic_service" {
 #   type = "string"
 #   description = "The content of the tectonic installer systemd service unit"

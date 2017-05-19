@@ -26,6 +26,7 @@ module "ignition-masters" {
   kube_dns_service_ip = "${var.tectonic_kube_dns_service_ip}"
   container_images = "${var.tectonic_container_images}"
   bootkube_service = "${module.bootkube.systemd_service}"
+  swap_size = "${var.tectonic_do_master_swap}"
   # tectonic_service = "${module.tectonic.systemd_service}"
   # tectonic_service_disabled = "${var.tectonic_vanilla_k8s}"
 }
@@ -50,6 +51,7 @@ module "ignition-workers" {
   kubelet_node_taints = ""
   kube_dns_service_ip = "${var.tectonic_kube_dns_service_ip}"
   container_images = "${var.tectonic_container_images}"
+  swap_size = "${var.tectonic_do_worker_swap}"
   bootkube_service = ""
   # tectonic_service = ""
 }

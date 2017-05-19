@@ -51,3 +51,15 @@ variable "tectonic_do_extra_tags" {
   type = "list"
   default = []
 }
+
+variable "tectonic_do_master_swap" {
+  type = "string"
+  description = "Amount of swap memory for master nodes"
+  default = "1024m"
+}
+
+variable "tectonic_do_worker_swap" {
+  type = "string"
+  description = "Amount of swap memory for worker nodes"
+  default = "1024m"
+}

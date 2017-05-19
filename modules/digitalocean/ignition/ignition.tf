@@ -12,6 +12,7 @@ data "ignition_config" "main" {
     "${data.ignition_systemd_unit.init-assets.id}",
     "${data.ignition_systemd_unit.bootkube.id}",
     "${data.ignition_systemd_unit.sshguard.id}",
+    "${data.ignition_systemd_unit.swap.id}",
     # "${data.ignition_systemd_unit.tectonic.id}",
   ]
 }
@@ -104,6 +105,19 @@ data "ignition_systemd_unit" "sshguard" {
   name = "sshguard.service"
   enable = true
   content = "${file("${path.module}/resources/services/sshguard.service")}"
+}
+
+data "template_file" "swap" {
+  template = "${file("${path.module}/resources/services/swap.service")}"
+  vars {
+    swap_size = "${var.swap_size}"
+  }
+}
+
+data "ignition_systemd_unit" "swap" {
+  name = "swap.service"
+  enable = "${var.swap_size != "" ? true : false}"
+  content = "${data.template_file.swap.rendered}"
 }
 
 # data "ignition_systemd_unit" "tectonic" {
