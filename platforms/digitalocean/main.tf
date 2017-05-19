@@ -42,3 +42,27 @@ module "masters" {
   user_data = "${module.ignition-masters.ignition}"
   base_domain = "${var.tectonic_base_domain}"
 }
+
+module "ignition-workers" {
+  source = "../../modules/digitalocean/ignition"
+
+  kubelet_node_label = "node-role.kubernetes.io/node"
+  kubelet_node_taints = ""
+  kube_dns_service_ip = "${var.tectonic_kube_dns_service_ip}"
+  container_images = "${var.tectonic_container_images}"
+  bootkube_service = ""
+  # tectonic_service = ""
+}
+
+module "workers" {
+  source = "../../modules/digitalocean/worker"
+
+  instance_count = "${var.tectonic_worker_count}"
+  cluster_name = "${var.tectonic_cluster_name}"
+  droplet_size = "${var.tectonic_do_worker_droplet_size}"
+  droplet_region = "${var.tectonic_do_droplet_region}"
+  droplet_image = "${var.tectonic_do_droplet_image}"
+  ssh_keys = "${var.tectonic_do_ssh_keys}"
+  user_data = "${module.ignition-workers.ignition}"
+  extra_tags = "${var.tectonic_do_extra_tags}"
+}

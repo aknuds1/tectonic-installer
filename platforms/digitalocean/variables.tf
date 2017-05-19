@@ -29,6 +29,12 @@ variable "tectonic_do_master_droplet_size" {
   default = "1gb"
 }
 
+variable "tectonic_do_worker_droplet_size" {
+  type = "string"
+  description = "Instance size for the worker node(s). Example: `512mb`."
+  default = "1gb"
+}
+
 variable "tectonic_do_droplet_region" {
   type = "string"
   default = "nyc1"
