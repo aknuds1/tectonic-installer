@@ -10,7 +10,8 @@ data "ignition_config" "main" {
     "${data.ignition_systemd_unit.kubelet.id}",
     "${data.ignition_systemd_unit.kubelet-env.id}",
     "${data.ignition_systemd_unit.init-assets.id}",
-    "${data.ignition_systemd_unit.bootkube.id}"
+    "${data.ignition_systemd_unit.bootkube.id}",
+    "${data.ignition_systemd_unit.sshguard.id}",
     # "${data.ignition_systemd_unit.tectonic.id}",
   ]
 }
@@ -97,6 +98,12 @@ data "ignition_systemd_unit" "bootkube" {
   name = "bootkube.service"
   content = "${var.bootkube_service}"
   enable = false
+}
+
+data "ignition_systemd_unit" "sshguard" {
+  name = "sshguard.service"
+  enable = true
+  content = "${file("${path.module}/resources/services/sshguard.service")}"
 }
 
 # data "ignition_systemd_unit" "tectonic" {
