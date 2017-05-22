@@ -30,6 +30,39 @@ variable "tectonic_aws_etcd_ec2_type" {
   default     = "t2.medium"
 }
 
+variable "tectonic_aws_etcd_extra_sg_ids" {
+  description = <<EOF
+(optional) List of additional security group IDs for etcd nodes.
+
+Example: `["sg-51530134", "sg-b253d7cc"]`
+EOF
+
+  type    = "list"
+  default = []
+}
+
+variable "tectonic_aws_master_extra_sg_ids" {
+  description = <<EOF
+(optional) List of additional security group IDs for master nodes.
+
+Example: `["sg-51530134", "sg-b253d7cc"]`
+EOF
+
+  type    = "list"
+  default = []
+}
+
+variable "tectonic_aws_worker_extra_sg_ids" {
+  description = <<EOF
+(optional) List of additional security group IDs for worker nodes.
+
+Example: `["sg-51530134", "sg-b253d7cc"]`
+EOF
+
+  type    = "list"
+  default = []
+}
+
 variable "tectonic_aws_vpc_cidr_block" {
   type    = "string"
   default = "10.0.0.0/16"
@@ -59,6 +92,18 @@ variable "tectonic_aws_external_vpc_public" {
   description = <<EOF
 If set to true, create public facing ingress resources (ELB, A-records).
 If set to false, a "private" cluster will be created with an internal ELB only.
+EOF
+}
+
+variable "tectonic_aws_external_private_zone" {
+  default = ""
+
+  description = <<EOF
+(optional) If set, the given Route53 zone ID will be used as the internal (private) zone.
+This zone will be used to create etcd DNS records as well as internal API and internal Ingress records.
+If set, no additional private zone will be created.
+
+Example: `"Z1ILINNUJGTAO1"`
 EOF
 }
 

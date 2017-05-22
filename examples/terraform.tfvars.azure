@@ -10,6 +10,9 @@ tectonic_admin_email = ""
 // Note: This field MUST be set manually prior to creating the cluster.
 tectonic_admin_password_hash = ""
 
+// If set to true, create an Azure DNS zone
+tectonic_azure_create_dns_zone = true
+
 // 
 tectonic_azure_dns_resource_group = "tectonic-dns-group"
 
@@ -37,8 +40,8 @@ tectonic_azure_external_vnet_name = ""
 // Example: the subnet ID starts with `"/subscriptions/{subscriptionId}"` or `"/providers/{resourceProviderNamespace}"`.
 // tectonic_azure_external_worker_subnet_id = ""
 
-// 
-tectonic_azure_image_reference = ""
+// (optional) Specifies an image map with the following keys: `publisher`, `offer`, `sku`, `version`
+// tectonic_azure_image_reference = ""
 
 // 
 tectonic_azure_location = ""
@@ -49,8 +52,8 @@ tectonic_azure_master_vm_size = "Standard_DS2_v2"
 // 
 tectonic_azure_ssh_key = ""
 
-// If set to true, assemble the FQDN from the configuration. Otherwise, use the FQDN set up by Azure.
-tectonic_azure_use_custom_fqdn = true
+// (optional) If set to true, assemble the FQDN from the configuration. Otherwise, use the FQDN set up by Azure.
+// tectonic_azure_use_custom_fqdn = false
 
 // Block of IP addresses used by the Resource Group. This should not overlap with any other networks, such as a private datacenter connected via ExpressRoute.
 tectonic_azure_vnet_cidr_block = "10.0.0.0/16"
@@ -126,18 +129,6 @@ tectonic_etcd_count = "0"
 
 // If set to true, experimental Tectonic assets are being deployed.
 tectonic_experimental = false
-
-// The Kubernetes service IP used to reach kube-apiserver inside the cluster
-// as returned by `kubectl -n default get service kubernetes`.
-tectonic_kube_apiserver_service_ip = "10.3.0.1"
-
-// The Kubernetes service IP used to reach kube-dns inside the cluster
-// as returned by `kubectl -n kube-system get service kube-dns`.
-tectonic_kube_dns_service_ip = "10.3.0.10"
-
-// The Kubernetes service IP used to reach self-hosted etcd inside the cluster
-// as returned by `kubectl -n kube-system get service etcd-service`.
-tectonic_kube_etcd_service_ip = "10.3.0.15"
 
 // The path to the tectonic licence file.
 // 

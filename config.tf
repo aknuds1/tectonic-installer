@@ -8,7 +8,7 @@ EOF
 }
 
 terraform {
-  required_version = ">= 0.9.4"
+  required_version = ">= 0.9.6"
 }
 
 variable "tectonic_container_images" {
@@ -25,9 +25,10 @@ variable "tectonic_container_images" {
     kube_version_operator           = "quay.io/coreos/kube-version-operator:v1.6.2"
     tectonic_channel_operator       = "quay.io/coreos/tectonic-channel-operator:0.3.2"
     node_agent                      = "quay.io/coreos/node-agent:787844277099e8c10d617c3c807244fc9f873e46"
-    prometheus_operator             = "quay.io/coreos/prometheus-operator:v0.8.2"
-    tectonic_prometheus_operator    = "quay.io/coreos/tectonic-prometheus-operator:v1.1.0"
-    node_exporter                   = "quay.io/prometheus/node-exporter:v0.13.0"
+    prometheus_operator             = "quay.io/coreos/prometheus-operator:v0.9.1"
+    tectonic_prometheus_operator    = "quay.io/coreos/tectonic-prometheus-operator:v1.2.0"
+    node_exporter                   = "quay.io/prometheus/node-exporter:v0.14.0"
+    kube_state_metrics              = "quay.io/coreos/kube-state-metrics:v0.5.0"
     config_reload                   = "quay.io/coreos/configmap-reload:v0.0.1"
     heapster                        = "gcr.io/google_containers/heapster:v1.3.0"
     addon_resizer                   = "gcr.io/google_containers/addon-resizer:1.7"
@@ -53,41 +54,11 @@ variable "tectonic_versions" {
 
   default = {
     etcd       = "3.1.6"
-    prometheus = "v1.6.1"
-    monitoring = "1.1.0"
+    prometheus = "v1.6.3"
+    monitoring = "1.2.0"
     kubernetes = "1.6.2+tectonic.1"
     tectonic   = "1.6.2-tectonic.1"
   }
-}
-
-variable "tectonic_kube_apiserver_service_ip" {
-  type    = "string"
-  default = "10.3.0.1"
-
-  description = <<EOF
-The Kubernetes service IP used to reach kube-apiserver inside the cluster
-as returned by `kubectl -n default get service kubernetes`.
-EOF
-}
-
-variable "tectonic_kube_etcd_service_ip" {
-  type    = "string"
-  default = "10.3.0.15"
-
-  description = <<EOF
-The Kubernetes service IP used to reach self-hosted etcd inside the cluster
-as returned by `kubectl -n kube-system get service etcd-service`.
-EOF
-}
-
-variable "tectonic_kube_dns_service_ip" {
-  type    = "string"
-  default = "10.3.0.10"
-
-  description = <<EOF
-The Kubernetes service IP used to reach kube-dns inside the cluster
-as returned by `kubectl -n kube-system get service kube-dns`.
-EOF
 }
 
 variable "tectonic_service_cidr" {

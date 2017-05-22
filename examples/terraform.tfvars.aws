@@ -19,6 +19,11 @@ tectonic_admin_password_hash = ""
 // Instance size for the etcd node(s). Example: `t2.medium`.
 tectonic_aws_etcd_ec2_type = "t2.medium"
 
+// (optional) List of additional security group IDs for etcd nodes.
+// 
+// Example: `["sg-51530134", "sg-b253d7cc"]`
+// tectonic_aws_etcd_extra_sg_ids = ""
+
 // The amount of provisioned IOPS for the root block device of etcd nodes.
 tectonic_aws_etcd_root_volume_iops = "100"
 
@@ -33,6 +38,13 @@ tectonic_aws_etcd_root_volume_type = "gp2"
 // 
 // Example: `["subnet-111111", "subnet-222222", "subnet-333333"]`
 // tectonic_aws_external_master_subnet_ids = ""
+
+// (optional) If set, the given Route53 zone ID will be used as the internal (private) zone.
+// This zone will be used to create etcd DNS records as well as internal API and internal Ingress records.
+// If set, no additional private zone will be created.
+// 
+// Example: `"Z1ILINNUJGTAO1"`
+// tectonic_aws_external_private_zone = ""
 
 // (optional) ID of an existing VPC to launch nodes into.
 // If unset a new VPC is created.
@@ -62,6 +74,11 @@ tectonic_aws_external_vpc_public = true
 // Instance size for the master node(s). Example: `t2.medium`.
 tectonic_aws_master_ec2_type = "t2.medium"
 
+// (optional) List of additional security group IDs for master nodes.
+// 
+// Example: `["sg-51530134", "sg-b253d7cc"]`
+// tectonic_aws_master_extra_sg_ids = ""
+
 // The amount of provisioned IOPS for the root block device of master nodes.
 tectonic_aws_master_root_volume_iops = "100"
 
@@ -88,6 +105,11 @@ tectonic_aws_vpc_cidr_block = "10.0.0.0/16"
 
 // Instance size for the worker node(s). Example: `t2.medium`.
 tectonic_aws_worker_ec2_type = "t2.medium"
+
+// (optional) List of additional security group IDs for worker nodes.
+// 
+// Example: `["sg-51530134", "sg-b253d7cc"]`
+// tectonic_aws_worker_extra_sg_ids = ""
 
 // The amount of provisioned IOPS for the root block device of worker nodes.
 tectonic_aws_worker_root_volume_iops = "100"
@@ -169,18 +191,6 @@ tectonic_etcd_count = "0"
 
 // If set to true, experimental Tectonic assets are being deployed.
 tectonic_experimental = false
-
-// The Kubernetes service IP used to reach kube-apiserver inside the cluster
-// as returned by `kubectl -n default get service kubernetes`.
-tectonic_kube_apiserver_service_ip = "10.3.0.1"
-
-// The Kubernetes service IP used to reach kube-dns inside the cluster
-// as returned by `kubectl -n kube-system get service kube-dns`.
-tectonic_kube_dns_service_ip = "10.3.0.10"
-
-// The Kubernetes service IP used to reach self-hosted etcd inside the cluster
-// as returned by `kubectl -n kube-system get service etcd-service`.
-tectonic_kube_etcd_service_ip = "10.3.0.15"
 
 // The path to the tectonic licence file.
 // 
