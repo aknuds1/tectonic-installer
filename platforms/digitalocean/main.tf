@@ -24,7 +24,7 @@ module "ignition-masters" {
 
   kubelet_node_label = "node-role.kubernetes.io/master"
   kubelet_node_taints = "node-role.kubernetes.io/master=:NoSchedule"
-  kube_dns_service_ip = "${var.tectonic_kube_dns_service_ip}"
+  kube_dns_service_ip = "${module.bootkube.kube_dns_service_ip}"
   container_images = "${var.tectonic_container_images}"
   bootkube_service = "${module.bootkube.systemd_service}"
   swap_size = "${var.tectonic_do_master_swap}"
@@ -50,7 +50,7 @@ module "ignition-workers" {
 
   kubelet_node_label = "node-role.kubernetes.io/node"
   kubelet_node_taints = ""
-  kube_dns_service_ip = "${var.tectonic_kube_dns_service_ip}"
+  kube_dns_service_ip = "${module.bootkube.kube_dns_service_ip}"
   container_images = "${var.tectonic_container_images}"
   swap_size = "${var.tectonic_do_worker_swap}"
   bootkube_service = ""
