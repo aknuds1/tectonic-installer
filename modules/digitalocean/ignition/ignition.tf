@@ -27,7 +27,7 @@ data "template_file" "resolv_conf" {
 
 data "ignition_file" "resolv_conf" {
   filesystem = "root"
-  path = "/resolv.conf"
+  path = "/etc/resolv.conf"
   mode = "420"
   content {
     content = "${data.template_file.resolv_conf.rendered}"
