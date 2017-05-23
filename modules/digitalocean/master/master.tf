@@ -9,9 +9,8 @@ resource "digitalocean_droplet" "master_node" {
   user_data = "${var.user_data}"
 }
 
-resource "digitalocean_domain" "api-external" {
-  count = 1
-  name = "${var.cluster_name}-api.${var.base_domain}"
+resource "digitalocean_domain" "cluster" {
+  name = "${var.cluster_domain}"
   # TODO: Introduce load balancer when having multiple master nodes
   ip_address = "${digitalocean_droplet.master_node.*.ipv4_address[0]}"
 }

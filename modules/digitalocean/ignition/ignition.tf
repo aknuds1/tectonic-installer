@@ -21,7 +21,7 @@ data "ignition_config" "main" {
 data "template_file" "resolved_conf" {
   template = "${file("${path.module}/resources/resolved.conf.tpl")}"
   vars {
-    base_domain = "${var.base_domain}"
+    cluster_domain = "${var.cluster_domain}"
   }
 }
 

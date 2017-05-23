@@ -1,5 +1,5 @@
-output "api_external_fqdn" {
-  value = "${digitalocean_domain.api-external.*.id[0]}"
+output "cluster_fqdn" {
+  value = "${digitalocean_domain.cluster.id}"
 }
 
 output "first_node_address" {

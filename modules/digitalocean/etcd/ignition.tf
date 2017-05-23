@@ -20,7 +20,7 @@ data "ignition_file" "node_hostname" {
   filesystem = "root"
 
   content {
-    content = "${var.cluster_name}-etcd-${count.index}.${var.base_domain}"
+    content = "etcd-${count.index}.etcd.${var.cluster_domain}"
   }
 }
 
@@ -41,7 +41,7 @@ data "template_file" "etcd-cluster" {
   count = "${var.droplet_count}"
   vars = {
     etcd-name = "${var.cluster_name}-etcd-${count.index}"
-    etcd-address = "${var.cluster_name}-etcd-${count.index}.${var.base_domain}"
+    etcd-address = "etcd-${count.index}.etcd.${var.cluster_domain}"
   }
 }
 
@@ -58,8 +58,8 @@ Environment="ETCD_IMAGE=${var.container_image}"
 ExecStart=
 ExecStart=/usr/lib/coreos/etcd-wrapper \
   --name=${var.cluster_name}-etcd-${count.index} \
-  --advertise-client-urls=http://${var.cluster_name}-etcd-${count.index}.${var.base_domain}:2379 \
-  --initial-advertise-peer-urls=http://${var.cluster_name}-etcd-${count.index}.${var.base_domain}:2380 \
+  --advertise-client-urls=http://etcd-${count.index}.etcd.${var.cluster_domain}:2379 \
+  --initial-advertise-peer-urls=http://etcd-${count.index}.etcd.${var.cluster_domain}:2380 \
   --listen-client-urls=http://0.0.0.0:2379 \
   --listen-peer-urls=http://0.0.0.0:2380 \
   --initial-cluster="${join("," , data.template_file.etcd-cluster.*.rendered)}"

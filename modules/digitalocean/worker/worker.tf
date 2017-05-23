@@ -9,8 +9,10 @@ resource "digitalocean_droplet" "worker_node" {
   user_data = "${var.user_data}"
 }
 
-resource "digitalocean_domain" "worker" {
+resource "digitalocean_record" "worker" {
   count = "${var.instance_count}"
-  name = "${var.cluster_name}-worker-${count.index}.${var.base_domain}"
-  ip_address = "${element(digitalocean_droplet.worker_node.*.ipv4_address, count.index)}"
+  domain = "${var.cluster_domain}"
+  type = "A"
+  name = "worker-${count.index}"
+  value = "${element(digitalocean_droplet.worker_node.*.ipv4_address, count.index)}"
 }

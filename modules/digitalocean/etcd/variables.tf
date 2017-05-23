@@ -2,7 +2,7 @@ variable "cluster_name" {
   type = "string"
 }
 
-variable "base_domain" {
+variable "cluster_domain" {
   type = "string"
 }
 

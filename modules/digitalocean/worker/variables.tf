@@ -30,6 +30,6 @@ variable "user_data" {
   type = "string"
 }
 
-variable "base_domain" {
+variable "cluster_domain" {
   type = "string"
 }

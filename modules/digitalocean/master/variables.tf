@@ -2,6 +2,10 @@ variable "cluster_name" {
   type = "string"
 }
 
+variable "cluster_domain" {
+  type = "string"
+}
+
 variable "droplet_size" {
   type = "string"
 }
@@ -24,9 +28,5 @@ variable "droplet_image" {
 }
 
 variable "user_data" {
-  type = "string"
-}
-
-variable "base_domain" {
   type = "string"
 }

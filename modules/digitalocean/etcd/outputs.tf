@@ -1,3 +1,3 @@
 output "endpoints" {
-  value = ["${digitalocean_domain.etcd_nodes.*.id}"]
+  value = ["${digitalocean_record.etcd_nodes.*.fqdn}"]
 }

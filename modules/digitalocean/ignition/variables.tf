@@ -28,9 +28,9 @@ variable "swap_size" {
   description = "The amount of swap memory to enable"
 }
 
-variable "base_domain" {
+variable "cluster_domain" {
   type = "string"
-  description = "The base domain"
+  description = "The cluster domain"
 }
 
 # variable "tectonic_service" {

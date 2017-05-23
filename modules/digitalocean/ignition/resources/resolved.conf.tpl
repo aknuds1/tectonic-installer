@@ -1,2 +1,2 @@
 [Resolve]
-Domains=${base_domain}
+Domains=${cluster_domain}
