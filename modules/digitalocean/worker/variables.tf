@@ -30,7 +30,6 @@ variable "user_data" {
   type = "string"
 }
 
-
 variable "base_domain" {
   type = "string"
 }

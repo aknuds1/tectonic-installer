@@ -2,7 +2,7 @@ data "ignition_config" "main" {
   files = [
     "${data.ignition_file.max-user-watches.id}",
     "${data.ignition_file.init-assets.id}",
-    "${data.ignition_file.resolv_conf.id}",
+    "${data.ignition_file.resolved_conf.id}",
   ]
 
   systemd = [
@@ -18,19 +18,19 @@ data "ignition_config" "main" {
   ]
 }
 
-data "template_file" "resolv_conf" {
-  template = "${file("${path.module}/resources/resolv.conf.tpl")}"
+data "template_file" "resolved_conf" {
+  template = "${file("${path.module}/resources/resolved.conf.tpl")}"
   vars {
     base_domain = "${var.base_domain}"
   }
 }
 
-data "ignition_file" "resolv_conf" {
+data "ignition_file" "resolved_conf" {
   filesystem = "root"
-  path = "/etc/resolv.conf"
+  path = "/etc/systemd/resolved.conf"
   mode = "420"
   content {
-    content = "${data.template_file.resolv_conf.rendered}"
+    content = "${data.template_file.resolved_conf.rendered}"
   }
 }
 
