@@ -28,6 +28,11 @@ variable "swap_size" {
   description = "The amount of swap memory to enable"
 }
 
+variable "base_domain" {
+  type = "string"
+  description = "The base domain"
+}
+
 # variable "tectonic_service" {
 #   type = "string"
 #   description = "The content of the tectonic installer systemd service unit"

@@ -2,6 +2,7 @@ data "ignition_config" "main" {
   files = [
     "${data.ignition_file.max-user-watches.id}",
     "${data.ignition_file.init-assets.id}",
+    "${data.ignition_file.resolv_conf.id}",
   ]
 
   systemd = [
@@ -15,6 +16,22 @@ data "ignition_config" "main" {
     "${module.sshguard.service_id}",
     # "${data.ignition_systemd_unit.tectonic.id}",
   ]
+}
+
+data "template_file" "resolv_conf" {
+  template = "${file("${path.module}/resources/resolv.conf.tpl")}"
+  vars {
+    base_domain = "${var.base_domain}"
+  }
+}
+
+data "ignition_file" "resolv_conf" {
+  filesystem = "root"
+  path = "/resolv.conf"
+  mode = "420"
+  content {
+    content = "${data.template_file.resolv_conf.rendered}"
+  }
 }
 
 data "ignition_systemd_unit" "docker" {

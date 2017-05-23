@@ -8,3 +8,9 @@ resource "digitalocean_droplet" "worker_node" {
   tags = ["${var.extra_tags}"]
   user_data = "${var.user_data}"
 }
+
+resource "digitalocean_domain" "worker" {
+  count = "${var.instance_count}"
+  name = "${var.cluster_name}-worker-${count.index}.${var.base_domain}"
+  ip_address = "${element(digitalocean_droplet.worker_node.*.ipv4_address, count.index)}"
+}
