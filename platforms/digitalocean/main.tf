@@ -29,8 +29,8 @@ module "ignition-masters" {
   bootkube_service = "${module.bootkube.systemd_service}"
   swap_size = "${var.tectonic_do_master_swap}"
   cluster_domain = "${var.tectonic_cluster_name}.k8s.${var.tectonic_base_domain}"
-  # tectonic_service = "${module.tectonic.systemd_service}"
-  # tectonic_service_disabled = "${var.tectonic_vanilla_k8s}"
+  tectonic_service = "${module.tectonic.systemd_service}"
+  tectonic_service_disabled = "${var.tectonic_vanilla_k8s}"
 }
 
 module "masters" {
@@ -56,7 +56,6 @@ module "ignition-workers" {
   swap_size = "${var.tectonic_do_worker_swap}"
   bootkube_service = ""
   cluster_domain = "${var.tectonic_cluster_name}.k8s.${var.tectonic_base_domain}"
-  # tectonic_service = ""
 }
 
 module "workers" {

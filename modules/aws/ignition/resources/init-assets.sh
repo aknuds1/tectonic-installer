@@ -5,7 +5,6 @@ set -e
 trap "{ /usr/bin/rkt gc --grace-period=0; /usr/bin/rkt image gc --grace-period 0; } &> /dev/null" EXIT
 
 mkdir -p /run/metadata
-# Wait for ASG to be at desired capacity
 /usr/bin/rkt run \
     --dns=host --net=host --trust-keys-from-https --interactive \
     \

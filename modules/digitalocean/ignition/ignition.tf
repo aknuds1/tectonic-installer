@@ -14,7 +14,7 @@ data "ignition_config" "main" {
     "${data.ignition_systemd_unit.bootkube.id}",
     "${module.swap.service_id}",
     "${module.sshguard.service_id}",
-    # "${data.ignition_systemd_unit.tectonic.id}",
+    "${data.ignition_systemd_unit.tectonic.id}",
   ]
 }
 
@@ -115,6 +115,7 @@ data "ignition_systemd_unit" "init-assets" {
 data "ignition_systemd_unit" "bootkube" {
   name = "bootkube.service"
   content = "${var.bootkube_service}"
+  # Defer enabling until /opt/tectonic is populated
   enable = false
 }
 
@@ -128,8 +129,9 @@ module "swap" {
   swap_size = "${var.swap_size}"
 }
 
-# data "ignition_systemd_unit" "tectonic" {
-#   name = "tectonic.service"
-#   enable = "${var.tectonic_service_disabled == 0 ? true : false}"
-#   content = "${var.tectonic_service}"
-# }
+data "ignition_systemd_unit" "tectonic" {
+  name = "tectonic.service"
+  content = "${var.tectonic_service}"
+  # Defer enabling until /opt/tectonic is populated
+  enable = false
+}

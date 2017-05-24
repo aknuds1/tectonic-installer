@@ -114,12 +114,16 @@ resource "null_resource" "first_master" {
     destination = "$HOME/tectonic.zip"
   }
 
+  provisioner "file" {
+    source = "${path.root}/resources/bootstrap-first-master.sh"
+    destination = "$HOME/bootstrap-first-master.sh"
+  }
+
   provisioner "remote-exec" {
     inline = [
-      "sudo unzip -o -d /opt/tectonic/ $HOME/tectonic.zip",
-      "rm $HOME/tectonic.zip",
-      "sudo systemctl enable bootkube",
-      "sudo systemctl start bootkube",
+      "chmod +x $HOME/bootstrap-first-master.sh",
+      "$HOME/bootstrap-first-master.sh ${var.tectonic_vanilla_k8s ? "" : "--enable-tectonic"}",
+      "rm $HOME/bootstrap-first-master.sh",
     ]
   }
 }
