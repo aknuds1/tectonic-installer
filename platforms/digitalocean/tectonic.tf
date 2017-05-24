@@ -21,6 +21,7 @@ module "bootkube" {
   etcd_client_cert = "${var.tectonic_etcd_client_cert_path}"
   etcd_client_key = "${var.tectonic_etcd_client_key_path}"
   experimental_enabled = "${var.tectonic_experimental}"
+  versions = "${var.tectonic_versions}"
 }
 
 module "tectonic" {
