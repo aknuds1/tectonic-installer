@@ -14,3 +14,11 @@ resource "digitalocean_domain" "cluster" {
   # TODO: Introduce load balancer when having multiple master nodes
   ip_address = "${digitalocean_droplet.master_node.*.ipv4_address[0]}"
 }
+
+resource "digitalocean_record" "master" {
+  count = 1
+  domain = "${digitalocean_domain.cluster.id}"
+  type = "A"
+  name = "${var.cluster_name}-master-${count.index}"
+  value = "${element(digitalocean_droplet.master_node.*.ipv4_address, count.index)}"
+}
