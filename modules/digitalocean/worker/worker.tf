@@ -13,6 +13,6 @@ resource "digitalocean_record" "worker" {
   count = "${var.instance_count}"
   domain = "${var.cluster_domain}"
   type = "A"
-  name = "worker-${count.index}"
+  name = "${var.cluster_name}-worker-${count.index}"
   value = "${element(digitalocean_droplet.worker_node.*.ipv4_address, count.index)}"
 }
