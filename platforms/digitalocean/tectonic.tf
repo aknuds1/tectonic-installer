@@ -3,7 +3,7 @@ module "bootkube" {
   
   cloud_provider = ""
   kube_apiserver_url = "https://${module.masters.cluster_fqdn}:443"
-  oidc_issuer_url = "https://${module.masters.cluster_fqdn}:443/identity"
+  oidc_issuer_url = "https://${digitalocean_loadbalancer.tectonic-console.ip}:443/identity"
   # Platform-independent variables wiring, do not modify.
   container_images = "${var.tectonic_container_images}"
   ca_cert = "${var.tectonic_ca_cert}"
@@ -28,7 +28,7 @@ module "tectonic" {
   source = "../../modules/tectonic"
 
   platform = "digitalocean"
-  base_address = "${module.masters.cluster_fqdn}"
+  base_address = "${var.tectonic_vanilla_k8s ? "" : digitalocean_loadbalancer.tectonic-console.ip}"
   kube_apiserver_url = "https://${module.masters.cluster_fqdn}:443"
   # Platform-independent variables wiring, do not modify.
   container_images = "${var.tectonic_container_images}"
@@ -154,5 +154,34 @@ resource "null_resource" "worker_nodes" {
     inline = [
       "sudo mv $HOME/kubeconfig /etc/kubernetes/",
     ]
+  }
+}
+
+resource digitalocean_loadbalancer "tectonic-console" {
+  name = "tectonic-console"
+  region = "${var.tectonic_do_droplet_region}"
+  droplet_ids = ["${module.masters.node_addresses}"]
+  
+  forwarding_rule {
+    entry_port = 80
+    entry_protocol = "http"
+    target_port = 32001
+    target_protocol = "http"
+  }
+  
+  forwarding_rule {
+    entry_port = 443
+    entry_protocol = "https"
+    target_port = 32000
+    target_protocol = "https"
+    tls_passthrough = true
+  }
+  
+  healthcheck {
+    port = 32002
+    protocol = "http"
+    path = "/healthz"
+    response_timeout_seconds = 3
+    check_interval_seconds = 5
   }
 }
