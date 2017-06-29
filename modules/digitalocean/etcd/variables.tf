@@ -39,3 +39,26 @@ variable "swap_size" {
   type = "string"
   description = "Amount of swap memory to enable"
 }
+
+variable "tls_enabled" {
+}
+
+variable "tls_ca_crt_pem" {
+  type = "string"
+}
+
+variable "tls_client_key_pem" {
+  type = "string"
+}
+
+variable "tls_client_crt_pem" {
+  type = "string"
+}
+
+variable "tls_peer_key_pem" {
+  type = "string"
+}
+
+variable "tls_peer_crt_pem" {
+  type = "string"
+}

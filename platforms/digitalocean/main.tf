@@ -17,6 +17,12 @@ module "etcd" {
   droplet_region = "${var.tectonic_do_droplet_region}"
   droplet_image = "${var.tectonic_do_droplet_image}"
   swap_size = "${var.tectonic_do_etcd_swap}"
+  tls_enabled = "${var.tectonic_etcd_tls_enabled}"
+  tls_ca_crt_pem = "${module.bootkube.etcd_ca_crt_pem}"
+  tls_client_crt_pem = "${module.bootkube.etcd_client_crt_pem}"
+  tls_client_key_pem = "${module.bootkube.etcd_client_key_pem}"
+  tls_peer_crt_pem = "${module.bootkube.etcd_peer_crt_pem}"
+  tls_peer_key_pem = "${module.bootkube.etcd_peer_key_pem}"
 }
 
 module "ignition-masters" {

@@ -12,9 +12,9 @@ data "ignition_config" "main" {
     "${data.ignition_systemd_unit.kubelet-env.id}",
     "${data.ignition_systemd_unit.init-assets.id}",
     "${data.ignition_systemd_unit.bootkube.id}",
+    "${data.ignition_systemd_unit.tectonic.id}",
     "${module.swap.service_id}",
     "${module.sshguard.service_id}",
-    "${data.ignition_systemd_unit.tectonic.id}",
   ]
 }
 
