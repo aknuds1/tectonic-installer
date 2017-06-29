@@ -9,3 +9,7 @@ output "first_node_address" {
 output "node_addresses" {
   value = ["${digitalocean_droplet.master_node.*.ipv4_address}"]
 }
+
+output "node_ids" {
+  value = ["${digitalocean_droplet.master_node.*.id}"]
+}

@@ -160,7 +160,7 @@ resource "null_resource" "worker_nodes" {
 resource digitalocean_loadbalancer "tectonic-console" {
   name = "tectonic-console"
   region = "${var.tectonic_do_droplet_region}"
-  droplet_ids = ["${module.masters.node_addresses}"]
+  droplet_ids = ["${module.masters.node_ids}"]
   
   forwarding_rule {
     entry_port = 80
