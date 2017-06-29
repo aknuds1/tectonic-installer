@@ -3,9 +3,10 @@ module "bootkube" {
   
   cloud_provider = ""
   kube_apiserver_url = "https://${module.masters.cluster_fqdn}:443"
-  oidc_issuer_url = "https://${digitalocean_loadbalancer.tectonic-console.ip}:443/identity"
+  oidc_issuer_url = "https://${digitalocean_loadbalancer.tectonic-console.ip}/identity"
   # Platform-independent variables wiring, do not modify.
   container_images = "${var.tectonic_container_images}"
+  versions = "${var.tectonic_versions}"
   ca_cert = "${var.tectonic_ca_cert}"
   ca_key = "${var.tectonic_ca_key}"
   ca_key_alg = "${var.tectonic_ca_key_alg}"
@@ -20,8 +21,18 @@ module "bootkube" {
   etcd_ca_cert = "${var.tectonic_etcd_ca_cert_path}"
   etcd_client_cert = "${var.tectonic_etcd_client_cert_path}"
   etcd_client_key = "${var.tectonic_etcd_client_key_path}"
+  etcd_tls_enabled = "${var.tectonic_etcd_tls_enabled}"
+  etcd_cert_dns_names = [
+    "${var.tectonic_cluster_name}-etcd-0.${var.tectonic_base_domain}",
+    "${var.tectonic_cluster_name}-etcd-1.${var.tectonic_base_domain}",
+    "${var.tectonic_cluster_name}-etcd-2.${var.tectonic_base_domain}",
+    "${var.tectonic_cluster_name}-etcd-3.${var.tectonic_base_domain}",
+    "${var.tectonic_cluster_name}-etcd-4.${var.tectonic_base_domain}",
+    "${var.tectonic_cluster_name}-etcd-5.${var.tectonic_base_domain}",
+    "${var.tectonic_cluster_name}-etcd-6.${var.tectonic_base_domain}",
+  ]
   experimental_enabled = "${var.tectonic_experimental}"
-  versions = "${var.tectonic_versions}"
+  master_count = "1"
 }
 
 module "tectonic" {
@@ -49,6 +60,7 @@ module "tectonic" {
   ingress_kind = "NodePort"
   experimental = "${var.tectonic_experimental}"
   master_count = 1
+  stats_url = "${var.tectonic_stats_url}"
 }
 
 data "archive_file" "assets" {
