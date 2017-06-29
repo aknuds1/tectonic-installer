@@ -6,13 +6,6 @@ import { keyToAlg, toExtraData } from './utils';
 
 const bcryptCost = 12;
 
-let defaultPlatformType = '';
-try {
-  defaultPlatformType = window.config.platforms[0];
-} catch (unused) {
-  // So tests pass
-}
-
 // TODO: (ggreer) clean up key names. Warning: Doing this will break progress files.
 export const AWS_ACCESS_KEY_ID = 'awsAccessKeyId';
 export const AWS_SUBNETS = 'awsSubnets';
@@ -53,7 +46,9 @@ export const CLUSTER_NAME = 'clusterName';
 export const CLUSTER_SUBDOMAIN = 'clusterSubdomain';
 export const CONTROLLER_DOMAIN = 'controllerDomain';
 export const EXTERNAL_ETCD_CLIENT = 'externalETCDClient';
-export const EXTERNAL_ETCD_ENABLED = 'externalETCDEnabled';
+
+export const ETCD_OPTION = 'etcdOption';
+
 export const DRY_RUN = 'dryRun';
 export const ENTITLEMENTS = 'entitlements';
 export const PLATFORM_TYPE = 'platformType';
@@ -62,9 +57,9 @@ export const SSH_AUTHORIZED_KEY = 'sshAuthorizedKey';
 export const STS_ENABLED = 'sts_enabled';
 export const TECTONIC_LICENSE = 'tectonicLicense';
 export const UPDATER = 'updater';
-export const UPDATER_ENABLED = 'updater_enabled';
 export const ADMIN_EMAIL = 'adminEmail';
 export const ADMIN_PASSWORD = 'adminPassword';
+export const ADMIN_PASSWORD2 = 'adminPassword2';
 
 // Networking
 export const POD_CIDR = 'podCIDR';
@@ -86,7 +81,10 @@ export const AWS_CLUSTER_INFO = 'aws_clusterInfo';
 export const AWS_WORKERS = 'aws_workers';
 export const AWS_REGION_FORM = 'aws_regionForm';
 export const BM_SSH_KEY = 'bm_sshKey';
+export const CREDS = 'creds';
 export const LICENSING = 'licensing';
+export const PLATFORM_FORM = 'platform';
+export const EXPERIMENTAL_FEATURES = 'experimentalFeatures';
 
 
 export const SPLIT_DNS_ON = "on";
@@ -95,6 +93,11 @@ export const SPLIT_DNS_OPTIONS = {
   [SPLIT_DNS_ON]: "Create an additional Route 53 private zone (default).",
   [SPLIT_DNS_OFF]: "Do not create a private zone.",
 };
+
+const SELF_HOSTED = "selfHosted";
+const EXTERNAL = "external";
+const PROVISIONED = "provisioned";
+export const ETCD_OPTIONS = { SELF_HOSTED, EXTERNAL, PROVISIONED };
 
 export const toVPCSubnet = (region, subnets, deselected) => {
   const vpcSubnets = {};
@@ -182,7 +185,6 @@ export const DEFAULT_CLUSTER_CONFIG = {
   [CONTROLLER_DOMAIN]: '',
   [DRY_RUN]: false,
   [ENTITLEMENTS]: {},
-  [PLATFORM_TYPE]: defaultPlatformType,
   [PULL_SECRET]: '',
   [RETRY]: false, // whether we're retrying a terraform apply
   [STS_ENABLED]: false,
@@ -192,7 +194,6 @@ export const DEFAULT_CLUSTER_CONFIG = {
     channel: 'tectonic-1.6',
     appID: '6bc7b986-4654-4a0f-94b3-84ce6feb1db4',
   },
-  [UPDATER_ENABLED]: false,
   [POD_CIDR]: "10.2.0.0/16",
   [SERVICE_CIDR]: "10.3.0.0/16",
 };
@@ -255,13 +256,13 @@ export const toAWS_TF = (cc, FORMS, opts={}) => {
       tectonic_worker_count: workers[NUMBER_OF_INSTANCES],
       // TODO: shouldn't hostedZoneID be specified somewhere?
       tectonic_dns_name: cc[CLUSTER_SUBDOMAIN],
-      tectonic_experimental: cc[UPDATER_ENABLED],
+      tectonic_experimental: cc[ETCD_OPTION] === SELF_HOSTED,
     },
   };
 
-  if (cc[EXTERNAL_ETCD_ENABLED]) {
+  if (cc[ETCD_OPTION] === EXTERNAL) {
     ret.variables.tectonic_etcd_servers = [cc[EXTERNAL_ETCD_CLIENT]];
-  } else if (!cc[UPDATER_ENABLED]) {
+  } else if (cc[ETCD_OPTION] === PROVISIONED) {
     ret.variables.tectonic_aws_etcd_ec2_type = etcds[INSTANCE_TYPE];
     ret.variables.tectonic_aws_etcd_root_volume_iops = etcds[STORAGE_TYPE] === 'io1' ? etcds[STORAGE_IOPS] : undefined;
     ret.variables.tectonic_aws_etcd_root_volume_size = etcds[STORAGE_SIZE_IN_GIB];
@@ -335,12 +336,12 @@ export const toBaremetal_TF = (cc, FORMS, opts={}) => {
       tectonic_cluster_cidr: cc[POD_CIDR],
       tectonic_service_cidr: cc[SERVICE_CIDR],
       tectonic_dns_name: cc[CLUSTER_SUBDOMAIN],
-      tectonic_experimental: cc[UPDATER_ENABLED],
+      tectonic_experimental: cc[ETCD_OPTION] === SELF_HOSTED,
       tectonic_base_domain: 'unused',
     },
   };
 
-  if (cc[EXTERNAL_ETCD_ENABLED]) {
+  if (cc[ETCD_OPTION] === EXTERNAL) {
     ret.variables.tectonic_etcd_servers = [cc[EXTERNAL_ETCD_CLIENT]];
   }
 

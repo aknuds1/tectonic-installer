@@ -4,14 +4,12 @@
 # It's using the manifests in the candidate assets dir.
 # yaml2json(https://github.com/bronze1man/yaml2json) and jq are required.
 
-which yaml2json > /dev/null
-if [[ $? != 0 ]]; then
+if ! which yaml2json > /dev/null; then
     echo "Require yaml2json (https://github.com/bronze1man/yaml2json)" >&2
     exit 1
 fi
 
-which jq > /dev/null
-if [[ $? != 0 ]]; then
+if ! which jq > /dev/null; then
     echo "Require jq" >&2
     exit 1
 fi
@@ -21,51 +19,56 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 echo "Invoking terraform to populate the templates..." >&2
-pushd ${DIR}
+pushd "${DIR}"
 while true; do echo "place_holder_for_terraform_input"; done | terraform apply ./
 popd
 
 ASSETS_DIR=${DIR}/generated
 
-# TODO(yifan): Maybe put these files into separate dirs for each channel
-# in the future.
-deployments=(
-  "tectonic-channel-operator.yaml"
-  "kube-version-operator.yaml"
-  "tectonic-prometheus-operator.yaml"
-  "container-linux-update-operator.yaml"
-)
-appversions=(
-  "app-version-kubernetes.yaml"
-  "app-version-tectonic-monitoring.yaml"
-)
-
 echo "Creating update payload..." >&2
-echo "Using deployments: [${deployments[*]}]" >&2
-echo "Using app versions: [${appversions[*]}]" >&2
+echo "Using deployments:" >&2
+for f in ${ASSETS_DIR}/operators/*.yaml; do
+  basename "${f}" >&2
+done
+
+echo "Using app versions:" >&2
+for f in ${ASSETS_DIR}/app_versions/*.yaml; do
+  basename "${f}" >&2
+done
 
 # Get the update payload version.
-VERSION=$(yaml2json < ${ASSETS_DIR}/app-version-tectonic-cluster.yaml | jq .status.currentVersion)
+# shellcheck disable=SC2086
+VERSION=$(yaml2json < ${ASSETS_DIR}/app_versions/app-version-tectonic-cluster.yaml | jq .status.currentVersion)
+# Don't include the meta app-version for sub-component's desired version.
+rm "${ASSETS_DIR}/app_versions/app-version-tectonic-cluster.yaml"
 
 # Get the deployments.
-for f in ${deployments[*]}; do
+for f in ${ASSETS_DIR}/operators/*.yaml; do
   tmpfile=$(mktemp /tmp/deployment.XXXXXX)
-  yaml2json < ${ASSETS_DIR}/${f} > ${tmpfile}
+  # shellcheck disable=SC2086
+  yaml2json < ${f} > ${tmpfile}
   tmpfiles+=(${tmpfile})
 done
 
+# TODO: (ggreer) I'm pretty sure ">" is *not* what we want here
+# shellcheck disable=SC2071
 if [[ ${#tmpfiles[*]} > 0 ]]; then
+    # shellcheck disable=SC2086
     DEPLOYMENTS=$(jq -s . ${tmpfiles[*]})
+    # shellcheck disable=SC2086
     rm ${tmpfiles[*]}
 fi
 
 unset tmpfiles
 
 # Get the desired versions.
-for f in ${appversions[*]}; do
+for f in ${ASSETS_DIR}/app_versions/*.yaml; do
   tmpfile=$(mktemp /tmp/desiredVersion.XXXXXX)
-  name=$(yaml2json < ${ASSETS_DIR}/${f} | jq .metadata.name)
-  desiredVersion=$(yaml2json < ${ASSETS_DIR}/${f} | jq .status.currentVersion)
+  # shellcheck disable=SC2086
+  name=$(yaml2json < ${f} | jq .metadata.name)
+  # shellcheck disable=SC2086
+  desiredVersion=$(yaml2json < ${f} | jq .status.currentVersion)
+  # shellcheck disable=SC2086
   cat <<EOF > ${tmpfile}
 {
   "name": ${name},
@@ -75,12 +78,17 @@ EOF
   tmpfiles+=(${tmpfile})
 done
 
+# TODO: (ggreer) I'm pretty sure ">" is *not* what we want here
+# shellcheck disable=SC2071
 if [[ ${#tmpfiles[*]} > 0 ]]; then
+    # shellcheck disable=SC2086
     DESIRED_VERSIONS=$(jq -s . ${tmpfiles[*]})
+    # shellcheck disable=SC2086
     rm ${tmpfiles[*]}
 fi
 
 # Create the final payload.
+# shellcheck disable=SC2086
 cat <<EOF | jq . > ${DIR}/payload.json
 {
   "version": ${VERSION},

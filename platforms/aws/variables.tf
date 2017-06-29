@@ -25,9 +25,13 @@ variable "tectonic_aws_worker_ec2_type" {
 }
 
 variable "tectonic_aws_etcd_ec2_type" {
-  type        = "string"
-  description = "Instance size for the etcd node(s). Example: `t2.medium`."
-  default     = "t2.medium"
+  type = "string"
+
+  description = <<EOF
+  Instance size for the etcd node(s). Example: `t2.medium`. Read the [etcd recommended hardware] (https://coreos.com/etcd/docs/latest/op-guide/hardware.html) guide for best performance
+  EOF
+
+  default = "t2.medium"
 }
 
 variable "tectonic_aws_etcd_extra_sg_ids" {
@@ -238,4 +242,32 @@ variable "tectonic_aws_region" {
   type        = "string"
   default     = "eu-west-1"
   description = "The target AWS region for the cluster."
+}
+
+variable "tectonic_aws_master_iam_role_name" {
+  type    = "string"
+  default = ""
+
+  description = <<EOF
+(optional) Name of IAM role to use for the instance profiles of master nodes.
+The name is also the last part of a role's ARN.
+
+Example:
+ * Role ARN  = arn:aws:iam::123456789012:role/tectonic-installer
+ * Role Name = tectonic-installer
+EOF
+}
+
+variable "tectonic_aws_worker_iam_role_name" {
+  type    = "string"
+  default = ""
+
+  description = <<EOF
+(optional) Name of IAM role to use for the instance profiles of worker nodes.
+The name is also the last part of a role's ARN.
+
+Example:
+ * Role ARN  = arn:aws:iam::123456789012:role/tectonic-installer
+ * Role Name = tectonic-installer
+EOF
 }

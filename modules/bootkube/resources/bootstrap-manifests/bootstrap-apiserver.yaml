@@ -9,8 +9,6 @@ spec:
     image: ${hyperkube_image}
     command:
     - /usr/bin/flock
-    - --exclusive
-    - --timeout=30
     - /var/lock/api-server.lock
     - /hyperkube
     - apiserver
@@ -56,3 +54,7 @@ spec:
   - name: var-lock
     hostPath:
       path: /var/lock
+  updateStrategy:
+    rollingUpdate:
+    maxUnavailable: 1
+    type: RollingUpdate

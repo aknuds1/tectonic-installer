@@ -23,10 +23,12 @@ module "bootkube" {
   oidc_groups_claim   = "groups"
   oidc_client_id      = "tectonic-kubectl"
 
-  etcd_endpoints   = ["${module.etcd.ip_address}"]
+  etcd_endpoints   = ["${module.vnet.etcd_public_ip}"]
   etcd_ca_cert     = "${var.tectonic_etcd_ca_cert_path}"
   etcd_client_cert = "${var.tectonic_etcd_client_cert_path}"
   etcd_client_key  = "${var.tectonic_etcd_client_key_path}"
+
+  master_count = "${var.tectonic_master_count}"
 }
 
 module "tectonic" {
@@ -60,6 +62,7 @@ module "tectonic" {
   ingress_kind      = "NodePort"
   experimental      = "${var.tectonic_experimental}"
   master_count      = "${var.tectonic_master_count}"
+  stats_url         = "${var.tectonic_stats_url}"
 }
 
 resource "null_resource" "tectonic" {
@@ -85,7 +88,7 @@ resource "null_resource" "tectonic" {
       "sudo mkdir -p /opt",
       "sudo rm -rf /opt/tectonic",
       "sudo mv /home/core/tectonic /opt/",
-      "sudo systemctl start tectonic",
+      "sudo systemctl start ${var.tectonic_vanilla_k8s ? "bootkube.service" : "tectonic.service"}",
     ]
   }
 }

@@ -1,7 +1,7 @@
 # etcd
 
 resource "openstack_compute_instance_v2" "etcd_node" {
-  count     = "${var.tectonic_etcd_count}"
+  count     = "${var.tectonic_experimental ? 0 : var.tectonic_etcd_count}"
   name      = "${var.tectonic_cluster_name}_etcd_node_${count.index}"
   image_id  = "${var.tectonic_openstack_image_id}"
   flavor_id = "${var.tectonic_openstack_flavor_id}"
@@ -22,7 +22,7 @@ resource "openstack_compute_instance_v2" "etcd_node" {
 
 resource "openstack_compute_instance_v2" "master_node" {
   count     = "${var.tectonic_master_count}"
-  name      = "${var.tectonic_cluster_name}_master_node_${count.index}"
+  name      = "${var.tectonic_cluster_name}-master-${count.index}"
   image_id  = "${var.tectonic_openstack_image_id}"
   flavor_id = "${var.tectonic_openstack_flavor_id}"
 
@@ -49,7 +49,7 @@ resource "openstack_compute_floatingip_associate_v2" "master" {
 
 resource "openstack_compute_instance_v2" "worker_node" {
   count     = "${var.tectonic_worker_count}"
-  name      = "${var.tectonic_cluster_name}_worker_node_${count.index}"
+  name      = "${var.tectonic_cluster_name}-worker-${count.index}"
   image_id  = "${var.tectonic_openstack_image_id}"
   flavor_id = "${var.tectonic_openstack_flavor_id}"
 
@@ -76,6 +76,7 @@ resource "openstack_compute_floatingip_associate_v2" "worker" {
 
 resource "null_resource" "tectonic" {
   depends_on = [
+    "module.bootkube",
     "module.tectonic",
     "openstack_compute_instance_v2.master_node",
     "openstack_networking_port_v2.master",

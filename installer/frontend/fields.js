@@ -16,7 +16,9 @@ FIELDS[CLUSTER_NAME] = new Field(CLUSTER_NAME, {
       if (s.length === 0 || s.length > 28) {
         return 'Value must be between 1 and 28 characters';
       }
-
+      if (s.toLowerCase() !== s) {
+        return 'Value must be lower case.';
+      }
       if (!/^[a-zA-Z][-a-zA-Z0-9]*$/.test(s)) {
         return 'Value must be a valid AWS Stack Name: [a-zA-Z][-a-zA-Z0-9]*';
       }

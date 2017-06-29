@@ -20,7 +20,7 @@ spec:
         checkpointer.alpha.coreos.com/checkpoint: "true"
     spec:
       containers:
-      - name: checkpoint
+      - name: pod-checkpointer
         image: ${pod_checkpointer_image}
         command:
         - /checkpoint
@@ -62,3 +62,7 @@ spec:
       - name: var-run
         hostPath:
           path: /var/run
+  updateStrategy:
+    rollingUpdate:
+      maxUnavailable: 1
+    type: RollingUpdate

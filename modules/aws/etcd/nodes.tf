@@ -40,7 +40,7 @@ resource "aws_instance" "etcd_node" {
   }
 
   tags = "${merge(map(
-      "Name", "${var.cluster_name}-${count.index}-etcd",
+      "Name", "${var.cluster_name}-etcd-${count.index}",
       "kubernetes.io/cluster/${var.cluster_name}", "owned",
       "tectonicClusterID", "${var.cluster_id}"
     ), var.extra_tags)}"
@@ -48,6 +48,6 @@ resource "aws_instance" "etcd_node" {
   root_block_device {
     volume_type = "${var.root_volume_type}"
     volume_size = "${var.root_volume_size}"
-    iops        = "${var.root_volume_iops}"
+    iops        = "${var.root_volume_type == "io1" ? var.root_volume_iops : 100}"
   }
 }

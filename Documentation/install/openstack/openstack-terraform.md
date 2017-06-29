@@ -8,13 +8,13 @@ Generally, the OpenStack platform templates adhere to the standards defined by t
 
 ## Prerequsities
 
- - **CoreOS Container Linux** - The latest Container Linux Beta (1353.2.0 or later) [uploaded into Glance](https://coreos.com/os/docs/latest/booting-on-openstack.html) and its OpenStack image ID.
- - **Tectonic Account** - Register for a [Tectonic Account][register], which is free for up to 10 nodes. You will need to provide the cluster license and pull secret below.
+* **Terraform**: Tectonic Installer includes and requires a specific version of Terraform. This is included in the Tectonic Installer tarball. See the [Tectonic Installer release notes][release-notes] for information about which Terraform versions are compatible.
+* **CoreOS Container Linux**: The latest Container Linux Beta (1353.2.0 or later) [uploaded into Glance](https://coreos.com/os/docs/latest/booting-on-openstack.html) and its OpenStack image ID.
+* **Tectonic Account**: Register for a [Tectonic Account][register], which is free for up to 10 nodes. You must provide the cluster license and pull secret during installation.
 
 ## Getting Started
-OpenStack is a highly customizable environment where different components can be enabled/disabled. This installation includes the following two flavors:
+OpenStack is a highly customizable environment where different components can be enabled/disabled. The installer currently supports only one flavor:
 
-- `nova`: Only Nova computing nodes are being created for etcd, master and worker nodes, assuming the nodes get public IPs assigned.
 - `neutron`: A private Neutron network is being created with master/worker nodes exposed via floating IPs connected to an etcd instance via an internal network.
 
 Replace `<flavor>` with either option in the following commands. Now we're ready to specify our cluster configuration.
@@ -24,8 +24,8 @@ Replace `<flavor>` with either option in the following commands. Now we're ready
 Open a new terminal, and run the following commands to download and extract Tectonic Installer.
 
 ```bash
-$ curl -O https://releases.tectonic.com/tectonic-1.6.2-tectonic.1.tar.gz # download
-$ tar xzvf tectonic-1.6.2-tectonic.1.tar.gz # extract the tarball
+$ curl -O https://releases.tectonic.com/tectonic-1.6.4-tectonic.1.tar.gz # download
+$ tar xzvf tectonic-1.6.4-tectonic.1.tar.gz # extract the tarball
 $ cd tectonic
 ```
 
@@ -86,13 +86,10 @@ Create a build directory to hold your customizations and copy the example file i
 
 ```
 $ mkdir -p build/${CLUSTER}
-# for Neutron:
 $ cp examples/terraform.tfvars.openstack-neutron build/${CLUSTER}/terraform.tfvars
-# for Nova:
-$ cp examples/terraform.tfvars.openstack-nova build/${CLUSTER}/terraform.tfvars
 ```
 
-Edit the parameters with your OpenStack details. View all of the [OpenStack Nova][openstack-nova-vars] and [OpenStack Neutron][openstack-neutron-vars] specific options and [the common Tectonic variables][vars].
+Edit the parameters with your OpenStack details. View all of the [OpenStack Neutron][openstack-neutron-vars] specific options and [the common Tectonic variables][vars].
 
 ## Deploy the cluster
 
@@ -112,7 +109,7 @@ This should run for a little bit, and when complete, your Tectonic cluster shoul
 
 If you encounter any issues, check the known issues and workarounds below.
 
-### Access the cluster
+## Access the cluster
 
 The Tectonic Console should be up and running after the containers have downloaded. You can access it at the DNS name configured in your variables file.
 
@@ -123,7 +120,18 @@ $ KUBECONFIG=generated/auth/kubeconfig
 $ kubectl cluster-info
 ```
 
-### Delete the cluster
+## Scale the cluster
+
+To scale worker nodes, adjust `tectonic_worker_count` in `terraform.vars` and run:
+
+```
+$ terraform apply $ terraform plan \
+  -var-file=build/${CLUSTER}/terraform.tfvars \
+  -target module.workers \
+  platforms/openstack/<flavor>
+```
+
+## Delete the cluster
 
 Deleting your cluster will remove only the infrastructure elements created by Terraform. If you selected an existing VPC and subnets, these items are not touched. To delete, run:
 
@@ -176,5 +184,5 @@ See the [troubleshooting][troubleshooting] document for workarounds for bugs tha
 [account]: https://account.coreos.com
 [vars]: ../../variables/config.md
 [troubleshooting]: ../../troubleshooting/faq.md
-[openstack-nova-vars]: ../../variables/openstack-nova.md
 [openstack-neutron-vars]: ../../variables/openstack-neutron.md
+[release-notes]: https://coreos.com/tectonic/releases/

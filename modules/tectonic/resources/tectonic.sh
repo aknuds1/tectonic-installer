@@ -18,7 +18,7 @@ KUBECTL="/kubectl --kubeconfig=$KUBECONFIG"
 function kubectl() {
   local i=0
 
-  echo "Executing kubectl $@"
+  echo "Executing kubectl" "$@"
   while true; do
     (( i++ )) && (( i == 100 )) && echo "kubectl failed, giving up" && exit 1
 
@@ -43,15 +43,16 @@ function kubectl() {
 }
 
 function wait_for_tpr() {
+  set +e
   local i=0
 
   echo "Waiting for TPR $2"
   until $KUBECTL -n "$1" get thirdpartyresources "$2"; do
-    (( i++ )) && (( i == 100 )) && echo "TPR $2 not available, giving up" && exit 1
-
-    echo "TPR $2 not available yet, retrying in 5 seconds"
+    (( i++ ))
+    echo "TPR $2 not available yet, retrying in 5 seconds ($i)"
     sleep 5
   done
+  set -e
 }
 
 function wait_for_pods() {
@@ -59,8 +60,8 @@ function wait_for_pods() {
   local i=0
   echo "Waiting for pods in namespace $1"
   while $KUBECTL -n "$1" get po -o custom-columns=STATUS:.status.phase,NAME:.metadata.name | tail -n +2 | grep -v '^Running'; do
-    (( i++ )) && (( i == 100 )) && echo "components not available, giving up" && exit 1
-    echo "Pods not available yet, waiting for 5 seconds"
+    (( i++ ))
+    echo "Pods not available yet, waiting for 5 seconds ($i)"
     sleep 5
   done
   set -e
@@ -70,13 +71,15 @@ function wait_for_pods() {
 cd "$ASSETS_PATH/tectonic"
 
 # Wait for Kubernetes to be in a proper state
+set +e
 i=0
 echo "Waiting for Kubernetes API..."
 until $KUBECTL cluster-info; do
-  (( i++ )) && (( i == 100 )) && echo "cluster not available, giving up" && exit 1
-  echo "Cluster not available yet, waiting for 5 seconds"
+  (( i++ ))
+  echo "Cluster not available yet, waiting for 5 seconds ($i)"
   sleep 5
 done
+set -e
 
 # wait for Kubernetes pods
 wait_for_pods kube-system
@@ -117,11 +120,18 @@ echo "Creating Tectonic Monitoring"
 kubectl create -f monitoring/prometheus-operator-cluster-role-binding.yaml
 kubectl create -f monitoring/prometheus-operator-cluster-role.yaml
 kubectl create -f monitoring/prometheus-operator-service-account.yaml
+kubectl create -f monitoring/prometheus-operator-svc.yaml
 kubectl create -f monitoring/prometheus-operator.yaml
 
 wait_for_tpr tectonic-system prometheus.monitoring.coreos.com
+wait_for_tpr tectonic-system alertmanager.monitoring.coreos.com
 wait_for_tpr tectonic-system service-monitor.monitoring.coreos.com
 
+kubectl create -f monitoring/alertmanager-config.yaml
+kubectl create -f monitoring/alertmanager-service.yaml
+kubectl create -f monitoring/alertmanager.yaml
+kubectl create -f monitoring/kube-controller-manager-svc.yaml
+kubectl create -f monitoring/kube-scheduler-svc.yaml
 kubectl create -f monitoring/kube-state-metrics-cluster-role-binding.yaml
 kubectl create -f monitoring/kube-state-metrics-cluster-role.yaml
 kubectl create -f monitoring/kube-state-metrics-deployment.yaml
@@ -133,13 +143,24 @@ kubectl create -f monitoring/prometheus-k8s-cluster-role-binding.yaml
 kubectl create -f monitoring/prometheus-k8s-cluster-role.yaml
 kubectl create -f monitoring/prometheus-k8s-rules.yaml
 kubectl create -f monitoring/prometheus-k8s-service-account.yaml
+kubectl create -f monitoring/prometheus-k8s-service-monitor-alertmanager.yaml
 kubectl create -f monitoring/prometheus-k8s-service-monitor-apiserver.yaml
+kubectl create -f monitoring/prometheus-k8s-service-monitor-kube-controller-manager.yaml
+kubectl create -f monitoring/prometheus-k8s-service-monitor-kube-scheduler.yaml
 kubectl create -f monitoring/prometheus-k8s-service-monitor-kube-state-metrics.yaml
 kubectl create -f monitoring/prometheus-k8s-service-monitor-kubelet.yaml
 kubectl create -f monitoring/prometheus-k8s-service-monitor-node-exporter.yaml
 kubectl create -f monitoring/prometheus-k8s-service-monitor-prometheus.yaml
+kubectl create -f monitoring/prometheus-k8s-service-monitor-prometheus-operator.yaml
 kubectl create -f monitoring/prometheus-k8s.yaml
 kubectl create -f monitoring/prometheus-svc.yaml
+
+kubectl create -f monitoring/tectonic-monitoring-auth-secret.yaml
+kubectl create -f monitoring/tectonic-monitoring-auth-alertmanager-deployment.yaml
+kubectl create -f monitoring/tectonic-monitoring-auth-alertmanager-svc.yaml
+kubectl create -f monitoring/tectonic-monitoring-auth-prometheus-deployment.yaml
+kubectl create -f monitoring/tectonic-monitoring-auth-prometheus-svc.yaml
+kubectl create -f monitoring/tectonic-monitoring-ingress.yaml
 
 echo "Creating Ingress"
 kubectl create -f ingress/default-backend/configmap.yaml
@@ -147,6 +168,7 @@ kubectl create -f ingress/default-backend/service.yaml
 kubectl create -f ingress/default-backend/deployment.yaml
 kubectl create -f ingress/ingress.yaml
 
+# shellcheck disable=SC2154
 if [ "${ingress_kind}" = "HostPort" ]; then
   kubectl create -f ingress/hostport/service.yaml
   kubectl create -f ingress/hostport/daemonset.yaml
@@ -162,26 +184,34 @@ kubectl create -f heapster/service.yaml
 kubectl create -f heapster/deployment.yaml
 kubectl create -f stats-emitter.yaml
 
+echo "Creating Operators"
+kubectl create -f updater/tectonic-channel-operator-kind.yaml
+kubectl create -f updater/app-version-kind.yaml
+kubectl create -f updater/migration-status-kind.yaml
+kubectl create -f updater/node-agent.yaml
+kubectl create -f updater/tectonic-monitoring-config.yaml
+
+wait_for_tpr tectonic-system channel-operator-config.coreos.com
+kubectl create -f updater/tectonic-channel-operator-config.yaml
+
+kubectl create -f updater/operators/kube-version-operator.yaml
+kubectl create -f updater/operators/tectonic-channel-operator.yaml
+kubectl create -f updater/operators/tectonic-prometheus-operator.yaml
+
+wait_for_tpr tectonic-system app-version.coreos.com
+kubectl create -f updater/app_versions/app-version-tectonic-cluster.yaml
+kubectl create -f updater/app_versions/app-version-kubernetes.yaml
+kubectl create -f updater/app_versions/app-version-tectonic-monitoring.yaml
+
 if [ "$EXPERIMENTAL" = "true" ]; then
-echo "Creating Tectonic Updater"
-  kubectl create -f updater/tectonic-channel-operator-kind.yaml
-  kubectl create -f updater/app-version-kind.yaml
-  kubectl create -f updater/migration-status-kind.yaml
-  kubectl create -f updater/node-agent.yaml
-  kubectl create -f updater/kube-version-operator.yaml
-  kubectl create -f updater/tectonic-channel-operator.yaml
-  kubectl create -f updater/tectonic-prometheus-operator.yaml
-  wait_for_tpr tectonic-system channel-operator-config.coreos.com
-  kubectl create -f updater/tectonic-channel-operator-config.yaml
-  wait_for_tpr tectonic-system app-version.coreos.com
-  kubectl create -f updater/app-version-tectonic-cluster.yaml
-  kubectl create -f updater/app-version-kubernetes.yaml
-  kubectl create -f updater/app-version-tectonic-monitoring.yaml
-  kubectl apply -f etcd/cluster-config.yaml
+  echo "Creating Experimental resources"
+  kubectl apply -f updater/cluster-config.yaml
+  kubectl create -f updater/app_versions/app-version-tectonic-etcd.yaml
+  kubectl create -f updater/operators/tectonic-etcd-operator.yaml
 fi
 
 echo "Creating Container Linux Updater"
-kubectl create -f updater/container-linux-update-operator.yaml
+kubectl create -f updater/operators/container-linux-update-operator.yaml
 
 # wait for Tectonic pods
 wait_for_pods tectonic-system

@@ -8,9 +8,10 @@ Generally, the Azure platform templates adhere to the standards defined by the p
 
 ## Prerequsities
 
- - **DNS** - Setup your DNS zone in a resource group called `tectonic-dns-group` or specify a different resource group using the `tectonic_azure_dns_resource_group` variable below. We use a separate resource group assuming that you have a zone that you already want to use. Follow the [docs to set one up][azure-dns].
- - **Tectonic Account** - Register for a [Tectonic Account][register], which is free for up to 10 nodes. You will need to provide the cluster license and pull secret below.
- - **Azure CLI** - The Azure Command line interface is required to generate Azure credentials.
+* **Terraform**: Tectonic Installer includes and requires a specific version of Terraform. This is included in the Tectonic Installer tarball. See the [Tectonic Installer release notes][release-notes] for information about which Terraform versions are compatible.
+* **DNS**: Set up your DNS zone in a resource group called `tectonic-dns-group` or specify a different resource group using the `tectonic_azure_dns_resource_group` variable below. We use a separate resource group assuming that you have a zone that you already want to use. Follow the [docs to set one up][azure-dns].
+* **Tectonic Account**: Register for a [Tectonic Account][register], which is free for up to 10 nodes. You must provide the cluster license and pull secret during installation.
+* **Azure CLI**: The Azure Command line interface is required to generate Azure credentials.
 
 ## Getting Started
 
@@ -19,8 +20,8 @@ Generally, the Azure platform templates adhere to the standards defined by the p
 Open a new terminal, and run the following commands to download and extract Tectonic Installer.
 
 ```bash
-$ curl -O https://releases.tectonic.com/tectonic-1.6.2-tectonic.1.tar.gz # download
-$ tar xzvf tectonic-1.6.2-tectonic.1.tar.gz # extract the tarball
+$ curl -O https://releases.tectonic.com/tectonic-1.6.4-tectonic.1.tar.gz # download
+$ tar xzvf tectonic-1.6.4-tectonic.1.tar.gz # extract the tarball
 $ cd tectonic
 ```
 
@@ -114,7 +115,7 @@ This should run for a little bit, and when complete, your Tectonic cluster shoul
 
 If you encounter any issues, check the known issues and workarounds below.
 
-### Access the cluster
+## Access the cluster
 
 The Tectonic Console should be up and running after the containers have downloaded. You can access it at the DNS name configured in your variables file.
 
@@ -125,19 +126,7 @@ $ KUBECONFIG=generated/auth/kubeconfig
 $ kubectl cluster-info
 ```
 
-### Delete the cluster
-
-Deleting your cluster will remove only the infrastructure elements created by Terraform. If you selected an existing resource group for DNS, this is not touched. To delete, run:
-
-```
-$ terraform destroy -var-file=build/${CLUSTER}/terraform.tfvars platforms/azure
-```
-
-### Known issues and workarounds
-
-See the [installer troubleshooting][troubleshooting] document for known problem points and workarounds.
-
-## Scaling the cluster
+## Scale the cluster
 
 To scale worker nodes, adjust `tectonic_worker_count` in `terraform.vars` and run:
 
@@ -146,6 +135,14 @@ $ terraform apply $ terraform plan \
   -var-file=build/${CLUSTER}/terraform.tfvars \
   -target module.workers \
   platforms/azure
+```
+
+## Delete the cluster
+
+Deleting your cluster will remove only the infrastructure elements created by Terraform. If you selected an existing resource group for DNS, this is not touched. To delete, run:
+
+```
+$ terraform destroy -var-file=build/${CLUSTER}/terraform.tfvars platforms/azure
 ```
 
 ## Under the hood
@@ -180,6 +177,11 @@ $ terraform apply $ terraform plan \
 * Worker VMs all share the same identical Ignition config
 * Worker nodes are not fronted by any LB and don't have public IP addresses. They can be accessed through SSH from any of the master nodes.
 
+## Known issues and workarounds
+
+See the [installer troubleshooting][troubleshooting] document for known problem points and workarounds.
+
+
 [conventions]: ../../conventions.md
 [generic]: ../../generic-platform.md
 [register]: https://account.coreos.com/signup/summary/tectonic-2016-12
@@ -192,3 +194,4 @@ $ terraform apply $ terraform plan \
 [azure-dns]: https://docs.microsoft.com/en-us/azure/dns/dns-getstarted-portal
 [vars]: ../../variables/config.md
 [azure-vars]: ../../variables/azure.md
+[release-notes]: https://coreos.com/tectonic/releases/

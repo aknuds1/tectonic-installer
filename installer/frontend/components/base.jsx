@@ -12,13 +12,15 @@ import { restoreModal } from './restore';
 import { WithTooltip } from './tooltip';
 import { PLATFORM_TYPE } from '../cluster-config';
 import { TectonicGA } from '../tectonic-ga';
+import { Header } from './header';
+import { Footer } from './footer';
 
 const downloadState = (state) => {
   const toSave = savable(state);
   const saved = JSON.stringify(toSave, null, 2);
   const stateBlob = new Blob([saved], {type: 'application/json'});
   saveAs(stateBlob, 'tectonic.progress');
-  TectonicGA.sendEvent('Installer Link', 'click', 'User downloads progress file');
+  TectonicGA.sendEvent('Installer Link', 'click', 'User downloads progress file', state.clusterConfig[PLATFORM_TYPE]);
 };
 
 const NavSection = connect(state => ({state}))(
@@ -109,11 +111,15 @@ class extends React.Component {
     const {router} = this.context;
 
     if (currentPage.path === '/define/cluster-type' && nextPage !== currentPage && state) {
-      TectonicGA.sendEvent('Platform Selected', 'user input', state.clusterConfig[PLATFORM_TYPE]);
+      TectonicGA.sendEvent('Platform Selected', 'user input', state.clusterConfig[PLATFORM_TYPE], state.clusterConfig[PLATFORM_TYPE]);
     }
 
     if (nextPage === currentPage) {
       return;
+    }
+
+    if (state) {
+      TectonicGA.sendEvent('Page Navigation Next', 'click', 'next on', state.clusterConfig[PLATFORM_TYPE]);
     }
     router.push(nextPage.path);
   }
@@ -142,60 +148,66 @@ class extends React.Component {
 
     const canNavigateForward = currentPage.component.canNavigateForward || (() => true);
     return (
-      <div className="wiz-wizard">
-        <div className="wiz-wizard__cell wiz-wizard__nav">
-          <NavSection
-              title="1. Choose Cluster Type"
-              navTrail={t}
-              sections={[trail.sections.choose]}
-              currentPage={currentPage}
-              handlePage={nav} />
-          <NavSection
-              title="2. Define Cluster"
-              navTrail={t}
-              sections={[trail.sections.defineBaremetal, trail.sections.defineAWS]}
-              currentPage={currentPage}
-              handlePage={nav} />
-          <NavSection
-              title="3. Boot Cluster"
-              navTrail={t}
-              sections={[
-                trail.sections.bootBaremetal,
-                trail.sections.bootAWS,
-                trail.sections.bootAWSTF,
-                trail.sections.bootDryRun,
-              ]}
-              currentPage={currentPage}
-              handlePage={nav} />
-        </div>
-        <div className="wiz-wizard__content wiz-wizard__cell">
-          <div className="wiz-form__header">
-            <span className="wiz-form__header__title">{this.props.title}</span>
-            {currentPage.showRestore &&
-              <span className="wiz-form__header__control">
-                <a onClick={restoreModal}><i className="fa fa-upload"></i>&nbsp;&nbsp;Restore progress</a>
-              </span>
-            }
-            {currentPage.hideSave ||
-             <span className="wiz-form__header__control">
-               <a onClick={() => downloadState(state)}><i className="fa fa-download"></i>&nbsp;&nbsp;Save progress</a>
-             </span>
-            }
+      <div className="tectonic">
+        <Header />
+        <div className="tectonic-installer">
+          <div className="wiz-wizard">
+            <div className="wiz-wizard__cell wiz-wizard__nav">
+              <NavSection
+                  title="1. Choose Cluster Type"
+                  navTrail={t}
+                  sections={[trail.sections.choose]}
+                  currentPage={currentPage}
+                  handlePage={nav} />
+              <NavSection
+                  title="2. Define Cluster"
+                  navTrail={t}
+                  sections={[trail.sections.defineBaremetal, trail.sections.defineAWS]}
+                  currentPage={currentPage}
+                  handlePage={nav} />
+              <NavSection
+                  title="3. Boot Cluster"
+                  navTrail={t}
+                  sections={[
+                    trail.sections.bootBaremetal,
+                    trail.sections.bootAWS,
+                    trail.sections.bootAWSTF,
+                    trail.sections.bootDryRun,
+                  ]}
+                  currentPage={currentPage}
+                  handlePage={nav} />
+            </div>
+            <div className="wiz-wizard__content wiz-wizard__cell">
+              <div className="wiz-form__header">
+                <span className="wiz-form__header__title">{this.props.title}</span>
+                {currentPage.showRestore &&
+                  <span className="wiz-form__header__control">
+                    <a onClick={restoreModal}><i className="fa fa-upload"></i>&nbsp;&nbsp;Restore progress</a>
+                  </span>
+                }
+                {currentPage.hideSave ||
+                 <span className="wiz-form__header__control">
+                   <a onClick={() => downloadState(state)}><i className="fa fa-download"></i>&nbsp;&nbsp;Save progress</a>
+                 </span>
+                }
+              </div>
+              <div className="wiz-wizard__content__body">
+                {kids}
+              </div>
+              {
+                currentPage.hidePager ||
+                <Pager
+                    showPrev={!!prevPage}
+                    showNext={!!nextPage}
+                    disableNext={!canNavigateForward(state)}
+                    navigatePrevious={navigatePrevious}
+                    resetBtn={t.canReset}
+                    navigateNext={navigateNext} />
+              }
+            </div>
           </div>
-          <div className="wiz-wizard__content__body">
-            {kids}
-          </div>
-          {
-            currentPage.hidePager ||
-            <Pager
-                showPrev={!!prevPage}
-                showNext={!!nextPage}
-                disableNext={!canNavigateForward(state)}
-                navigatePrevious={navigatePrevious}
-                resetBtn={t.canReset}
-                navigateNext={navigateNext} />
-          }
         </div>
+        <Footer />
       </div>
     );
   }

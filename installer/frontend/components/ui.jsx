@@ -11,6 +11,7 @@ import { toError, toAsyncError, toExtraData, toInFly, toExtraDataInFly, toExtraD
 import { configActionTypes, dirtyActionTypes, configActions } from '../actions';
 import { DESELECTED_FIELDS } from '../cluster-config.js';
 
+import { Alert } from './alert';
 
 // Use this function to dirty a field due to
 // non-user interaction (like uploading a config file)
@@ -68,7 +69,16 @@ const FIELD_PROPS = ImmutableSet([
   'width',
 ]);
 
-export const ErrorComponent = props => props.error ? <div className="wiz-error-message">{props.error}</div> : <span/>;
+export const ErrorComponent = props => {
+  const error = props.error;
+  if (props.ErrorComponent) {
+    return <props.ErrorComponent error={error} />;
+  }
+  if (error) {
+    return <Alert severity='error'>{error}</Alert>;
+  }
+  return <span />;
+};
 
 const Field = connect(
   (state, {id}) => ({isDirty: _.get(state.dirty, id)}),
@@ -677,6 +687,97 @@ export class AsyncSelect extends React.Component {
             {props.invalid}
           </div>
         }
+      </div>
+    );
+  }
+}
+
+class InnerFieldList_ extends React.Component {
+  render() {
+    const {value, removeField, children, fields, id} = this.props;
+    const onlyChild = React.Children.only(children);
+    const newChildren = _.map(value, (unused, i) => {
+      const row = {};
+      _.keys(fields).forEach(k => row[k] = `${id}.${i}.${k}`);
+      const childProps = { row, i, key: i, remove: () => removeField(id, i) };
+      if (i === value.length - 1) {
+        childProps.autoFocus = true;
+      }
+      return React.cloneElement(onlyChild, childProps);
+    });
+    return <div>{newChildren}</div>;
+  }
+}
+
+export const ConnectedFieldList = connect(
+  ({clusterConfig}, {id}) => ({value: clusterConfig[id]}),
+  (dispatch) => ({removeField: (id, i) => dispatch(configActions.removeField(id, i))})
+)((props) => <InnerFieldList_ {...props} />);
+
+
+export class DropdownMixin extends React.PureComponent {
+  constructor(props) {
+    super(props);
+    this.listener = this._onWindowClick.bind(this);
+    this.state = {active: !!props.active};
+    this.toggle = this.toggle.bind(this);
+    this.hide = this.hide.bind(this);
+  }
+
+  _onWindowClick ( event ) {
+    if (!this.state.active ) {
+      return;
+    }
+    const {dropdownElement} = this.refs;
+
+    if( event.target === dropdownElement || dropdownElement.contains(event.target)) {
+      return;
+    }
+    this.hide();
+  }
+
+  componentDidMount () {
+    window.addEventListener('click', this.listener);
+  }
+
+  componentWillUnmount () {
+    window.removeEventListener('click', this.listener);
+  }
+
+  onClick_ (key, e) {
+    e.stopPropagation();
+    this.setState({active: false});
+  }
+
+  toggle () {
+    this.setState({active: !this.state.active});
+  }
+
+  hide (e) {
+    e && e.stopPropagation();
+    this.setState({active: false});
+  }
+}
+
+export class Dropdown extends DropdownMixin {
+  render() {
+    const {active} = this.state;
+    const {items, header} = this.props;
+
+    const children = _.map(items, (href, key) => {
+      return <li className="tectonic-dropdown-menu-item" key={key}>
+        <a className="tectonic-dropdown-menu-item__link" href={href} key={key} target="_blank">
+          {key}
+        </a>
+      </li>;
+    });
+
+    return (
+      <div ref="dropdownElement">
+        <div className="dropdown" onClick={this.toggle}>
+          <a className="tectonic-dropdown-menu-title">{header}&nbsp;&nbsp;<i className="fa fa-angle-down" aria-hidden="true"></i></a>
+          <ul className="dropdown-menu tectonic-dropdown-menu" style={{display: active ? 'block' : 'none'}}>{children}</ul>
+        </div>
       </div>
     );
   }

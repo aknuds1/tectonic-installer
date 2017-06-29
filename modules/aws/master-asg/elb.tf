@@ -1,10 +1,12 @@
 resource "aws_elb" "api-internal" {
-  name            = "${var.cluster_name}-api-internal"
+  name            = "${var.cluster_name}-int"
   subnets         = ["${var.subnet_ids}"]
   internal        = true
   security_groups = ["${var.api_sg_ids}"]
 
-  idle_timeout = 3600
+  idle_timeout                = 3600
+  connection_draining         = true
+  connection_draining_timeout = 300
 
   listener {
     instance_port     = 443
@@ -17,12 +19,12 @@ resource "aws_elb" "api-internal" {
     healthy_threshold   = 2
     unhealthy_threshold = 2
     timeout             = 3
-    target              = "TCP:443"
+    target              = "SSL:443"
     interval            = 5
   }
 
   tags = "${merge(map(
-      "Name", "${var.cluster_name}-api-internal",
+      "Name", "${var.cluster_name}-int",
       "kubernetes.io/cluster/${var.cluster_name}", "owned",
       "tectonicClusterID", "${var.cluster_id}"
     ), var.extra_tags)}"
@@ -42,12 +44,14 @@ resource "aws_route53_record" "api-internal" {
 
 resource "aws_elb" "api-external" {
   count           = "${var.public_vpc}"
-  name            = "${var.custom_dns_name == "" ? var.cluster_name : var.custom_dns_name}-api-external"
+  name            = "${var.custom_dns_name == "" ? var.cluster_name : var.custom_dns_name}-ext"
   subnets         = ["${var.subnet_ids}"]
   internal        = false
   security_groups = ["${var.api_sg_ids}"]
 
-  idle_timeout = 3600
+  idle_timeout                = 3600
+  connection_draining         = true
+  connection_draining_timeout = 300
 
   listener {
     instance_port     = 22
@@ -67,7 +71,7 @@ resource "aws_elb" "api-external" {
     healthy_threshold   = 2
     unhealthy_threshold = 2
     timeout             = 3
-    target              = "TCP:443"
+    target              = "SSL:443"
     interval            = 5
   }
 
@@ -92,7 +96,7 @@ resource "aws_route53_record" "api-external" {
 }
 
 resource "aws_elb" "console" {
-  name            = "${var.custom_dns_name == "" ? var.cluster_name : var.custom_dns_name}-console"
+  name            = "${var.custom_dns_name == "" ? var.cluster_name : var.custom_dns_name}-con"
   subnets         = ["${var.subnet_ids}"]
   internal        = "${var.public_vpc ? false : true}"
   security_groups = ["${var.console_sg_ids}"]

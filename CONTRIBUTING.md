@@ -1,18 +1,24 @@
 # How to Contribute
 
 CoreOS projects are [Apache 2.0 licensed](LICENSE) and accept contributions via
-GitHub pull requests.  This document outlines some of the conventions on
+GitHub pull requests. This document outlines some of the conventions on
 development workflow, commit message formatting, contact points and other
 resources to make it easier to get your contribution accepted.
 
-# Certificate of Origin
+# Tectonic Installer contributions
+
+Tectonic Installer provides specific guidelines for the modification of included Terraform modules. For more information, please see [Modifying Tectonic Installer][modify-installer].
+
+For more information on Terraform, please see the [Terraform Documentation][tf-doc].
+
+## Certificate of Origin
 
 By contributing to this project you agree to the Developer Certificate of
 Origin (DCO). This document was created by the Linux Kernel community and is a
 simple statement that you, as a contributor, have the legal right to make the
 contribution. See the [DCO](DCO) file for details.
 
-# Email and Chat
+## Email and Chat
 
 The project currently uses the general CoreOS email list and IRC channel:
 - Email: [coreos-dev](https://groups.google.com/forum/#!forum/coreos-dev)
@@ -21,13 +27,17 @@ The project currently uses the general CoreOS email list and IRC channel:
 Please avoid emailing maintainers found in the MAINTAINERS file directly. They
 are very busy and read the mailing lists.
 
+##  Reporting a security vulnerability
+
+Due to their public nature, GitHub and mailing lists are not appropriate places for reporting vulnerabilities. Please refer to CoreOS's [security disclosure][disclosure] process when reporting issues that may be security related.
+
 ## Getting Started
 
 - Fork the repository on GitHub
 - Read the [README](README.md) for build and test instructions
 - Play with the project, submit bugs, submit patches!
 
-## Contribution Flow
+### Contribution Flow
 
 This is a rough outline of what a contributor's workflow looks like:
 
@@ -40,13 +50,17 @@ This is a rough outline of what a contributor's workflow looks like:
 
 Thanks for your contributions!
 
-### Coding Style
+## Coding Style
 
-CoreOS projects written in Go follow a set of style guidelines that we've documented 
-[here](https://github.com/coreos/docs/tree/master/golang). Please follow them when 
+CoreOS projects written in Go follow a set of style guidelines that we've documented in [Go at CoreOS][coreos-golang]. Please follow them when
 working on your contributions.
 
-### Format of the Commit Message
+
+Tectonic Installer includes syntax checks on the Terraform templates which will fail the PR checker for non-standard formatted code.
+
+Use `make structure-check` to identify files that don't meet the canonical format and style. Then, use `terraform fmt` to align the template syntax, if necessary.
+
+## Format of the Commit Message
 
 We follow a rough convention for commit messages that is designed to answer two
 questions: what changed and why. The subject line should feature the what and
@@ -55,7 +69,7 @@ the body of the commit should describe the why.
 ```
 scripts: add the test-cluster command
 
-this uses tmux to setup a test cluster that you can easily kill and
+this uses tmux to set up a test cluster that you can easily kill and
 start for debugging.
 
 Fixes #38
@@ -75,3 +89,9 @@ The first line is the subject and should be no longer than 70 characters, the
 second line is always blank, and other lines should be wrapped at 80 characters.
 This allows the message to be easier to read on GitHub as well as in various
 git tools.
+
+
+[modify-installer]: Documentation/contrib/modify-installer.md
+[tf-doc]: https://www.terraform.io/docs/index.html
+[coreos-golang]: https://github.com/coreos/docs/tree/master/golang
+[disclosure]: https://coreos.com/security/disclosure/

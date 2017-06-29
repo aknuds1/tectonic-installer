@@ -23,10 +23,25 @@ module "bootkube" {
   oidc_groups_claim   = "groups"
   oidc_client_id      = "tectonic-kubectl"
 
-  etcd_endpoints   = ["${openstack_compute_instance_v2.etcd_node.*.access_ip_v4}"]
+  etcd_endpoints   = ["${aws_route53_record.etc_a_nodes.*.fqdn}"]
   etcd_ca_cert     = "${var.tectonic_etcd_ca_cert_path}"
   etcd_client_cert = "${var.tectonic_etcd_client_cert_path}"
   etcd_client_key  = "${var.tectonic_etcd_client_key_path}"
+  etcd_tls_enabled = "${var.tectonic_etcd_tls_enabled}"
+
+  etcd_cert_dns_names = [
+    "${var.tectonic_cluster_name}-etcd-0.${var.tectonic_base_domain}",
+    "${var.tectonic_cluster_name}-etcd-1.${var.tectonic_base_domain}",
+    "${var.tectonic_cluster_name}-etcd-2.${var.tectonic_base_domain}",
+    "${var.tectonic_cluster_name}-etcd-3.${var.tectonic_base_domain}",
+    "${var.tectonic_cluster_name}-etcd-4.${var.tectonic_base_domain}",
+    "${var.tectonic_cluster_name}-etcd-5.${var.tectonic_base_domain}",
+    "${var.tectonic_cluster_name}-etcd-6.${var.tectonic_base_domain}",
+  ]
+
+  experimental_enabled = "${var.tectonic_experimental}"
+
+  master_count = "${var.tectonic_master_count}"
 }
 
 module "tectonic" {
@@ -59,8 +74,8 @@ module "tectonic" {
   kubectl_client_id = "tectonic-kubectl"
   ingress_kind      = "HostPort"
   experimental      = "${var.tectonic_experimental}"
-
-  master_count = "${var.tectonic_master_count}"
+  master_count      = "${var.tectonic_master_count}"
+  stats_url         = "${var.tectonic_stats_url}"
 }
 
 module "etcd" {
@@ -72,16 +87,26 @@ nameserver 8.8.8.8
 nameserver 8.8.4.4
 EOF
 
-  base_domain      = "${var.tectonic_base_domain}"
-  cluster_name     = "${var.tectonic_cluster_name}"
-  container_image  = "${var.tectonic_container_images["etcd"]}"
-  core_public_keys = ["${module.secrets.core_public_key_openssh}"]
+  base_domain           = "${var.tectonic_base_domain}"
+  cluster_name          = "${var.tectonic_cluster_name}"
+  container_image       = "${var.tectonic_container_images["etcd"]}"
+  core_public_keys      = ["${module.secrets.core_public_key_openssh}"]
+  tectonic_experimental = "${var.tectonic_experimental}"
+  tls_enabled           = "${var.tectonic_etcd_tls_enabled}"
+
+  tls_ca_crt_pem     = "${module.bootkube.etcd_ca_crt_pem}"
+  tls_client_crt_pem = "${module.bootkube.etcd_client_crt_pem}"
+  tls_client_key_pem = "${module.bootkube.etcd_client_key_pem}"
+  tls_peer_crt_pem   = "${module.bootkube.etcd_peer_crt_pem}"
+  tls_peer_key_pem   = "${module.bootkube.etcd_peer_key_pem}"
+
+  instance_count = "${var.tectonic_etcd_count}"
 }
 
 data "null_data_source" "local" {
   inputs = {
-    kube_image_url = "${element(split(":", var.tectonic_container_images["hyperkube"]), 0)}"
-    kube_image_tag = "${element(split(":", var.tectonic_container_images["hyperkube"]), 1)}"
+    kube_image_url = "${replace(var.tectonic_container_images["hyperkube"],var.tectonic_image_re,"$1")}"
+    kube_image_tag = "${replace(var.tectonic_container_images["hyperkube"],var.tectonic_image_re,"$2")}"
   }
 }
 
@@ -106,6 +131,7 @@ EOF
   hostname_infix               = "master"
   node_labels                  = "node-role.kubernetes.io/master"
   node_taints                  = "node-role.kubernetes.io/master=:NoSchedule"
+  tectonic_experimental        = "${var.tectonic_experimental}"
 }
 
 module "worker_nodes" {
@@ -134,4 +160,10 @@ EOF
 module "secrets" {
   source       = "../../../modules/openstack/secrets"
   cluster_name = "${var.tectonic_cluster_name}"
+}
+
+module "secgroups" {
+  source                = "../../../modules/openstack/secgroups"
+  cluster_name          = "${var.tectonic_cluster_name}"
+  tectonic_experimental = "${var.tectonic_experimental}"
 }
