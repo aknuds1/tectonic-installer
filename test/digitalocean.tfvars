@@ -1,0 +1,13 @@
+tectonic_do_worker_droplet_size = "4gb"
+tectonic_worker_count = "4"
+tectonic_etcd_count = "3"
+tectonic_base_domain = "socialfoodie.club"
+tectonic_cluster_name = "coreos-testing"
+tectonic_admin_email = "example@coreos.com"
+tectonic_admin_password_hash = "$2a$12$k9wa31uE/4uD9aVtT/vNtOZwxXyEJ/9DwXXEYB/eUpb9fvEPsH/kO"
+tectonic_license_path = "./tectonic-license.txt"
+tectonic_pull_secret_path = "./config.json"
+tectonic_do_ssh_keys = ["10342047"]
+tectonic_do_droplet_region = "fra1"
+tectonic_do_ssh_key_path = "/Users/arve/.ssh/id_rsa"
+tectonic_vanilla_k8s = false
