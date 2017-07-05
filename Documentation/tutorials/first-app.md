@@ -28,7 +28,7 @@ Then, download the `kubectl-config` and `kubectl` files.
 
 1. Click *Generate Configuration* to open the *Download kubectl Configuration* window, and follow the instructions provided.
 2. Click *Download Configuration* to download your `kubectl-config` file.
-3. Click *Mac*, *Linux*, or *Windows* to download the `kubectl` binary for your operating system. 
+3. Click *Mac* or *Linux* to download the `kubectl` binary for your operating system. 
 
 Click *I’m Done* to exit the download window, and return to the console.
 
@@ -180,7 +180,7 @@ You can also deploy an application using the Tectonic Console by navigating to t
 This example will use the simple app deployed above. To create an identical app using the Tectonic Console, first delete the existing app using `kubectl delete`.
 
 ```sh
-$ kubectl delete deploy/simple-service svc/simple-service
+$ kubectl delete deploy/simple-deployment svc/simple-service
 deployment "simple-deployment" deleted
 service "simple-service" deleted
 ```

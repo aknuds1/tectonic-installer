@@ -3,19 +3,22 @@ variable "container_images" {
   type        = "map"
 }
 
+variable "versions" {
+  description = "Container versions to use"
+  type        = "map"
+}
+
 variable "kube_apiserver_url" {
   description = "URL used to reach kube-apiserver"
   type        = "string"
 }
 
-variable "kube_apiserver_service_ip" {
-  description = "Service IP used to reach kube-apiserver inside the cluster"
-  type        = "string"
+variable "etcd_tls_enabled" {
+  default = false
 }
 
-variable "kube_dns_service_ip" {
-  description = "Service IP used to reach kube-dns"
-  type        = "string"
+variable "etcd_cert_dns_names" {
+  type = "list"
 }
 
 variable "etcd_endpoints" {
@@ -33,11 +36,6 @@ variable "etcd_client_cert" {
 
 variable "etcd_client_key" {
   type = "string"
-}
-
-variable "etcd_service_ip" {
-  description = "Service IP used to reach etcd"
-  type        = "string"
 }
 
 variable "experimental_enabled" {
@@ -103,4 +101,21 @@ variable "oidc_username_claim" {
 variable "oidc_groups_claim" {
   description = "The OpenID claim to use for specifying user groups (string or array of strings)"
   type        = "string"
+}
+
+variable "master_count" {
+  description = "The number of the master nodes"
+  type        = "string"
+}
+
+variable "node_monitor_grace_period" {
+  description = "Amount of time which we allow running Node to be unresponsive before marking it unhealthy. Must be N times more than kubelet's nodeStatusUpdateFrequency, where N means number of retries allowed for kubelet to post node status. N must be stricly > 1."
+  type        = "string"
+  default     = "40s"
+}
+
+variable "pod_eviction_timeout" {
+  description = "The grace period for deleting pods on failed nodes. The eviction process will start after node_monitor_grace_period + pod_eviction_timeout."
+  type        = "string"
+  default     = "5m"
 }

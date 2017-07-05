@@ -6,6 +6,11 @@ metadata:
   name: etcd-operator
   namespace: kube-system
 spec: 
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
   replicas: 1
   template: 
     metadata: 
@@ -22,8 +27,15 @@ spec:
               valueFrom: 
                 fieldRef: 
                   fieldPath: metadata.name
+            - name: HOME
+              value: /tmp
           image: ${etcd_operator_image}
           name: etcd-operator
+      nodeSelector:
+        node-role.kubernetes.io/master: ""
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
       tolerations:
       - key: node-role.kubernetes.io/master
         operator: Exists

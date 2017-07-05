@@ -21,18 +21,24 @@ installer-env: $(INSTALLER_BIN) terraformrc.example
 
 localconfig:
 	mkdir -p $(BUILD_DIR)
+	cp examples/*$(subst /,-,$(PLATFORM)) $(BUILD_DIR)/terraform.tfvars
 
-terraform-get:
-	cd $(BUILD_DIR) && $(TF_CMD) get $(TOP_DIR)/platforms/$(PLATFORM)
+terraform-init:
+ifneq ($(shell $(TF_CMD) version | grep -E "Terraform v0\.1[0-9]\.[0-9]+"), )
+	cd $(BUILD_DIR) && $(TF_CMD) init $(TF_INIT_OPTIONS) $(TOP_DIR)/platforms/$(PLATFORM)
+endif
+
+terraform-get: terraform-init
+	cd $(BUILD_DIR) && $(TF_CMD) get $(TF_GET_OPTIONS) $(TOP_DIR)/platforms/$(PLATFORM)
 
 plan: installer-env terraform-get
-	cd $(BUILD_DIR) && $(TF_CMD) plan $(TOP_DIR)/platforms/$(PLATFORM)
+	cd $(BUILD_DIR) && $(TF_CMD) plan $(TF_PLAN_OPTIONS) $(TOP_DIR)/platforms/$(PLATFORM)
 
 apply: installer-env terraform-get
-	cd $(BUILD_DIR) && $(TF_CMD) apply $(TOP_DIR)/platforms/$(PLATFORM)
+	cd $(BUILD_DIR) && $(TF_CMD) apply $(TF_APPLY_OPTIONS) $(TOP_DIR)/platforms/$(PLATFORM)
 
 destroy: installer-env terraform-get
-	cd $(BUILD_DIR) && $(TF_CMD) destroy -force $(TOP_DIR)/platforms/$(PLATFORM)
+	cd $(BUILD_DIR) && $(TF_CMD) destroy $(TF_DESTROY_OPTIONS) -force $(TOP_DIR)/platforms/$(PLATFORM)
 
 payload:
 	@${TOP_DIR}/modules/update-payload/make-update-payload.sh > /dev/null
@@ -47,7 +53,7 @@ define terraform-docs
 endef
 
 define terraform-examples
-	$(if $(TF_EXAMPLES),,$(error "terraform-examples revision >= 83d7ad6 is required (https://github.com/segmentio/terraform-docs)"))
+	$(if $(TF_EXAMPLES),,$(error "terraform-examples revision >= 83d7ad6 is required (https://github.com/s-urbaniak/terraform-examples)"))
 	terraform-examples $2 $3 $4 $5 > $1
 endef
 
@@ -64,10 +70,6 @@ docs:
 			'This document gives an overview of variables used in the Azure platform of the Tectonic SDK.', \
 			platforms/azure/variables.tf)
 
-	$(call terraform-docs, Documentation/variables/openstack-nova.md, \
-			'This document gives an overview of variables used in the Openstack/Nova platform of the Tectonic SDK.', \
-			platforms/openstack/nova/variables.tf)
-
 	$(call terraform-docs, Documentation/variables/openstack-neutron.md, \
 			'This document gives an overview of variables used in the Openstack/Neutron platform of the Tectonic SDK.', \
 			platforms/openstack/neutron/variables.tf)
@@ -75,6 +77,10 @@ docs:
 	$(call terraform-docs, Documentation/variables/metal.md, \
 			'This document gives an overview of variables used in the bare metal platform of the Tectonic SDK.', \
 			platforms/metal/variables.tf)
+
+	$(call terraform-docs, Documentation/variables/vmware.md, \
+			'This document gives an overview of variables used in the VMware platform of the Tectonic SDK.', \
+			platforms/vmware/variables.tf)
 
 examples:
 	$(call terraform-examples, examples/terraform.tfvars.aws, \
@@ -87,11 +93,6 @@ examples:
 			platforms/azure/variables.tf)
 
 	$(call terraform-examples, \
-			examples/terraform.tfvars.openstack-nova, \
-			config.tf, \
-			platforms/openstack/nova/variables.tf)
-
-	$(call terraform-examples, \
 			examples/terraform.tfvars.openstack-neutron, \
 			config.tf, \
 			platforms/openstack/neutron/variables.tf)
@@ -100,6 +101,11 @@ examples:
 			examples/terraform.tfvars.metal, \
 			config.tf, \
 			platforms/metal/variables.tf)
+
+	$(call terraform-examples, \
+			examples/terraform.tfvars.vmware, \
+			config.tf, \
+			platforms/vmware/variables.tf)
 
 clean: destroy
 	rm -rf $(BUILD_DIR)
@@ -111,7 +117,15 @@ structure-check:
 	$(eval FMT_ERR := $(shell terraform fmt -list -write=false .))
 	@if [ "$(FMT_ERR)" != "" ]; then echo "misformatted files (run 'terraform fmt .' to fix):" $(FMT_ERR); exit 1; fi
 
-canonical-syntax:
-	terraform fmt -list .
+	@if make docs && ! git diff --exit-code; then echo "outdated docs (run 'make docs' to fix)"; exit 1; fi
+	@if make examples && ! git diff --exit-code; then echo "outdated examples (run 'make examples' to fix)"; exit 1; fi
 
-.PHONY: make clean terraform terraform-dev structure-check canonical-syntax docs examples terraform-get
+SMOKE_SOURCES := $(shell find $(TOP_DIR)/tests/smoke -name '*.go')
+bin/smoke: $(SMOKE_SOURCES)
+	@CGO_ENABLED=0 go test ./tests/smoke/ -c -o bin/smoke
+
+vendor-smoke: $(TOP_DIR)/tests/smoke/glide.yaml
+	@cd $(TOP_DIR)/tests/smoke && glide up -v
+	@cd $(TOP_DIR)/tests/smoke && glide-vc --use-lock-file --no-tests --only-code
+
+.PHONY: make clean terraform terraform-dev structure-check docs examples terraform-get terraform-init

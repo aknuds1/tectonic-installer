@@ -43,25 +43,26 @@ tectonic_cluster_cidr = "10.2.0.0/16"
 // If used in a cloud-environment, this will be prepended to `tectonic_base_domain` resulting in the URL to the Tectonic console.
 // 
 // Note: This field MUST be set manually prior to creating the cluster.
+// Warning: Special characters in the name like '.' may cause errors on OpenStack platforms due to resource name constraints.
 tectonic_cluster_name = ""
 
 // (optional) The path of the file containing the CA certificate for TLS communication with etcd.
 // 
 // Note: This works only when used in conjunction with an external etcd cluster.
 // If set, the variables `tectonic_etcd_servers`, `tectonic_etcd_client_cert_path`, and `tectonic_etcd_client_key_path` must also be set.
-// tectonic_etcd_ca_cert_path = ""
+// tectonic_etcd_ca_cert_path = "/dev/null"
 
 // (optional) The path of the file containing the client certificate for TLS communication with etcd.
 // 
 // Note: This works only when used in conjunction with an external etcd cluster.
 // If set, the variables `tectonic_etcd_servers`, `tectonic_etcd_ca_cert_path`, and `tectonic_etcd_client_key_path` must also be set.
-// tectonic_etcd_client_cert_path = ""
+// tectonic_etcd_client_cert_path = "/dev/null"
 
 // (optional) The path of the file containing the client key for TLS communication with etcd.
 // 
 // Note: This works only when used in conjunction with an external etcd cluster.
 // If set, the variables `tectonic_etcd_servers`, `tectonic_etcd_ca_cert_path`, and `tectonic_etcd_client_cert_path` must also be set.
-// tectonic_etcd_client_key_path = ""
+// tectonic_etcd_client_key_path = "/dev/null"
 
 // The number of etcd nodes to be created.
 // If set to zero, the count of etcd nodes will be determined automatically.
@@ -75,24 +76,17 @@ tectonic_etcd_count = "0"
 // Example: `["etcd1", "etcd2", "etcd3"]`
 // tectonic_etcd_servers = ""
 
+// (optional) If set to `true`, TLS secure communication for self-provisioned etcd. will be used.
+// 
+// Note: If `tectonic_experimental` is set to `true` this variable has no effect, because the experimental self-hosted etcd always uses TLS.
+// tectonic_etcd_tls_enabled = true
+
 // If set to true, experimental Tectonic assets are being deployed.
 tectonic_experimental = false
 
-// The Kubernetes service IP used to reach kube-apiserver inside the cluster
-// as returned by `kubectl -n default get service kubernetes`.
-tectonic_kube_apiserver_service_ip = "10.3.0.1"
-
-// The Kubernetes service IP used to reach kube-dns inside the cluster
-// as returned by `kubectl -n kube-system get service kube-dns`.
-tectonic_kube_dns_service_ip = "10.3.0.10"
-
-// The Kubernetes service IP used to reach self-hosted etcd inside the cluster
-// as returned by `kubectl -n kube-system get service etcd-service`.
-tectonic_kube_etcd_service_ip = "10.3.0.15"
-
 // The path to the tectonic licence file.
 // 
-// Note: This field MUST be set manually prior to creating the cluster.
+// Note: This field MUST be set manually prior to creating the cluster unless `tectonic_vanilla_k8s` is set to `true`.
 tectonic_license_path = ""
 
 // The number of master nodes to be created.
@@ -200,16 +194,19 @@ tectonic_metal_worker_names = ""
 
 // The path the pull secret file in JSON format.
 // 
-// Note: This field MUST be set manually prior to creating the cluster.
+// Note: This field MUST be set manually prior to creating the cluster unless `tectonic_vanilla_k8s` is set to `true`.
 tectonic_pull_secret_path = ""
 
-// This declares the IP range to assign Kubernetes service cluster IPs in CIDR notation.
+// This declares the IP range to assign Kubernetes service cluster IPs in CIDR notation. The maximum size of this IP range is /12
 tectonic_service_cidr = "10.3.0.0/16"
 
 // SSH public key to use as an authorized key.
 // 
 // Example: `ssh-rsa AAAB3N...`
 tectonic_ssh_authorized_key = ""
+
+// The Tectonic statistics collection URL to which to report.
+tectonic_stats_url = "https://stats-collector.tectonic.com"
 
 // If set to true, a vanilla Kubernetes cluster will be deployed, omitting any Tectonic assets.
 tectonic_vanilla_k8s = false

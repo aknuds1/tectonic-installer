@@ -7,6 +7,7 @@ module "bootkube" {
 
   # Platform-independent variables wiring, do not modify.
   container_images = "${var.tectonic_container_images}"
+  versions         = "${var.tectonic_versions}"
 
   ca_cert    = "${var.tectonic_ca_cert}"
   ca_key     = "${var.tectonic_ca_key}"
@@ -15,9 +16,6 @@ module "bootkube" {
   service_cidr = "${var.tectonic_service_cidr}"
   cluster_cidr = "${var.tectonic_cluster_cidr}"
 
-  kube_apiserver_service_ip = "${var.tectonic_kube_apiserver_service_ip}"
-  kube_dns_service_ip       = "${var.tectonic_kube_dns_service_ip}"
-
   advertise_address = "0.0.0.0"
   anonymous_auth    = "false"
 
@@ -25,11 +23,12 @@ module "bootkube" {
   oidc_groups_claim   = "groups"
   oidc_client_id      = "tectonic-kubectl"
 
-  etcd_endpoints   = ["${module.etcd.ip_address}"]
+  etcd_endpoints   = ["${module.vnet.etcd_public_ip}"]
   etcd_ca_cert     = "${var.tectonic_etcd_ca_cert_path}"
   etcd_client_cert = "${var.tectonic_etcd_client_cert_path}"
   etcd_client_key  = "${var.tectonic_etcd_client_key_path}"
-  etcd_service_ip  = "${var.tectonic_kube_etcd_service_ip}"
+
+  master_count = "${var.tectonic_master_count}"
 }
 
 module "tectonic" {
@@ -43,8 +42,8 @@ module "tectonic" {
   container_images = "${var.tectonic_container_images}"
   versions         = "${var.tectonic_versions}"
 
-  license_path     = "${pathexpand(var.tectonic_license_path)}"
-  pull_secret_path = "${pathexpand(var.tectonic_pull_secret_path)}"
+  license_path     = "${var.tectonic_vanilla_k8s ? "/dev/null" : pathexpand(var.tectonic_license_path)}"
+  pull_secret_path = "${var.tectonic_vanilla_k8s ? "/dev/null" : pathexpand(var.tectonic_pull_secret_path)}"
 
   admin_email         = "${var.tectonic_admin_email}"
   admin_password_hash = "${var.tectonic_admin_password_hash}"
@@ -63,6 +62,7 @@ module "tectonic" {
   ingress_kind      = "NodePort"
   experimental      = "${var.tectonic_experimental}"
   master_count      = "${var.tectonic_master_count}"
+  stats_url         = "${var.tectonic_stats_url}"
 }
 
 resource "null_resource" "tectonic" {
@@ -79,7 +79,7 @@ resource "null_resource" "tectonic" {
   }
 
   provisioner "file" {
-    source      = "${path.cwd}/generated"
+    source      = "./generated"
     destination = "$HOME/tectonic"
   }
 
@@ -88,7 +88,7 @@ resource "null_resource" "tectonic" {
       "sudo mkdir -p /opt",
       "sudo rm -rf /opt/tectonic",
       "sudo mv /home/core/tectonic /opt/",
-      "sudo systemctl start tectonic",
+      "sudo systemctl start ${var.tectonic_vanilla_k8s ? "bootkube.service" : "tectonic.service"}",
     ]
   }
 }

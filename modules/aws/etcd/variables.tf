@@ -2,6 +2,10 @@ variable "base_domain" {
   type = "string"
 }
 
+variable "cluster_id" {
+  type = "string"
+}
+
 variable "cluster_name" {
   type = "string"
 }
@@ -11,10 +15,6 @@ variable "cl_channel" {
 }
 
 variable "dns_zone_id" {
-  type = "string"
-}
-
-variable "az_count" {
   type = "string"
 }
 
@@ -73,4 +73,28 @@ variable "dns_enabled" {
   description = "If set to true, DNS records for etcd nodes will be created."
   type        = "string"
   default     = "false"
+}
+
+variable "tls_enabled" {
+  default = false
+}
+
+variable "tls_ca_crt_pem" {
+  default = ""
+}
+
+variable "tls_client_key_pem" {
+  default = ""
+}
+
+variable "tls_client_crt_pem" {
+  default = ""
+}
+
+variable "tls_peer_key_pem" {
+  default = ""
+}
+
+variable "tls_peer_crt_pem" {
+  default = ""
 }

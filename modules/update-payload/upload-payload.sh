@@ -1,7 +1,6 @@
 #!/bin/bash
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-source ${DIR}/awsutil.sh
 
 # A script that uploads the payload.json to aws s3 bucket, and
 # create a new package on the core update server.
@@ -25,15 +24,14 @@ if [[ ${AWS_ACCESS_KEY_ID} == "" || ${AWS_SECRET_ACCESS_KEY} == "" || ${COREUPDA
     print_usage
 fi
 
-which jq > /dev/null
-if [[ $? != 0 ]]; then
+if ! which jq > /dev/null; then
     echo "Require jq"
     exit 1
 fi
 
-which updateservicectl > /dev/null
-if [[ $? == 0 ]]; then
-    export UPDATESERVICECTL=$(which updateservicectl)
+if which updateservicectl > /dev/null; then
+    export UPDATESERVICECTL
+    UPDATESERVICECTL=$(which updateservicectl)
 fi
 
 if [[ ${UPDATESERVICECTL} == "" ]]; then
@@ -45,11 +43,14 @@ set -e
 
 payload=${DIR}/payload.json
 
-if [ ! -f ${payload} ]; then
-    echo "Expecting payload.json in the current directory"
-    exit 1
-fi
+for f in "${payload}" "${payload}.sig"; do
+    if [[ ! -f "${f}" ]]; then
+        echo "Expecting ${f} in the current directory" >&2
+        exit 1
+    fi
+done
 
+# shellcheck disable=SC2002,SC2086
 VERSION=${VERSION:-$(cat ${payload} | jq -r .version)}
 
 if [[ ${VERSION} == "" ]]; then
@@ -63,12 +64,8 @@ PAYLOAD_URL="https://s3-us-west-2.amazonaws.com/${BUCKET}/${DESTINATION}"
 
 echo "Uploading payload to \"${PAYLOAD_URL}\", version: \"${VERSION}\""
 
-aws_upload_file ${payload} ${DESTINATION} ${BUCKET} application/json
-
-# TODO(marineam): require signature once it is no longer optional in TCO
-if [[ -f ${payload}.sig ]]; then
-    aws_upload_file ${payload}.sig ${DESTINATION}.sig ${BUCKET} application/pgp-signature
-fi
+aws s3 cp "${payload}" "s3://${BUCKET}/${DESTINATION}"
+aws s3 cp "${payload}.sig" "s3://${BUCKET}/${DESTINATION}.sig"
 
 SERVER=${SERVER:-"https://tectonic.update.core-os.net"}
 APPID=${APPID:-"6bc7b986-4654-4a0f-94b3-84ce6feb1db4"}
@@ -77,6 +74,7 @@ echo "Payload successfully uploaded"
 
 echo "Creating package ${VERSION} on Core Update server ${SERVER} for ${APPID}"
 
+# shellcheck disable=SC2086,SC2154
 ${UPDATESERVICECTL} --server ${SERVER} \
                     --key ${COREUPDATE_KEY} \
                     --user ${COREUPDATE_USR} \

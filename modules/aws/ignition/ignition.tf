@@ -3,6 +3,7 @@ data "ignition_config" "main" {
     "${data.ignition_file.max-user-watches.id}",
     "${data.ignition_file.s3-puller.id}",
     "${data.ignition_file.init-assets.id}",
+    "${data.ignition_file.detect-master.id}",
   ]
 
   systemd = [
@@ -54,9 +55,9 @@ data "template_file" "kubelet-env" {
   template = "${file("${path.module}/resources/services/kubelet-env.service")}"
 
   vars {
-    kube_version_image_url = "${element(split(":", var.container_images["kube_version"]), 0)}"
-    kube_version_image_tag = "${element(split(":", var.container_images["kube_version"]), 1)}"
-    kubelet_image_url      = "${element(split(":", var.container_images["hyperkube"]), 0)}"
+    kube_version_image_url = "${replace(var.container_images["kube_version"],var.image_re,"$1")}"
+    kube_version_image_tag = "${replace(var.container_images["kube_version"],var.image_re,"$2")}"
+    kubelet_image_url      = "${replace(var.container_images["hyperkube"],var.image_re,"$1")}"
     kubeconfig_s3_location = "${var.kubeconfig_s3_location}"
   }
 }
@@ -70,20 +71,38 @@ data "ignition_systemd_unit" "kubelet-env" {
 data "ignition_file" "max-user-watches" {
   filesystem = "root"
   path       = "/etc/sysctl.d/max-user-watches.conf"
-  mode       = "420"
+  mode       = 0644
 
   content {
     content = "fs.inotify.max_user_watches=16184"
   }
 }
 
+data "template_file" "s3-puller" {
+  template = "${file("${path.module}/resources/s3-puller.sh")}"
+
+  vars {
+    awscli_image = "${var.container_images["awscli"]}"
+  }
+}
+
 data "ignition_file" "s3-puller" {
   filesystem = "root"
   path       = "/opt/s3-puller.sh"
-  mode       = "555"
+  mode       = 0755
 
   content {
-    content = "${file("${path.module}/resources/s3-puller.sh")}"
+    content = "${data.template_file.s3-puller.rendered}"
+  }
+}
+
+data "ignition_file" "detect-master" {
+  filesystem = "root"
+  path       = "/opt/detect-master.sh"
+  mode       = 0755
+
+  content {
+    content = "${file("${path.module}/resources/detect-master.sh")}"
   }
 }
 
@@ -91,17 +110,18 @@ data "template_file" "init-assets" {
   template = "${file("${path.module}/resources/init-assets.sh")}"
 
   vars {
+    cluster_name       = "${var.cluster_name}"
     awscli_image       = "${var.container_images["awscli"]}"
     assets_s3_location = "${var.assets_s3_location}"
-    kubelet_image_url  = "${element(split(":", var.container_images["hyperkube"]), 0)}"
-    kubelet_image_tag  = "${element(split(":", var.container_images["hyperkube"]), 1)}"
+    kubelet_image_url  = "${replace(var.container_images["hyperkube"],var.image_re,"$1")}"
+    kubelet_image_tag  = "${replace(var.container_images["hyperkube"],var.image_re,"$2")}"
   }
 }
 
 data "ignition_file" "init-assets" {
   filesystem = "root"
   path       = "/opt/tectonic/init-assets.sh"
-  mode       = "555"
+  mode       = 0755
 
   content {
     content = "${data.template_file.init-assets.rendered}"

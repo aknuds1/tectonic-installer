@@ -94,19 +94,19 @@ class TF_PowerOn extends React.Component {
         consoleSubsteps.push(<AWS_DomainValidation key="domain" />);
       }
       consoleSubsteps.push(
-        <WaitingLi done={dnsReady} key="dns" substep={true}>
+        <WaitingLi done={dnsReady} key="dns">
           <span title={msg}>{msg}</span>
         </WaitingLi>
       );
       msg = `Starting Tectonic console`;
       consoleSubsteps.push(
-        <WaitingLi done={tectonicConsole.ready} key="consoleReady" substep={true}>
+        <WaitingLi done={tectonicConsole.ready} key="consoleReady">
           <span title={msg}>{msg}</span>
         </WaitingLi>
       );
     }
     let platformMsg = <p>
-        Kubernetes is starting up. We're commiting your cluster details.
+        Kubernetes is starting up. We're committing your cluster details.
         Grab some tea and sit tight. This process can take up to 20 minutes.
         Status updates will appear below.
       </p>;

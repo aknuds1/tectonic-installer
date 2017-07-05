@@ -7,31 +7,29 @@ metadata:
     tier: control-plane
     k8s-app: kube-controller-manager
 spec:
-  replicas: 2
+  replicas: ${master_count}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
   template:
     metadata:
       labels:
         tier: control-plane
         k8s-app: kube-controller-manager
+        pod-anti-affinity: kube-controller-manager-${tectonic_version}
       annotations:
         scheduler.alpha.kubernetes.io/critical-pod: ""
     spec:
       affinity:
         podAntiAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-          - weight: 100
-            podAffinityTerm:
-              labelSelector:
-                matchExpressions:
-                - key: tier
-                  operator: In
-                  values:
-                  - control-plane
-                - key: k8s-app
-                  operator: In
-                  values:
-                  - kube-contoller-manager
-              topologyKey: kubernetes.io/hostname
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchLabels:
+                pod-anti-affinity: kube-controller-manager-${tectonic_version}
+            namespaces:
+              - kube-system
+            topologyKey: kubernetes.io/hostname
       containers:
       - name: kube-controller-manager
         image: ${hyperkube_image}
@@ -44,6 +42,8 @@ spec:
         - --root-ca-file=/etc/kubernetes/secrets/ca.crt
         - --service-account-private-key-file=/etc/kubernetes/secrets/service-account.key
         - --leader-elect=true
+        - --node-monitor-grace-period=${node_monitor_grace_period}
+        - --pod-eviction-timeout=${pod_eviction_timeout}
         - --cloud-provider=${cloud_provider}
         livenessProbe:
           httpGet:
@@ -58,14 +58,17 @@ spec:
         - name: ssl-host
           mountPath: /etc/ssl/certs
           readOnly: true
+      nodeSelector:
+        node-role.kubernetes.io/master: ""
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
       tolerations:
       - key: "CriticalAddonsOnly"
         operator: "Exists"
       - key: "node-role.kubernetes.io/master"
         operator: "Exists"
         effect: "NoSchedule"
-      nodeSelector:
-        node-role.kubernetes.io/master: ""
       volumes:
       - name: secrets
         secret:
