@@ -8,6 +8,10 @@ metadata:
     k8s-app: kube-controller-manager
 spec:
   replicas: ${master_count}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
   template:
     metadata:
       labels:
@@ -38,6 +42,8 @@ spec:
         - --root-ca-file=/etc/kubernetes/secrets/ca.crt
         - --service-account-private-key-file=/etc/kubernetes/secrets/service-account.key
         - --leader-elect=true
+        - --node-monitor-grace-period=${node_monitor_grace_period}
+        - --pod-eviction-timeout=${pod_eviction_timeout}
         - --cloud-provider=${cloud_provider}
         livenessProbe:
           httpGet:
