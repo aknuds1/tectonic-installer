@@ -1,9 +1,11 @@
 module "bootkube" {
-  source         = "../../modules/bootkube"
-  cloud_provider = ""
+  source = "../../modules/bootkube"
 
-  kube_apiserver_url = "https://${module.masters.api_internal_fqdn}:443"
-  oidc_issuer_url    = "https://${module.masters.ingress_internal_fqdn}/identity"
+  cloud_provider        = "azure"
+  cloud_provider_config = "${jsonencode(data.null_data_source.cloud-provider.inputs)}"
+
+  kube_apiserver_url = "https://${module.vnet.api_external_fqdn}:443"
+  oidc_issuer_url    = "https://${module.vnet.ingress_internal_fqdn}/identity"
 
   # Platform-independent variables wiring, do not modify.
   container_images = "${var.tectonic_container_images}"
@@ -23,10 +25,14 @@ module "bootkube" {
   oidc_groups_claim   = "groups"
   oidc_client_id      = "tectonic-kubectl"
 
-  etcd_endpoints   = ["${module.vnet.etcd_public_ip}"]
-  etcd_ca_cert     = "${var.tectonic_etcd_ca_cert_path}"
-  etcd_client_cert = "${var.tectonic_etcd_client_cert_path}"
-  etcd_client_key  = "${var.tectonic_etcd_client_key_path}"
+  etcd_endpoints      = "${module.etcd.node_names}"
+  etcd_cert_dns_names = "${module.etcd.node_names}"
+  etcd_ca_cert        = "${var.tectonic_etcd_ca_cert_path}"
+  etcd_client_cert    = "${var.tectonic_etcd_client_cert_path}"
+  etcd_client_key     = "${var.tectonic_etcd_client_key_path}"
+  etcd_tls_enabled    = "${var.tectonic_etcd_tls_enabled}"
+
+  experimental_enabled = "${var.tectonic_experimental}"
 
   master_count = "${var.tectonic_master_count}"
 }
@@ -35,8 +41,8 @@ module "tectonic" {
   source   = "../../modules/tectonic"
   platform = "azure"
 
-  base_address       = "${module.masters.ingress_internal_fqdn}"
-  kube_apiserver_url = "https://${module.masters.api_internal_fqdn}:443"
+  base_address       = "${module.vnet.ingress_internal_fqdn}"
+  kube_apiserver_url = "https://${module.vnet.api_external_fqdn}:443"
 
   # Platform-independent variables wiring, do not modify.
   container_images = "${var.tectonic_container_images}"
@@ -65,15 +71,37 @@ module "tectonic" {
   stats_url         = "${var.tectonic_stats_url}"
 }
 
+module "flannel-vxlan" {
+  source = "../../modules/net/flannel-vxlan"
+
+  flannel_image     = "${var.tectonic_container_images["flannel"]}"
+  flannel_cni_image = "${var.tectonic_container_images["flannel_cni"]}"
+  cluster_cidr      = "${var.tectonic_cluster_cidr}"
+
+  bootkube_id = "${module.bootkube.id}"
+}
+
+module "calico-network-policy" {
+  source = "../../modules/net/calico-network-policy"
+
+  kube_apiserver_url = "https://${module.vnet.api_external_fqdn}:443"
+  calico_image       = "${var.tectonic_container_images["calico"]}"
+  calico_cni_image   = "${var.tectonic_container_images["calico_cni"]}"
+  cluster_cidr       = "${var.tectonic_cluster_cidr}"
+  enabled            = "${var.tectonic_calico_network_policy}"
+
+  bootkube_id = "${module.bootkube.id}"
+}
+
 resource "null_resource" "tectonic" {
-  depends_on = ["module.tectonic", "module.masters"]
+  depends_on = ["module.vnet", "module.dns", "module.etcd", "module.masters", "module.bootkube", "module.tectonic", "module.flannel-vxlan", "module.calico-network-policy"]
 
   triggers {
-    api-endpoint = "${module.masters.api_external_fqdn}"
+    api-endpoint = "${module.vnet.api_external_fqdn}"
   }
 
   connection {
-    host  = "${module.masters.api_external_fqdn}"
+    host  = "${module.vnet.api_external_fqdn}"
     user  = "core"
     agent = true
   }

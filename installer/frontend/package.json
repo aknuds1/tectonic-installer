@@ -15,7 +15,8 @@
     "dev": "mkdir -p ../assets/frontend/scripts && ./node_modules/.bin/watchify --extension=.jsx app.jsx --verbose -d -o ../assets/frontend/scripts/app-bundle.js -t [ babelify ]",
     "postinstall": "./check-versions.js",
     "test": "./node_modules/.bin/jest",
-    "installer-tests": "./node_modules/.bin/nightwatch"
+    "aws-installer-tests": "./node_modules/.bin/nightwatch --test ui-tests/tests/awsInstaller.js",
+    "baremetal-installer-tests": "./node_modules/.bin/nightwatch --test ui-tests/tests/bareMetalInstaller.js"
   },
   "jest": {
     "automock": false,
@@ -38,7 +39,7 @@
     "react-dom": "15.3.x",
     "react-modal": "1.4.x",
     "react-redux": "4.4.x",
-    "react-router": "2.4.x",
+    "react-router": "3.0.x",
     "redux": "3.5.x",
     "redux-thunk": "2.1.x",
     "semver": "5.x",

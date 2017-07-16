@@ -31,6 +31,11 @@ tectonic_base_domain = ""
 // This field is mandatory if `tectonic_ca_cert` is set.
 // tectonic_ca_key_alg = "RSA"
 
+// [ALPHA] If set to true, calico network policy support will be deployed.
+// WARNING: Enabling an alpha feature means that future updates may become unsupported.
+// This should only be enabled on clusters that are meant to be short-lived to begin validating the alpha feature.
+tectonic_calico_network_policy = false
+
 // The Container Linux update channel.
 // 
 // Examples: `stable`, `beta`, `alpha`
@@ -45,6 +50,26 @@ tectonic_cluster_cidr = "10.2.0.0/16"
 // Note: This field MUST be set manually prior to creating the cluster.
 // Warning: Special characters in the name like '.' may cause errors on OpenStack platforms due to resource name constraints.
 tectonic_cluster_name = ""
+
+// (optional) This only applies if you use the modules/dns/ddns module.
+// 
+// Specifies the RFC2136 Dynamic DNS server key algorithm.
+// tectonic_ddns_key_algorithm = ""
+
+// (optional) This only applies if you use the modules/dns/ddns module.
+// 
+// Specifies the RFC2136 Dynamic DNS server key name.
+// tectonic_ddns_key_name = ""
+
+// (optional) This only applies if you use the modules/dns/ddns module.
+// 
+// Specifies the RFC2136 Dynamic DNS server key secret.
+// tectonic_ddns_key_secret = ""
+
+// (optional) This only applies if you use the modules/dns/ddns module.
+// 
+// Specifies the RFC2136 Dynamic DNS server IP/host to register IP addresses to.
+// tectonic_ddns_server = ""
 
 // (optional) The path of the file containing the CA certificate for TLS communication with etcd.
 // 

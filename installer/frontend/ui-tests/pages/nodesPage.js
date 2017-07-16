@@ -1,4 +1,4 @@
-const installerInput = require('../utils/installerInput');
+const installerInput = require('../utils/awsInstallerInput');
 
 module.exports = {
   url: '',

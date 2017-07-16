@@ -17,11 +17,14 @@
 # interpolated once the assets have all been created.
 output "id" {
   value = "${sha1("
+  ${data.archive_file.etcd_tls_zip.id}
   ${local_file.kubeconfig.id}
   ${local_file.bootkube-sh.id}
   ${template_dir.bootkube.id} ${template_dir.bootkube-bootstrap.id}
   ${join(" ",
     local_file.etcd_ca_crt.*.id,
+    local_file.etcd_server_crt.*.id,
+    local_file.etcd_server_key.*.id,
     local_file.etcd_client_crt.*.id,
     local_file.etcd_client_key.*.id,
     local_file.etcd_peer_crt.*.id,
@@ -31,6 +34,10 @@ output "id" {
     template_dir.etcd-experimental.*.id,
     )}
   ")}"
+}
+
+output "etcd_tls_zip" {
+  value = "${data.archive_file.etcd_tls_zip.id != "" ? file("./.terraform/etcd_tls.zip") : ""}"
 }
 
 output "kubeconfig" {
@@ -59,6 +66,14 @@ output "kube_dns_service_ip" {
 
 output "etcd_ca_crt_pem" {
   value = "${join("", tls_self_signed_cert.etcd-ca.*.cert_pem)}"
+}
+
+output "etcd_server_crt_pem" {
+  value = "${join("", tls_locally_signed_cert.etcd_server.*.cert_pem)}"
+}
+
+output "etcd_server_key_pem" {
+  value = "${join("", tls_private_key.etcd_server.*.private_key_pem)}"
 }
 
 output "etcd_client_crt_pem" {

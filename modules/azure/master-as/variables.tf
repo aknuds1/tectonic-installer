@@ -7,11 +7,6 @@ variable "resource_group_name" {
   type = "string"
 }
 
-// Image refernce to use for master instances
-variable "image_reference" {
-  type = "map"
-}
-
 // VM Size name
 variable "vm_size" {
   type = "string"
@@ -41,10 +36,6 @@ variable "virtual_network" {
   type = "string"
 }
 
-variable "subnet" {
-  type = "string"
-}
-
 variable "kube_image_url" {
   type = "string"
 }
@@ -71,11 +62,20 @@ variable "cloud_provider" {
   default = "azure"
 }
 
+variable "cloud_provider_config" {
+  description = "Content of cloud provider config"
+  type        = "string"
+}
+
 variable "kubelet_node_label" {
   type = "string"
 }
 
 variable "kubelet_node_taints" {
+  type = "string"
+}
+
+variable "kubelet_cni_bin_dir" {
   type = "string"
 }
 
@@ -94,6 +94,16 @@ variable "tectonic_service_disabled" {
   default     = false
 }
 
-variable "use_custom_fqdn" {
-  default = false
+variable "network_interface_ids" {
+  type        = "list"
+  description = "List of NICs to use for master VMs"
+}
+
+variable "versions" {
+  description = "(internal) Versions of the components to use"
+  type        = "map"
+}
+
+variable "cl_channel" {
+  type = "string"
 }

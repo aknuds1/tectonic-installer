@@ -74,6 +74,7 @@ data "template_file" "kubelet" {
     cluster_dns       = "${var.tectonic_kube_dns_service_ip}"
     node_labels       = "${var.node_labels}"
     node_taints_param = "${var.node_taints != "" ? "--register-with-taints=${var.node_taints}" : ""}"
+    cni_bin_dir_flag  = "${var.kubelet_cni_bin_dir != "" ? "--cni-bin-dir=${var.kubelet_cni_bin_dir}" : ""}"
   }
 }
 
@@ -123,5 +124,6 @@ data "ignition_systemd_unit" "bootkube" {
 
 data "ignition_systemd_unit" "tectonic" {
   name    = "tectonic.service"
+  enable  = "${var.tectonic_service_disabled == 0 ? true : false}"
   content = "${var.tectonic_service}"
 }

@@ -51,6 +51,12 @@ const awsCredsForm = new Form(AWS_CREDS, [
   new Field(AWS_ACCESS_KEY_ID, {
     default: '',
     validator: compose(validate.nonEmpty, (v) => {
+      if (!v.startsWith('AK')) {
+        return 'AWS access key IDs always begin with \'AK\'.';
+      }
+      if (v.indexOf('@') >= 0) {
+        return 'AWS access key IDs are not email addresses.';
+      }
       if (v.length < 20) {
         return 'AWS key IDs are at least 20 characters.';
       }
@@ -154,7 +160,7 @@ const awsCreds = <div>
     </div>
     <div className="col-xs-8">
       <Connect field={AWS_ACCESS_KEY_ID}>
-        <Input id="accessKeyId" autoFocus="true"/>
+        <Input id="accessKeyId" autoFocus="true" placeholder="AKxxxxxxxxxxxxxxxxxx" />
       </Connect>
     </div>
   </div>
@@ -176,7 +182,7 @@ export const AWS_CloudCredentials = connect(stateToProps)(
     <div className="row form-group">
       <div className="col-xs-12">
         Enter your Amazon Web Services (AWS) credentials to create and configure the required resources.
-        It is strongly suggested that you create a <a href="https://coreos.com/tectonic/docs/latest/install/aws/requirements.html#privileges" onClick={TectonicGA.sendDocsEvent} target="_blank">limited access role</a> for Tectonic's communication with your cloud provider.
+        It is strongly suggested that you create a <a href="https://coreos.com/tectonic/docs/latest/install/aws/requirements.html#privileges" onClick={() => TectonicGA.sendDocsEvent('aws-tf')} target="_blank">limited access role</a> for Tectonic's communication with your cloud provider.
       </div>
     </div>
 
@@ -190,6 +196,9 @@ export const AWS_CloudCredentials = connect(stateToProps)(
               </Connect>
               Use a normal access key
             </label>&nbsp;(default)
+            <p className="text-muted">
+              Go to the <a href="https://console.aws.amazon.com/iam/home#/users" target="_blank">AWS console user section</a>, select your user name, and the Security Credentials tab.
+            </p>
           </div>
           <div className="wiz-radio-group__body">
             { !stsEnabled && awsCreds }

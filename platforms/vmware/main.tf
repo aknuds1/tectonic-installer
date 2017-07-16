@@ -9,10 +9,12 @@ module "etcd" {
   external_endpoints = ["${compact(var.tectonic_etcd_servers)}"]
 
   tls_ca_crt_pem     = "${module.bootkube.etcd_ca_crt_pem}"
+  tls_server_crt_pem = "${module.bootkube.etcd_server_crt_pem}"
+  tls_server_key_pem = "${module.bootkube.etcd_server_key_pem}"
   tls_client_crt_pem = "${module.bootkube.etcd_client_crt_pem}"
   tls_client_key_pem = "${module.bootkube.etcd_client_key_pem}"
-  tls_peer_key_pem   = "${module.bootkube.etcd_peer_crt_pem}"
-  tls_peer_crt_pem   = "${module.bootkube.etcd_peer_key_pem}"
+  tls_peer_key_pem   = "${module.bootkube.etcd_peer_key_pem}"
+  tls_peer_crt_pem   = "${module.bootkube.etcd_peer_crt_pem}"
 
   hostname   = "${var.tectonic_vmware_etcd_hostnames}"
   dns_server = "${var.tectonic_vmware_node_dns}"
@@ -42,6 +44,7 @@ module "masters" {
 
   kubelet_node_label        = "node-role.kubernetes.io/master"
   kubelet_node_taints       = "node-role.kubernetes.io/master=:NoSchedule"
+  kubelet_cni_bin_dir       = "${var.tectonic_calico_network_policy ? "/var/lib/cni/bin" : "" }"
   kube_dns_service_ip       = "${module.bootkube.kube_dns_service_ip}"
   container_images          = "${var.tectonic_container_images}"
   bootkube_service          = "${module.bootkube.systemd_service}"
@@ -76,6 +79,7 @@ module "workers" {
 
   kubelet_node_label  = "node-role.kubernetes.io/node"
   kubelet_node_taints = ""
+  kubelet_cni_bin_dir = "${var.tectonic_calico_network_policy ? "/var/lib/cni/bin" : "" }"
   kube_dns_service_ip = "${module.bootkube.kube_dns_service_ip}"
   container_images    = "${var.tectonic_container_images}"
   bootkube_service    = ""
