@@ -30,7 +30,7 @@ resource "aws_autoscaling_group" "masters" {
   launch_configuration = "${aws_launch_configuration.master_conf.id}"
   vpc_zone_identifier  = ["${var.subnet_ids}"]
 
-  load_balancers = ["${aws_elb.api-internal.id}", "${join("",aws_elb.api-external.*.id)}", "${aws_elb.console.id}"]
+  load_balancers = ["${compact(concat(list(aws_elb.api-internal.id), list(aws_elb.console.id), aws_elb.api-external.*.id))}"]
 
   tags = [
     {
@@ -85,8 +85,8 @@ resource "aws_launch_configuration" "master_conf" {
 resource "aws_iam_instance_profile" "master_profile" {
   name = "${var.cluster_name}-master-profile"
 
-  role = "${var.master_iam_role == "" ? 
-    join("|", aws_iam_role.master_role.*.name) : 
+  role = "${var.master_iam_role == "" ?
+    join("|", aws_iam_role.master_role.*.name) :
     join("|", data.aws_iam_role.master_role.*.role_name)
   }"
 }

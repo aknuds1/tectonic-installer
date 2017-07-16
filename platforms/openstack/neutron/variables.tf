@@ -7,19 +7,93 @@ EOF
   default = "1.0"
 }
 
-variable "tectonic_openstack_flavor_id" {
-  type = "string"
+variable "tectonic_openstack_master_flavor_name" {
+  type    = "string"
+  default = ""
 
   description = <<EOF
-The flavor ID as given in `openstack flavor list`. Specifies the size (CPU/Memory/Drive) of the VM.
+The flavor name for master instances as given in `openstack flavor list`. Specifies the size (CPU/Memory/Drive) of the VM.
+
+Note: Set either tectonic_openstack_master_flavor_name or tectonic_openstack_master_flavor_id.
+EOF
+}
+
+variable "tectonic_openstack_worker_flavor_name" {
+  type    = "string"
+  default = ""
+
+  description = <<EOF
+The flavor name for worker instances as given in `openstack flavor list`. Specifies the size (CPU/Memory/Drive) of the VM.
+
+Note: Set either tectonic_openstack_worker_flavor_name or tectonic_openstack_worker_flavor_id.
+EOF
+}
+
+variable "tectonic_openstack_etcd_flavor_name" {
+  type    = "string"
+  default = ""
+
+  description = <<EOF
+(optional) The flavor name for etcd instances as given in `openstack flavor list`. Specifies the size (CPU/Memory/Drive) of the VM.
+
+Note: Set either tectonic_openstack_etcd_flavor_name or tectonic_openstack_etcd_flavor_id.
+Note: This value is ignored for self-hosted etcd.
+EOF
+}
+
+variable "tectonic_openstack_master_flavor_id" {
+  type    = "string"
+  default = ""
+
+  description = <<EOF
+The flavor id for master instances as given in `openstack flavor list`. Specifies the size (CPU/Memory/Drive) of the VM.
+
+Note: Set either tectonic_openstack_master_flavor_name or tectonic_openstack_master_flavor_id.
+EOF
+}
+
+variable "tectonic_openstack_worker_flavor_id" {
+  type    = "string"
+  default = ""
+
+  description = <<EOF
+The flavor id for worker instances as given in `openstack flavor list`. Specifies the size (CPU/Memory/Drive) of the VM.
+
+Note: Set either tectonic_openstack_worker_flavor_name or tectonic_openstack_worker_flavor_id.
+EOF
+}
+
+variable "tectonic_openstack_etcd_flavor_id" {
+  type    = "string"
+  default = ""
+
+  description = <<EOF
+(optional) The flavor id for etcd instances as given in `openstack flavor list`. Specifies the size (CPU/Memory/Drive) of the VM.
+
+Note: Set either tectonic_openstack_etcd_flavor_name or tectonic_openstack_etcd_flavor_id.
+Note: This value is ignored for self-hosted etcd.
+EOF
+}
+
+variable "tectonic_openstack_image_name" {
+  type    = "string"
+  default = ""
+
+  description = <<EOF
+The image ID as given in `openstack image list`. Specifies the OS image of the VM.
+
+Note: Set either tectonic_openstack_image_name or tectonic_openstack_image_id.
 EOF
 }
 
 variable "tectonic_openstack_image_id" {
-  type = "string"
+  type    = "string"
+  default = ""
 
   description = <<EOF
 The image ID as given in `openstack image list`. Specifies the OS image of the VM.
+
+Note: Set either tectonic_openstack_image_name or tectonic_openstack_image_id.
 EOF
 }
 

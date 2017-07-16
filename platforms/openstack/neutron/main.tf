@@ -95,6 +95,8 @@ EOF
   tls_enabled           = "${var.tectonic_etcd_tls_enabled}"
 
   tls_ca_crt_pem     = "${module.bootkube.etcd_ca_crt_pem}"
+  tls_server_crt_pem = "${module.bootkube.etcd_server_crt_pem}"
+  tls_server_key_pem = "${module.bootkube.etcd_server_key_pem}"
   tls_client_crt_pem = "${module.bootkube.etcd_client_crt_pem}"
   tls_client_key_pem = "${module.bootkube.etcd_client_key_pem}"
   tls_peer_crt_pem   = "${module.bootkube.etcd_peer_crt_pem}"
@@ -131,7 +133,9 @@ EOF
   hostname_infix               = "master"
   node_labels                  = "node-role.kubernetes.io/master"
   node_taints                  = "node-role.kubernetes.io/master=:NoSchedule"
+  kubelet_cni_bin_dir          = "${var.tectonic_calico_network_policy ? "/var/lib/cni/bin" : "" }"
   tectonic_experimental        = "${var.tectonic_experimental}"
+  tectonic_service_disabled    = "${var.tectonic_vanilla_k8s}"
 }
 
 module "worker_nodes" {
@@ -155,6 +159,8 @@ EOF
   hostname_infix               = "worker"
   node_labels                  = "node-role.kubernetes.io/node"
   node_taints                  = ""
+  kubelet_cni_bin_dir          = "${var.tectonic_calico_network_policy ? "/var/lib/cni/bin" : "" }"
+  tectonic_service_disabled    = "${var.tectonic_vanilla_k8s}"
 }
 
 module "secrets" {
@@ -166,4 +172,26 @@ module "secgroups" {
   source                = "../../../modules/openstack/secgroups"
   cluster_name          = "${var.tectonic_cluster_name}"
   tectonic_experimental = "${var.tectonic_experimental}"
+}
+
+module "flannel-vxlan" {
+  source = "../../../modules/net/flannel-vxlan"
+
+  flannel_image     = "${var.tectonic_container_images["flannel"]}"
+  flannel_cni_image = "${var.tectonic_container_images["flannel_cni"]}"
+  cluster_cidr      = "${var.tectonic_cluster_cidr}"
+
+  bootkube_id = "${module.bootkube.id}"
+}
+
+module "calico-network-policy" {
+  source = "../../../modules/net/calico-network-policy"
+
+  kube_apiserver_url = "https://${var.tectonic_cluster_name}-k8s.${var.tectonic_base_domain}:443"
+  calico_image       = "${var.tectonic_container_images["calico"]}"
+  calico_cni_image   = "${var.tectonic_container_images["calico_cni"]}"
+  cluster_cidr       = "${var.tectonic_cluster_cidr}"
+  enabled            = "${var.tectonic_calico_network_policy}"
+
+  bootkube_id = "${module.bootkube.id}"
 }

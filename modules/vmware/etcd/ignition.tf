@@ -7,12 +7,18 @@ data "ignition_config" "etcd" {
 
   files = [
     "${data.ignition_file.node_hostname.*.id[count.index]}",
+    "${data.ignition_file.etcd_ca.id}",
+    "${data.ignition_file.etcd_server_crt.id}",
+    "${data.ignition_file.etcd_server_key.id}",
+    "${data.ignition_file.etcd_client_crt.id}",
+    "${data.ignition_file.etcd_client_key.id}",
+    "${data.ignition_file.etcd_peer_crt.id}",
+    "${data.ignition_file.etcd_peer_key.id}",
   ]
 
   systemd = [
     "${data.ignition_systemd_unit.locksmithd.*.id[count.index]}",
     "${data.ignition_systemd_unit.etcd3.*.id[count.index]}",
-    "${data.ignition_systemd_unit.vmtoolsd_member.id}",
   ]
 
   networkd = [
@@ -23,6 +29,90 @@ data "ignition_config" "etcd" {
 data "ignition_user" "core" {
   name                = "core"
   ssh_authorized_keys = ["${var.core_public_keys}"]
+}
+
+data "ignition_file" "etcd_ca" {
+  path       = "/etc/ssl/etcd/ca.crt"
+  mode       = 0644
+  uid        = 232
+  gid        = 232
+  filesystem = "root"
+
+  content {
+    content = "${var.tls_ca_crt_pem}"
+  }
+}
+
+data "ignition_file" "etcd_client_key" {
+  path       = "/etc/ssl/etcd/client.key"
+  mode       = 0400
+  uid        = 0
+  gid        = 0
+  filesystem = "root"
+
+  content {
+    content = "${var.tls_client_key_pem}"
+  }
+}
+
+data "ignition_file" "etcd_client_crt" {
+  path       = "/etc/ssl/etcd/client.crt"
+  mode       = 0400
+  uid        = 0
+  gid        = 0
+  filesystem = "root"
+
+  content {
+    content = "${var.tls_client_crt_pem}"
+  }
+}
+
+data "ignition_file" "etcd_server_key" {
+  path       = "/etc/ssl/etcd/server.key"
+  mode       = 0400
+  uid        = 232
+  gid        = 232
+  filesystem = "root"
+
+  content {
+    content = "${var.tls_server_key_pem}"
+  }
+}
+
+data "ignition_file" "etcd_server_crt" {
+  path       = "/etc/ssl/etcd/server.crt"
+  mode       = 0400
+  uid        = 232
+  gid        = 232
+  filesystem = "root"
+
+  content {
+    content = "${var.tls_server_crt_pem}"
+  }
+}
+
+data "ignition_file" "etcd_peer_key" {
+  path       = "/etc/ssl/etcd/peer.key"
+  mode       = 0400
+  uid        = 232
+  gid        = 232
+  filesystem = "root"
+
+  content {
+    content = "${var.tls_peer_key_pem}"
+  }
+}
+
+data "ignition_file" "etcd_peer_crt" {
+  path       = "/etc/ssl/etcd/peer.crt"
+  mode       = 0400
+  uid        = 232
+  gid        = 232
+  filesystem = "root"
+
+  content {
+    content = "${var.tls_peer_crt_pem}"
+  }
 }
 
 data "ignition_systemd_unit" "locksmithd" {
@@ -78,8 +168,8 @@ ExecStart=/usr/lib/coreos/etcd-wrapper \
 --name=${var.hostname["${count.index}"]} \
 --initial-cluster="${join("," , data.template_file.etcd-cluster.*.rendered)}" \
 --advertise-client-urls=https://${var.hostname["${count.index}"]}.${var.base_domain}:2379 \
---cert-file=/etc/ssl/etcd/client.crt \
---key-file=/etc/ssl/etcd/client.key \
+--cert-file=/etc/ssl/etcd/server.crt \
+--key-file=/etc/ssl/etcd/server.key \
 --peer-cert-file=/etc/ssl/etcd/peer.crt \
 --peer-key-file=/etc/ssl/etcd/peer.key \
 --peer-trusted-ca-file=/etc/ssl/etcd/ca.crt \
@@ -116,21 +206,5 @@ data "ignition_networkd_unit" "vmnetwork" {
   Gateway=${var.gateway}
   UseDomains=yes
   Domains=${var.base_domain}
-EOF
-}
-
-data "ignition_systemd_unit" "vmtoolsd_member" {
-  name   = "vmtoolsd.service"
-  enable = true
-
-  content = <<EOF
-  [Unit]
-  Description=VMware Tools Agent
-  Documentation=http://open-vm-tools.sourceforge.net/
-  ConditionVirtualization=vmware
-  [Service]
-  ExecStartPre=/usr/bin/ln -sfT /usr/share/oem/vmware-tools /etc/vmware-tools
-  ExecStart=/usr/share/oem/bin/vmtoolsd
-  TimeoutStopSec=5
 EOF
 }

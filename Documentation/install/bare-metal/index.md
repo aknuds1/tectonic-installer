@@ -81,7 +81,7 @@ Matchbox can serve CoreOS Container Linux images to reduce bandwidth usage and i
 Download a recent CoreOS Container Linux stable [release][coreos-release] with signatures.
 
 ```sh
-$ ./scripts/get-coreos stable 1353.7.0 .     # note the "." 3rd argument
+$ ./scripts/get-coreos stable 1353.8.0 .     # note the "." 3rd argument
 ```
 
 Move the images to `/var/lib/matchbox/assets`,
@@ -94,7 +94,7 @@ $ sudo cp -r coreos /var/lib/matchbox/assets
 $ tree /var/lib/matchbox/assets
 /var/lib/matchbox/assets/
 ├── coreos
-│   └── 1353.7.0
+│   └── 1353.8.0
 │       ├── CoreOS_Image_Signing_Key.asc
 │       ├── coreos_production_image.bin.bz2
 │       ├── coreos_production_image.bin.bz2.sig
@@ -164,16 +164,26 @@ Make sure a current version of either the Google Chrome or Mozilla Firefox web b
 Download the [Tectonic Installer][latest-tectonic-release].
 
 ```sh
-wget https://releases.tectonic.com/tectonic-1.6.4-tectonic.1.tar.gz
-tar xzvf tectonic-1.6.4-tectonic.1.tar.gz
+wget https://releases.tectonic.com/tectonic-1.6.7-tectonic.1.tar.gz
+tar xzvf tectonic-1.6.7-tectonic.1.tar.gz
 cd tectonic/tectonic-installer
 ```
 
-Run the Tectonic Installer that matches your platform (`linux` or `darwin`):
+Run the Tectonic Installer for your platform:
 
-```sh
-./$PLATFORM/installer
+For macOS users:
+
+```bash
+$ ./tectonic-installer/darwin/installer
 ```
+
+For Linux users:
+
+```
+$ ./tectonic-installer/linux/installer
+```
+
+For Windows users, [see this guide][install-windows].
 
 A browser window will open to begin the GUI installation process, which will require the following information:
 * DNS: Domain names assigned for the master and worker nodes, which must exist before launching Tectonic Installer.
@@ -209,7 +219,7 @@ After the installer is complete, you'll have a Tectonic cluster and be able to a
 [copr-repo]: https://copr.fedorainfracloud.org/coprs/g/CoreOS/matchbox/
 [coreos-release]: https://coreos.com/releases/
 [daemonset]: http://kubernetes.io/docs/admin/daemons/
-[latest-tectonic-release]: https://releases.tectonic.com/tectonic-1.6.4-tectonic.1.tar.gz
+[latest-tectonic-release]: https://releases.tectonic.com/tectonic-1.6.7-tectonic.1.tar.gz
 [matchbox-config]: https://coreos.com/matchbox/docs/latest/config.html
 [matchbox-dnsmasq]: https://github.com/coreos/matchbox/tree/master/contrib/dnsmasq
 [matchbox]: https://coreos.com/matchbox
@@ -226,3 +236,4 @@ After the installer is complete, you'll have a Tectonic cluster and be able to a
 [dnsmasq]: https://quay.io/repository/coreos/dnsmasq
 [copy-paste-examples]: https://github.com/coreos/matchbox/blob/master/Documentation/network-setup.md#coreosdnsmasq
 [proxy-dhcp]: https://github.com/coreos/matchbox/blob/master/Documentation/network-setup.md#proxy-dhcp
+[install-windows]: ../installer-windows.md

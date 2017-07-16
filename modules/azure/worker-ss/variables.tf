@@ -7,11 +7,6 @@ variable "resource_group_name" {
   type = "string"
 }
 
-// Image refernce to use for worker instances
-variable "image_reference" {
-  type = "map"
-}
-
 // VM Size name
 variable "vm_size" {
   type = "string"
@@ -73,5 +68,9 @@ variable "cloud_provider" {
 }
 
 variable "kubelet_node_label" {
+  type = "string"
+}
+
+variable "kubelet_cni_bin_dir" {
   type = "string"
 }

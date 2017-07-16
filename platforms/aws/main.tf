@@ -78,11 +78,7 @@ module "etcd" {
   dns_enabled = "${!var.tectonic_experimental && length(compact(var.tectonic_etcd_servers)) == 0}"
   tls_enabled = "${var.tectonic_etcd_tls_enabled}"
 
-  tls_ca_crt_pem     = "${module.bootkube.etcd_ca_crt_pem}"
-  tls_client_crt_pem = "${module.bootkube.etcd_client_crt_pem}"
-  tls_client_key_pem = "${module.bootkube.etcd_client_key_pem}"
-  tls_peer_crt_pem   = "${module.bootkube.etcd_peer_crt_pem}"
-  tls_peer_key_pem   = "${module.bootkube.etcd_peer_key_pem}"
+  tls_zip = "${module.bootkube.etcd_tls_zip}"
 }
 
 module "ignition-masters" {
@@ -90,6 +86,7 @@ module "ignition-masters" {
 
   kubelet_node_label        = "node-role.kubernetes.io/master"
   kubelet_node_taints       = "node-role.kubernetes.io/master=:NoSchedule"
+  kubelet_cni_bin_dir       = "${var.tectonic_calico_network_policy ? "/var/lib/cni/bin" : "" }"
   kube_dns_service_ip       = "${module.bootkube.kube_dns_service_ip}"
   kubeconfig_s3_location    = "${aws_s3_bucket_object.kubeconfig.bucket}/${aws_s3_bucket_object.kubeconfig.key}"
   assets_s3_location        = "${aws_s3_bucket_object.tectonic-assets.bucket}/${aws_s3_bucket_object.tectonic-assets.key}"
@@ -138,6 +135,7 @@ module "ignition-workers" {
 
   kubelet_node_label     = "node-role.kubernetes.io/node"
   kubelet_node_taints    = ""
+  kubelet_cni_bin_dir    = "${var.tectonic_calico_network_policy ? "/var/lib/cni/bin" : "" }"
   kube_dns_service_ip    = "${module.bootkube.kube_dns_service_ip}"
   kubeconfig_s3_location = "${aws_s3_bucket_object.kubeconfig.bucket}/${aws_s3_bucket_object.kubeconfig.key}"
   assets_s3_location     = ""
