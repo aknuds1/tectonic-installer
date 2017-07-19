@@ -83,7 +83,7 @@ data "ignition_systemd_unit" "kubelet-env" {
 data "ignition_file" "max-user-watches" {
   filesystem = "root"
   path = "/etc/sysctl.d/max-user-watches.conf"
-  mode = "420"
+  mode = 0644
   content {
     content = "fs.inotify.max_user_watches=16184"
   }
@@ -119,6 +119,13 @@ data "ignition_systemd_unit" "bootkube" {
   enable = false
 }
 
+data "ignition_systemd_unit" "tectonic" {
+  name = "tectonic.service"
+  content = "${var.tectonic_service}"
+  # Defer enabling until /opt/tectonic is populated
+  enable = false
+}
+
 module "sshguard" {
   source = "../../sshguard"
 }
@@ -127,11 +134,4 @@ module "swap" {
   source = "../swap"
   
   swap_size = "${var.swap_size}"
-}
-
-data "ignition_systemd_unit" "tectonic" {
-  name = "tectonic.service"
-  content = "${var.tectonic_service}"
-  # Defer enabling until /opt/tectonic is populated
-  enable = false
 }
