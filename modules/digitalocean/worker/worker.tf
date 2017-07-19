@@ -1,5 +1,5 @@
 resource "digitalocean_droplet" "worker_node" {
-  count = "${var.instance_count}"
+  count = "${var.droplet_count}"
   name = "${var.cluster_name}-worker-${count.index}"
   image = "${var.droplet_image}"
   region = "${var.droplet_region}"
@@ -10,7 +10,7 @@ resource "digitalocean_droplet" "worker_node" {
 }
 
 resource "digitalocean_record" "worker" {
-  count = "${var.instance_count}"
+  count = "${var.droplet_count}"
   domain = "${var.cluster_domain}"
   type = "A"
   name = "${var.cluster_name}-worker-${count.index}"

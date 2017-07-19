@@ -60,14 +60,13 @@ module "ignition-workers" {
   kube_dns_service_ip = "${module.bootkube.kube_dns_service_ip}"
   container_images = "${var.tectonic_container_images}"
   swap_size = "${var.tectonic_do_worker_swap}"
-  bootkube_service = ""
   cluster_domain = "${var.tectonic_cluster_name}.k8s.${var.tectonic_base_domain}"
 }
 
 module "workers" {
   source = "../../modules/digitalocean/worker"
 
-  instance_count = "${var.tectonic_worker_count}"
+  droplet_count = "${var.tectonic_worker_count}"
   cluster_name = "${var.tectonic_cluster_name}"
   droplet_size = "${var.tectonic_do_worker_droplet_size}"
   droplet_region = "${var.tectonic_do_droplet_region}"

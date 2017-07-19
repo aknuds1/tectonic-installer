@@ -22,6 +22,16 @@ module "bootkube" {
   etcd_client_key = "${var.tectonic_etcd_client_key_path}"
   experimental_enabled = "${var.tectonic_experimental}"
   versions = "${var.tectonic_versions}"
+  master_count = 1
+  etcd_cert_dns_names = [
+    "${var.tectonic_cluster_name}-etcd-0.${var.tectonic_base_domain}",
+    "${var.tectonic_cluster_name}-etcd-1.${var.tectonic_base_domain}",
+    "${var.tectonic_cluster_name}-etcd-2.${var.tectonic_base_domain}",
+    "${var.tectonic_cluster_name}-etcd-3.${var.tectonic_base_domain}",
+    "${var.tectonic_cluster_name}-etcd-4.${var.tectonic_base_domain}",
+    "${var.tectonic_cluster_name}-etcd-5.${var.tectonic_base_domain}",
+    "${var.tectonic_cluster_name}-etcd-6.${var.tectonic_base_domain}",
+  ]
 }
 
 module "tectonic" {
@@ -49,6 +59,7 @@ module "tectonic" {
   ingress_kind = "NodePort"
   experimental = "${var.tectonic_experimental}"
   master_count = 1
+  stats_url = "${var.tectonic_stats_url}"
 }
 
 data "archive_file" "assets" {

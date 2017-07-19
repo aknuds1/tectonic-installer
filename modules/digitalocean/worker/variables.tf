@@ -1,4 +1,4 @@
-variable "instance_count" {
+variable "droplet_count" {
   type = "string"
 }
 

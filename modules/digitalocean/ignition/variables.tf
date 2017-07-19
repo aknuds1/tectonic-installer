@@ -21,6 +21,7 @@ variable "kubelet_node_taints" {
 variable "bootkube_service" {
   type = "string"
   description = "The content of the bootkube systemd service unit"
+  default = ""
 }
 
 variable "swap_size" {
