@@ -29,7 +29,7 @@ variable "tectonic_container_images" {
     pod_checkpointer                = "quay.io/coreos/pod-checkpointer:4e7a7dab10bc4d895b66c21656291c6e0b017248"
     bootkube                        = "quay.io/coreos/bootkube:v0.5.0"
     console                         = "quay.io/coreos/tectonic-console:v1.7.4"
-    identity                        = "quay.io/coreos/dex:v2.4.1"
+    identity                        = "quay.io/coreos/dex:v2.5.0"
     container_linux_update_operator = "quay.io/coreos/container-linux-update-operator:v0.2.1"
     kube_version_operator           = "quay.io/coreos/kube-version-operator:v1.6.7"
     tectonic_channel_operator       = "quay.io/coreos/tectonic-channel-operator:0.3.6"
@@ -48,7 +48,7 @@ variable "tectonic_container_images" {
     stats_emitter                   = "quay.io/coreos/tectonic-stats:6e882361357fe4b773adbf279cddf48cb50164c1"
     stats_extender                  = "quay.io/coreos/tectonic-stats-extender:487b3da4e175da96dabfb44fba65cdb8b823db2e"
     error_server                    = "quay.io/coreos/tectonic-error-server:1.0"
-    ingress_controller              = "gcr.io/google_containers/nginx-ingress-controller:0.9.0-beta.8"
+    ingress_controller              = "gcr.io/google_containers/nginx-ingress-controller:0.9.0-beta.11"
     kubedns                         = "gcr.io/google_containers/k8s-dns-kube-dns-amd64:1.14.4"
     kubednsmasq                     = "gcr.io/google_containers/k8s-dns-dnsmasq-nanny-amd64:1.14.4"
     kubedns_sidecar                 = "gcr.io/google_containers/k8s-dns-sidecar-amd64:1.14.4"
@@ -189,7 +189,8 @@ variable "tectonic_base_domain" {
   type = "string"
 
   description = <<EOF
-The base DNS domain of the cluster.
+The base DNS domain of the cluster. It must NOT contain a trailing period. Some
+DNS providers will automatically add this if necessary.
 
 Example: `openstack.dev.coreos.systems`.
 
@@ -265,7 +266,9 @@ variable "tectonic_admin_email" {
   type = "string"
 
   description = <<EOF
-The e-mail address used to login as the admin user to the Tectonic Console.
+The e-mail address used to:
+1. login as the admin user to the Tectonic Console.
+2. generate DNS zones for some providers.
 
 Note: This field MUST be set manually prior to creating the cluster.
 EOF
