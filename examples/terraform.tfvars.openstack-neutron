@@ -1,5 +1,7 @@
 
-// The e-mail address used to login as the admin user to the Tectonic Console.
+// The e-mail address used to:
+// 1. login as the admin user to the Tectonic Console.
+// 2. generate DNS zones for some providers.
 // 
 // Note: This field MUST be set manually prior to creating the cluster.
 tectonic_admin_email = ""
@@ -10,7 +12,8 @@ tectonic_admin_email = ""
 // Note: This field MUST be set manually prior to creating the cluster.
 tectonic_admin_password_hash = ""
 
-// The base DNS domain of the cluster.
+// The base DNS domain of the cluster. It must NOT contain a trailing period. Some
+// DNS providers will automatically add this if necessary.
 // 
 // Example: `openstack.dev.coreos.systems`.
 // 
@@ -31,6 +34,11 @@ tectonic_base_domain = ""
 // This field is mandatory if `tectonic_ca_cert` is set.
 // tectonic_ca_key_alg = "RSA"
 
+// [ALPHA] If set to true, calico network policy support will be deployed.
+// WARNING: Enabling an alpha feature means that future updates may become unsupported.
+// This should only be enabled on clusters that are meant to be short-lived to begin validating the alpha feature.
+tectonic_calico_network_policy = false
+
 // The Container Linux update channel.
 // 
 // Examples: `stable`, `beta`, `alpha`
@@ -45,6 +53,26 @@ tectonic_cluster_cidr = "10.2.0.0/16"
 // Note: This field MUST be set manually prior to creating the cluster.
 // Warning: Special characters in the name like '.' may cause errors on OpenStack platforms due to resource name constraints.
 tectonic_cluster_name = ""
+
+// (optional) This only applies if you use the modules/dns/ddns module.
+// 
+// Specifies the RFC2136 Dynamic DNS server key algorithm.
+// tectonic_ddns_key_algorithm = ""
+
+// (optional) This only applies if you use the modules/dns/ddns module.
+// 
+// Specifies the RFC2136 Dynamic DNS server key name.
+// tectonic_ddns_key_name = ""
+
+// (optional) This only applies if you use the modules/dns/ddns module.
+// 
+// Specifies the RFC2136 Dynamic DNS server key secret.
+// tectonic_ddns_key_secret = ""
+
+// (optional) This only applies if you use the modules/dns/ddns module.
+// 
+// Specifies the RFC2136 Dynamic DNS server IP/host to register IP addresses to.
+// tectonic_ddns_server = ""
 
 // (optional) The path of the file containing the CA certificate for TLS communication with etcd.
 // 
@@ -96,11 +124,20 @@ tectonic_master_count = "1"
 // The DNS servers assigned to the generated OpenStack subnet resource.
 tectonic_openstack_dns_nameservers = ""
 
+// (optional) The flavor id for etcd instances as given in `openstack flavor list`. Specifies the size (CPU/Memory/Drive) of the VM.
+// 
+// Note: Set either tectonic_openstack_etcd_flavor_name or tectonic_openstack_etcd_flavor_id.
+// Note: This value is ignored for self-hosted etcd.
+// tectonic_openstack_etcd_flavor_id = ""
+
+// (optional) The flavor name for etcd instances as given in `openstack flavor list`. Specifies the size (CPU/Memory/Drive) of the VM.
+// 
+// Note: Set either tectonic_openstack_etcd_flavor_name or tectonic_openstack_etcd_flavor_id.
+// Note: This value is ignored for self-hosted etcd.
+// tectonic_openstack_etcd_flavor_name = ""
+
 // The ID of the network to be used as the external internet gateway as given in `openstack network list`.
 tectonic_openstack_external_gateway_id = ""
-
-// The flavor ID as given in `openstack flavor list`. Specifies the size (CPU/Memory/Drive) of the VM.
-tectonic_openstack_flavor_id = ""
 
 // The name name of the floating IP pool
 // as given in `openstack floating ip list`.
@@ -108,11 +145,38 @@ tectonic_openstack_flavor_id = ""
 tectonic_openstack_floatingip_pool = "public"
 
 // The image ID as given in `openstack image list`. Specifies the OS image of the VM.
+// 
+// Note: Set either tectonic_openstack_image_name or tectonic_openstack_image_id.
 tectonic_openstack_image_id = ""
+
+// The image ID as given in `openstack image list`. Specifies the OS image of the VM.
+// 
+// Note: Set either tectonic_openstack_image_name or tectonic_openstack_image_id.
+tectonic_openstack_image_name = ""
+
+// The flavor id for master instances as given in `openstack flavor list`. Specifies the size (CPU/Memory/Drive) of the VM.
+// 
+// Note: Set either tectonic_openstack_master_flavor_name or tectonic_openstack_master_flavor_id.
+tectonic_openstack_master_flavor_id = ""
+
+// The flavor name for master instances as given in `openstack flavor list`. Specifies the size (CPU/Memory/Drive) of the VM.
+// 
+// Note: Set either tectonic_openstack_master_flavor_name or tectonic_openstack_master_flavor_id.
+tectonic_openstack_master_flavor_name = ""
 
 // The subnet CIDR for the master/worker/etcd compute nodes.
 // This CIDR will also be assigned to the created the OpenStack subnet resource.
 tectonic_openstack_subnet_cidr = "192.168.1.0/24"
+
+// The flavor id for worker instances as given in `openstack flavor list`. Specifies the size (CPU/Memory/Drive) of the VM.
+// 
+// Note: Set either tectonic_openstack_worker_flavor_name or tectonic_openstack_worker_flavor_id.
+tectonic_openstack_worker_flavor_id = ""
+
+// The flavor name for worker instances as given in `openstack flavor list`. Specifies the size (CPU/Memory/Drive) of the VM.
+// 
+// Note: Set either tectonic_openstack_worker_flavor_name or tectonic_openstack_worker_flavor_id.
+tectonic_openstack_worker_flavor_name = ""
 
 // The path the pull secret file in JSON format.
 // 

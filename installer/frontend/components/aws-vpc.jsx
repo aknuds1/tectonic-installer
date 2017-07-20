@@ -49,7 +49,7 @@ import {
   SERVICE_CIDR,
   toVPCSubnetID,
   SPLIT_DNS_ON,
-  SPLIT_DNS_OPTIONS,
+  // SPLIT_DNS_OPTIONS,
 } from '../cluster-config';
 
 const vpcInfoForm = new Form(AWS_VPC_FORM, [
@@ -235,7 +235,7 @@ class AWS_VPCComponent extends React.Component {
   }
 
   render () {
-    const { availableVpcs, awsCreateVpc, availableVpcSubnets, awsVpcId, clusterName, clusterSubdomain, internalCluster, advanced, privateZone } = this.props;
+    const { availableVpcs, awsCreateVpc, availableVpcSubnets, awsVpcId, clusterName, clusterSubdomain, internalCluster, advanced } = this.props;
 
     let controllerSubnets;
     let workerSubnets;
@@ -311,7 +311,7 @@ class AWS_VPCComponent extends React.Component {
                 Use an existing VPC (Public)
               </label>
               <p className="text-muted wiz-help-text">
-                Useful for installing beside existing resources. Your VPC must be <a href="https://coreos.com/tectonic/docs/latest/install/aws/requirements.html#using-an-existing-vpc" onClick={TectonicGA.sendDocsEvent} target="_blank">set up correctly</a>.
+                Useful for installing beside existing resources. Your VPC must be <a href="https://coreos.com/tectonic/docs/latest/install/aws/requirements.html#using-an-existing-vpc" onClick={() => TectonicGA.sendDocsEvent('aws-tf')} target="_blank">set up correctly</a>.
               </p>
             </div>
           </div>
@@ -324,7 +324,7 @@ class AWS_VPCComponent extends React.Component {
                 Use an existing VPC (Private)
               </label>
               <p className="text-muted wiz-help-text">
-                Useful for installing beside existing resources. Your VPC must be <a href="https://coreos.com/tectonic/docs/latest/install/aws/requirements.html#using-an-existing-vpc" onClick={TectonicGA.sendDocsEvent} target="_blank">set up correctly</a>.
+                Useful for installing beside existing resources. Your VPC must be <a href="https://coreos.com/tectonic/docs/latest/install/aws/requirements.html#using-an-existing-vpc" onClick={() => TectonicGA.sendDocsEvent('aws-tf')} target="_blank">set up correctly</a>.
               </p>
             </div>
           </div>
@@ -355,7 +355,7 @@ class AWS_VPCComponent extends React.Component {
           </div>
         </div>
       </div>
-      { !privateZone &&
+      {/* privateZone &&
         <div className="row form-group">
           <div className="col-xs-offset-3 col-xs-9">
             <Connect field={AWS_SPLIT_DNS}>
@@ -369,14 +369,13 @@ class AWS_VPCComponent extends React.Component {
             </p>
           </div>
         </div>
-      }
+      */}
 
       <vpcInfoForm.Errors/>
       <AWS_DomainValidation />
       <hr />
 
-      { awsCreateVpc &&
-      <Connect field={AWS_ADVANCED_NETWORKING}>
+      { awsCreateVpc && <Connect field={AWS_ADVANCED_NETWORKING}>
         <ToggleButton className="btn btn-default">Advanced Settings</ToggleButton>
       </Connect>
       }
@@ -434,16 +433,14 @@ class AWS_VPCComponent extends React.Component {
         }
 
         { (controllerSubnets || workerSubnets) && <hr /> }
-        { controllerSubnets &&
-        <div className="row form-group">
+        { controllerSubnets && <div className="row form-group">
           <div className="col-xs-12">
             <h4>Masters</h4>
             { controllerSubnets }
           </div>
         </div>
         }
-        { workerSubnets &&
-        <div className="row form-group">
+        { workerSubnets && <div className="row form-group">
           <div className="col-xs-12">
             <h4>Workers</h4>
             { workerSubnets }

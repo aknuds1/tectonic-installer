@@ -3,6 +3,7 @@ data "ignition_config" "master" {
     "${data.ignition_file.kubeconfig.id}",
     "${data.ignition_file.kubelet-env.id}",
     "${data.ignition_file.max-user-watches.id}",
+    "${data.ignition_file.cloud-provider-config.id}",
   ]
 
   systemd = [
@@ -49,6 +50,7 @@ data "template_file" "kubelet-master" {
   vars {
     node_label        = "${var.kubelet_node_label}"
     node_taints_param = "${var.kubelet_node_taints != "" ? "--register-with-taints=${var.kubelet_node_taints}" : ""}"
+    cni_bin_dir_flag  = "${var.kubelet_cni_bin_dir != "" ? "--cni-bin-dir=${var.kubelet_cni_bin_dir}" : ""}"
     cloud_provider    = "${var.cloud_provider}"
     cluster_dns       = "${var.tectonic_kube_dns_service_ip}"
   }
@@ -90,6 +92,16 @@ data "ignition_file" "max-user-watches" {
 
   content {
     content = "fs.inotify.max_user_watches=16184"
+  }
+}
+
+data "ignition_file" "cloud-provider-config" {
+  filesystem = "root"
+  path       = "/etc/kubernetes/cloud/config"
+  mode       = 0600
+
+  content {
+    content = "${var.cloud_provider_config}"
   }
 }
 

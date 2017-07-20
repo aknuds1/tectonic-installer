@@ -7,11 +7,17 @@ resource "template_dir" "experimental" {
     etcd_operator_image = "${var.container_images["etcd_operator"]}"
     etcd_service_ip     = "${cidrhost(var.service_cidr, 15)}"
     kenc_image          = "${var.container_images["kenc"]}"
-    etcd_ca_cert        = "${base64encode(data.template_file.etcd_ca_cert_pem.rendered)}"
-    etcd_client_cert    = "${base64encode(data.template_file.etcd_client_crt.rendered)}"
-    etcd_client_key     = "${base64encode(data.template_file.etcd_client_key.rendered)}"
-    etcd_peer_cert      = "${base64encode(join("", tls_locally_signed_cert.etcd_peer.*.cert_pem))}"
-    etcd_peer_key       = "${base64encode(join("", tls_private_key.etcd_peer.*.private_key_pem))}"
+
+    etcd_ca_cert = "${base64encode(data.template_file.etcd_ca_cert_pem.rendered)}"
+
+    etcd_server_cert = "${base64encode(join("", tls_locally_signed_cert.etcd_server.*.cert_pem))}"
+    etcd_server_key  = "${base64encode(join("", tls_private_key.etcd_server.*.private_key_pem))}"
+
+    etcd_client_cert = "${base64encode(data.template_file.etcd_client_crt.rendered)}"
+    etcd_client_key  = "${base64encode(data.template_file.etcd_client_key.rendered)}"
+
+    etcd_peer_cert = "${base64encode(join("", tls_locally_signed_cert.etcd_peer.*.cert_pem))}"
+    etcd_peer_key  = "${base64encode(join("", tls_private_key.etcd_peer.*.private_key_pem))}"
   }
 }
 
@@ -49,8 +55,6 @@ resource "template_dir" "bootkube" {
     kubedns_image          = "${var.container_images["kubedns"]}"
     kubednsmasq_image      = "${var.container_images["kubednsmasq"]}"
     kubedns_sidecar_image  = "${var.container_images["kubedns_sidecar"]}"
-    flannel_image          = "${var.container_images["flannel"]}"
-    flannel_cni_image      = "${var.container_images["flannel_cni"]}"
 
     # Choose the etcd endpoints to use.
     # 1. If experimental mode is enabled (self-hosted etcd), then use
@@ -60,7 +64,7 @@ resource "template_dir" "bootkube" {
     # 3. Else (if etcd TLS certific are provided), then use the secure https
     # var.etcd_endpoints.
     etcd_servers = "${
-      var.experimental_enabled 
+      var.experimental_enabled
         ? format("https://%s:2379", cidrhost(var.service_cidr, 15))
         : data.template_file.etcd_ca_cert_pem.rendered == ""
           ? join(",", formatlist("http://%s:2379", var.etcd_endpoints))
@@ -70,7 +74,9 @@ resource "template_dir" "bootkube" {
     etcd_service_ip           = "${cidrhost(var.service_cidr, 15)}"
     bootstrap_etcd_service_ip = "${cidrhost(var.service_cidr, 20)}"
 
-    cloud_provider = "${var.cloud_provider}"
+    cloud_provider             = "${var.cloud_provider}"
+    cloud_provider_config      = "${var.cloud_provider_config}"
+    cloud_provider_config_flag = "${var.cloud_provider_config != "" ? "- --cloud-config=/etc/kubernetes/cloud/config" : "# no cloud provider config given"}"
 
     cluster_cidr        = "${var.cluster_cidr}"
     service_cidr        = "${var.service_cidr}"
@@ -89,7 +95,7 @@ resource "template_dir" "bootkube" {
     serviceaccount_pub = "${base64encode(tls_private_key.service-account.public_key_pem)}"
     serviceaccount_key = "${base64encode(tls_private_key.service-account.private_key_pem)}"
 
-    etcd_ca_flag   = "${data.template_file.etcd_ca_cert_pem.rendered != "" ? "- --etcd-cafile=/etc/kubernetes/secrets/etcd-ca.crt" : "# no etcd-ca.crt given" }"
+    etcd_ca_flag   = "${data.template_file.etcd_ca_cert_pem.rendered != "" ? "- --etcd-cafile=/etc/kubernetes/secrets/etcd-client-ca.crt" : "# no etcd-client-ca.crt given" }"
     etcd_cert_flag = "${data.template_file.etcd_client_crt.rendered != "" ? "- --etcd-certfile=/etc/kubernetes/secrets/etcd-client.crt" : "# no etcd-client.crt given" }"
     etcd_key_flag  = "${data.template_file.etcd_client_key.rendered != "" ? "- --etcd-keyfile=/etc/kubernetes/secrets/etcd-client.key" : "# no etcd-client.key given" }"
 
@@ -115,19 +121,22 @@ resource "template_dir" "bootkube-bootstrap" {
     etcd_image      = "${var.container_images["etcd"]}"
 
     etcd_servers = "${
-      var.experimental_enabled 
+      var.experimental_enabled
         ? format("https://%s:2379,https://127.0.0.1:12379", cidrhost(var.service_cidr, 15))
         : data.template_file.etcd_ca_cert_pem.rendered == ""
           ? join(",", formatlist("http://%s:2379", var.etcd_endpoints))
           : join(",", formatlist("https://%s:2379", var.etcd_endpoints))
       }"
 
-    etcd_ca_flag   = "${data.template_file.etcd_ca_cert_pem.rendered != "" ? "- --etcd-cafile=/etc/kubernetes/secrets/operator/etcd-ca-crt.pem" : "# no etcd-ca.crt given" }"
-    etcd_cert_flag = "${data.template_file.etcd_client_crt.rendered != "" ? "- --etcd-certfile=/etc/kubernetes/secrets/operator/etcd-crt.pem" : "# no etcd-client.crt given" }"
-    etcd_key_flag  = "${data.template_file.etcd_client_key.rendered != "" ? "- --etcd-keyfile=/etc/kubernetes/secrets/operator/etcd-key.pem" : "# no etcd-client.key given" }"
+    etcd_ca_flag   = "${data.template_file.etcd_ca_cert_pem.rendered != "" ? "- --etcd-cafile=/etc/kubernetes/secrets/etcd-client-ca.crt" : "# no etcd-client-ca.crt given" }"
+    etcd_cert_flag = "${data.template_file.etcd_client_crt.rendered != "" ? "- --etcd-certfile=/etc/kubernetes/secrets/etcd-client.crt" : "# no etcd-client.crt given" }"
+    etcd_key_flag  = "${data.template_file.etcd_client_key.rendered != "" ? "- --etcd-keyfile=/etc/kubernetes/secrets/etcd-client.key" : "# no etcd-client.key given" }"
+
+    cloud_provider             = "${var.cloud_provider}"
+    cloud_provider_config      = "${var.cloud_provider_config}"
+    cloud_provider_config_flag = "${var.cloud_provider_config != "" ? "- --cloud-config=/etc/kubernetes/cloud/config" : "# no cloud provider config given"}"
 
     advertise_address = "${var.advertise_address}"
-    cloud_provider    = "${var.cloud_provider}"
     cluster_cidr      = "${var.cluster_cidr}"
     service_cidr      = "${var.service_cidr}"
   }
@@ -142,6 +151,7 @@ data "template_file" "kubeconfig" {
     kubelet_cert = "${base64encode(tls_locally_signed_cert.kubelet.cert_pem)}"
     kubelet_key  = "${base64encode(tls_private_key.kubelet.private_key_pem)}"
     server       = "${var.kube_apiserver_url}"
+    cluster_name = "${var.cluster_name}"
   }
 }
 
@@ -194,29 +204,82 @@ data "template_file" "etcd_client_key" {
 resource "local_file" "etcd_ca_crt" {
   count    = "${var.experimental_enabled || var.etcd_tls_enabled ? 1 : 0}"
   content  = "${data.template_file.etcd_ca_cert_pem.rendered}"
-  filename = "./generated/tls/operator/etcd-ca-crt.pem"
+  filename = "./generated/tls/etcd-client-ca.crt"
 }
 
 resource "local_file" "etcd_client_crt" {
   count    = "${var.experimental_enabled || var.etcd_tls_enabled ? 1 : 0}"
   content  = "${data.template_file.etcd_client_crt.rendered}"
-  filename = "./generated/tls/operator/etcd-crt.pem"
+  filename = "./generated/tls/etcd-client.crt"
 }
 
 resource "local_file" "etcd_client_key" {
   count    = "${var.experimental_enabled || var.etcd_tls_enabled ? 1 : 0}"
   content  = "${data.template_file.etcd_client_key.rendered}"
-  filename = "./generated/tls/operator/etcd-key.pem"
+  filename = "./generated/tls/etcd-client.key"
+}
+
+resource "local_file" "etcd_server_crt" {
+  count    = "${var.experimental_enabled || var.etcd_tls_enabled ? 1 : 0}"
+  content  = "${join("", tls_locally_signed_cert.etcd_server.*.cert_pem)}"
+  filename = "./generated/tls/etcd/server.crt"
+}
+
+resource "local_file" "etcd_server_key" {
+  count    = "${var.experimental_enabled || var.etcd_tls_enabled ? 1 : 0}"
+  content  = "${join("", tls_private_key.etcd_server.*.private_key_pem)}"
+  filename = "./generated/tls/etcd/server.key"
 }
 
 resource "local_file" "etcd_peer_crt" {
   count    = "${var.experimental_enabled || var.etcd_tls_enabled ? 1 : 0}"
   content  = "${join("", tls_locally_signed_cert.etcd_peer.*.cert_pem)}"
-  filename = "./generated/tls/peer/etcd-peer.crt"
+  filename = "./generated/tls/etcd/peer.crt"
 }
 
 resource "local_file" "etcd_peer_key" {
   count    = "${var.experimental_enabled || var.etcd_tls_enabled ? 1 : 0}"
   content  = "${join("", tls_private_key.etcd_peer.*.private_key_pem)}"
-  filename = "./generated/tls/peer/etcd-peer.key"
+  filename = "./generated/tls/etcd/peer.key"
+}
+
+data "archive_file" "etcd_tls_zip" {
+  type = "zip"
+
+  output_path = "./.terraform/etcd_tls.zip"
+
+  source {
+    filename = "ca.crt"
+    content  = "${data.template_file.etcd_ca_cert_pem.rendered}"
+  }
+
+  source {
+    filename = "server.crt"
+    content  = "${join("", tls_locally_signed_cert.etcd_server.*.cert_pem)}"
+  }
+
+  source {
+    filename = "server.key"
+    content  = "${join("", tls_private_key.etcd_server.*.private_key_pem)}"
+  }
+
+  source {
+    filename = "peer.crt"
+    content  = "${join("", tls_locally_signed_cert.etcd_peer.*.cert_pem)}"
+  }
+
+  source {
+    filename = "peer.key"
+    content  = "${join("", tls_private_key.etcd_peer.*.private_key_pem)}"
+  }
+
+  source {
+    filename = "client.crt"
+    content  = "${data.template_file.etcd_client_crt.rendered}"
+  }
+
+  source {
+    filename = "client.key"
+    content  = "${data.template_file.etcd_client_key.rendered}"
+  }
 }

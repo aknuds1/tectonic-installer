@@ -4,11 +4,13 @@ import Modal from 'react-modal';
 import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
 
+import { navigateNext } from '../app';
 import { store } from '../store';
 import { eventErrorsActionTypes, restoreActionTypes, validateAllFields } from '../actions';
 import { readFile } from '../readfile';
 import { TectonicGA } from '../tectonic-ga';
 import { CLUSTER_NAME } from '../cluster-config';
+import { LoaderInline } from './loader';
 
 const UPLOAD_ERROR_NAME = 'UPLOAD_ERROR_NAME';
 
@@ -65,7 +67,7 @@ const dispatchToProps = dispatch => bindActionCreators({handleUpload}, dispatch)
 const Modal_ = connect(stateToProps, dispatchToProps)(class Modal_Inner extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {done: false};
+    this.state = {done: false, inProgress: false};
     this.onKeyDown = event => event.keyCode === 27 && this.close();
   }
 
@@ -78,15 +80,25 @@ const Modal_ = connect(stateToProps, dispatchToProps)(class Modal_Inner extends 
     window.removeEventListener("keydown", this.onKeyDown);
   }
 
+  handleUpload (e) {
+    if (e.target.files.length) {
+      this.setState({done: false, inProgress: true});
+      this.props.handleUpload(e.target.files[0], this.isDone.bind(this));
+    }
+  }
+
   close () {
     setTimeout(() => ReactDom.unmountComponentAtNode(document.getElementById('tectonic-modal')), 0);
+    if (this.state.done) {
+      navigateNext();
+    }
   }
 
   isDone () {
     if (this.unmounted) {
       return;
     }
-    this.setState({done: true});
+    this.setState({done: true, inProgress: false});
   }
 
   render () {
@@ -95,12 +107,14 @@ const Modal_ = connect(stateToProps, dispatchToProps)(class Modal_Inner extends 
     return (
       <Modal isOpen={true} className="tectonic-modal" overlayClassName="tectonic-modal-overlay" shouldCloseOnOverlayClick={false}>
         <div className="modal-header">
-          <h2 className="modal-title">Restore progress</h2>
+          <h2 className="modal-title">Restore Progress</h2>
+          <p>Pre-fill all of the inputs based on a "progress file", which can be downloaded at the end of the installer. Note that future compatibility is not guaranteed.</p>
         </div>
         <div className="modal-body" style={{minHeight: 100}}>
-           <input id="upload-state" type="file" onChange={e => this.props.handleUpload(e.target.files[0], this.isDone.bind(this))} />
-           { uploadError && <p className="wiz-error-message">{uploadError}</p>}
-           { this.state.done && <p className="alert alert-info">Restored state for {clusterName} cluster.</p>}
+          <input id="upload-state" type="file" onChange={this.handleUpload.bind(this)} />
+          { uploadError && <p className="wiz-error-message">{uploadError}</p>}
+          { !uploadError && this.state.inProgress && <span><LoaderInline /> Restoring...</span>}
+          { this.state.done && <p className="alert alert-info">Restored state for {clusterName} cluster.</p>}
         </div>
         <div className="modal-footer tectonic-modal-footer">
           <button className="btn btn-default" onClick={this.close.bind(this)}>Close</button>

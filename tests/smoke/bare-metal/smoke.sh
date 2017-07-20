@@ -66,6 +66,16 @@ main() {
   until $(curl --silent --fail -k http://matchbox.example.com:8080 > /dev/null); do
     echo "Waiting for matchbox..."
     sleep 5
+
+    if sudo -E systemctl is-failed dev-matchbox; then
+      sudo -E journalctl -u dev-matchbox
+      exit 1
+    fi
+
+    if sudo -E systemctl is-failed dev-dnsmasq; then
+      sudo -E journalctl -u dev-dnsmasq
+      exit 1
+    fi
   done
 
   echo "Starting Terraform"
@@ -262,6 +272,11 @@ test_cluster() {
   MASTER_COUNT=$(grep tectonic_master_count "$CONFIG" | awk -F "=" '{gsub(/"/, "", $2); print $2}')
   WORKER_COUNT=$(grep tectonic_worker_count "$CONFIG" | awk -F "=" '{gsub(/"/, "", $2); print $2}')
   export NODE_COUNT=$(( MASTER_COUNT + WORKER_COUNT ))
+  export MANIFEST_PATHS=${ROOT}/build/${CLUSTER}/generated/
+  # shellcheck disable=SC2155
+  export MANIFEST_EXPERIMENTAL=$(grep tectonic_experimental "$CONFIG" | awk -F "=" '{gsub(/"/, "", $2); print $2}' | tr -d ' ')
+  # shellcheck disable=SC2155
+  export CALICO_NETWORK_POLICY=$(grep tectonic_calico_network_policy "$CONFIG" | awk -F "=" '{gsub(/"/, "", $2); print $2}' | tr -d ' ')
   bin/smoke -test.v -test.parallel=1 --cluster
 }
 

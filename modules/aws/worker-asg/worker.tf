@@ -43,7 +43,7 @@ resource "aws_launch_configuration" "worker_conf" {
   root_block_device {
     volume_type = "${var.root_volume_type}"
     volume_size = "${var.root_volume_size}"
-    iops        = "${var.root_volume_type == "io1" ? var.root_volume_iops : 0}"
+    iops        = "${var.root_volume_type == "io1" ? var.root_volume_iops : 100}"
   }
 }
 
@@ -82,8 +82,8 @@ resource "aws_autoscaling_group" "workers" {
 resource "aws_iam_instance_profile" "worker_profile" {
   name = "${var.cluster_name}-worker-profile"
 
-  role = "${var.worker_iam_role == "" ? 
-    join("|", aws_iam_role.worker_role.*.name) : 
+  role = "${var.worker_iam_role == "" ?
+    join("|", aws_iam_role.worker_role.*.name) :
     join("|", data.aws_iam_role.worker_role.*.role_name)
   }"
 }

@@ -10,7 +10,7 @@
 # docker push quay.io/coreos/tectonic-builder:<next-semver>
 ###
 
-FROM golang:1.8-stretch
+FROM golang:1.8.3-stretch
 
 ### For golang testing stuff
 RUN go get -u github.com/golang/lint/golint
@@ -19,11 +19,22 @@ RUN go get github.com/jstemmer/go-junit-report
 ### License parser
 RUN go get github.com/coreos/license-bill-of-materials
 
+### 'grafiti' for cluster cleanup
+ENV GRAFITI_VERSION "v0.1.1"
+RUN git clone -q https://github.com/coreos/grafiti.git ${GOPATH}/src/github.com/coreos/grafiti \
+    && cd ${GOPATH}/src/github.com/coreos/grafiti \
+    && git checkout -q tags/${GRAFITI_VERSION} \
+    && make install
+
+# /go needs to be writable by jenkins user like it is in the upstream golang image
+RUN chmod 777 -R /go
+
 ### Install Shellcheck, Terraform, NodeJS and Yarn
 ENV SHELLCHECK_VERSION="v0.4.6"
-ENV TERRAFORM_VERSION="0.9.6"
+ENV TERRAFORM_VERSION="v0.9.11-coreos.2"
 ENV NODE_VERSION="v8.1.2"
 ENV YARN_VERSION="v0.24.6"
+ENV MATCHBOXVERSION="v0.6.1"
 # yarn needs a home writable by any user running the container
 ENV HOME /opt/home
 RUN mkdir -p ${HOME}
@@ -35,7 +46,7 @@ RUN apt-get update && \
     openvpn xvfb xauth
 
 # Install Terraform
-RUN curl https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip | funzip > /usr/local/bin/terraform && chmod +x /usr/local/bin/terraform
+RUN curl -L https://github.com/coreos/terraform/releases/download/${TERRAFORM_VERSION}/linux_amd64.zip | funzip > /usr/local/bin/terraform && chmod +x /usr/local/bin/terraform
 
 # Install NodeJS
 RUN cd /tmp && \
@@ -70,6 +81,13 @@ RUN wget --quiet -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | ap
     apt-get update && \
     apt-get install --no-install-recommends -y -q \
     google-chrome-beta ca-certificates
+
+# matchbox for baremetal installer gui tests
+RUN cd /tmp && \
+    wget --quiet -O /tmp/matchbox.tar.gz https://github.com/coreos/matchbox/releases/download/${MATCHBOXVERSION}/matchbox-${MATCHBOXVERSION}-linux-amd64.tar.gz && \
+    tar xzvf /tmp/matchbox.tar.gz && \
+    rm -f /tmp/matchbox.tar.gz && \
+    cp matchbox-*/matchbox /usr/local/bin
 
 # cleanup
 RUN rm -rf /tmp/node-v*

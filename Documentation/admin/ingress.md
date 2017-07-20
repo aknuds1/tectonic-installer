@@ -52,7 +52,7 @@ hello     hello.example.com   172.18.0.22,172.18.0.23   80        1h
 
 Next, test that traffic to `hello.example.com` reaches the cluster's Ingress Controllers.
     
-On Tectonic bare-metal, add a DNS record on your network which resolves `hello.example.com` to any worker node(s), similar to how the Tectonic DNS entry was setup while going through the installer. In a pinch, you could test this by adding an `/etc/host` entry
+On Tectonic bare-metal, add a DNS record on your network which resolves `hello.example.com` to any worker node(s), similar to how the Tectonic DNS entry was setup while going through the installer. In a pinch, you could test this by adding an `/etc/hosts` entry
 
 ```
 workerIP hello.example.com
@@ -95,7 +95,7 @@ spec:
     spec:
       containers:
         - name: nginx-ingress-lb
-          image: gcr.io/google_containers/nginx-ingress-controller:0.9.0-beta.1
+          image: gcr.io/google_containers/nginx-ingress-controller:0.9.0-beta.11
           args:
           - /nginx-ingress-controller
           - --default-backend-service=$(POD_NAMESPACE)/default-http-backend

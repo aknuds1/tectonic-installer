@@ -4,14 +4,24 @@ This document describes how to add cluster nodes to Tectonic clusters on bare me
 
 ## Scaling worker nodes
 
-To scale worker nodes, adjust `tectonic_worker_count` in `terraform.vars` and run:
+To scale worker nodes, adjust `tectonic_worker_count`, `tectonic_metal_worker_macs`, `tectonic_metal_worker_names` and `tectonic_metal_worker_domains` variables in `terraform.vars` and run:
 
 ```
-$ terraform apply $ terraform plan \
+$ terraform plan \
   -var-file=build/${CLUSTER}/terraform.tfvars \
   -target module.workers \
   platforms/metal
 ```
+
+Once you are ready to make the changes live, use `apply`:
+
+```
+$ terraform apply \
+  -var-file=build/${CLUSTER}/terraform.tfvars \
+  -target module.workers \
+  platforms/metal
+```
+
 After running `terraform apply`, [power on][power-on] the machines to PXE boot the new nodes and access the cluster.
 
 ## Scaling controller nodes

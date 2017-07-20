@@ -1,3 +1,7 @@
+variable "cluster_name" {
+  type = "string"
+}
+
 variable "container_images" {
   description = "Container images to use"
   type        = "map"
@@ -46,6 +50,12 @@ variable "experimental_enabled" {
 variable "cloud_provider" {
   description = "The provider for cloud services (empty string for no provider)"
   type        = "string"
+}
+
+variable "cloud_provider_config" {
+  description = "Content of cloud provider config"
+  type        = "string"
+  default     = ""
 }
 
 variable "service_cidr" {
