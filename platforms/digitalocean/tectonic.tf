@@ -2,6 +2,7 @@ module "bootkube" {
   source = "../../modules/bootkube"
   
   cloud_provider = ""
+  cluster_name = "${var.tectonic_cluster_name}"
   kube_apiserver_url = "https://${module.masters.cluster_fqdn}:443"
   oidc_issuer_url = "https://${module.masters.cluster_fqdn}:443/identity"
   # Platform-independent variables wiring, do not modify.
@@ -38,6 +39,7 @@ module "tectonic" {
   source = "../../modules/tectonic"
 
   platform = "digitalocean"
+  cluster_name = "${var.tectonic_cluster_name}"
   base_address = "${module.masters.cluster_fqdn}"
   kube_apiserver_url = "https://${module.masters.cluster_fqdn}:443"
   # Platform-independent variables wiring, do not modify.
