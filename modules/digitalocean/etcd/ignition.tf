@@ -51,6 +51,7 @@ Type=oneshot
 WorkingDirectory=/etc/ssl/etcd
 ExecStart=/usr/bin/bash -c 'unzip /etc/ssl/etcd/tls.zip && \
 chown etcd:etcd /etc/ssl/etcd/peer.* && \
+chown etcd:etcd /etc/ssl/etcd/client.* && \
 chown etcd:etcd /etc/ssl/etcd/server.* && \
 chmod 0400 /etc/ssl/etcd/peer.* /etc/ssl/etcd/server.* /etc/ssl/etcd/client.*'
 [Install]
@@ -84,6 +85,7 @@ data "template_file" "etcd-cluster" {
   vars = {
     etcd-name = "${var.cluster_name}-etcd-${count.index}"
     etcd-address = "etcd-${count.index}.etcd.${var.cluster_domain}"
+    tls-enabled = "${var.tls_enabled}"
   }
 }
 
