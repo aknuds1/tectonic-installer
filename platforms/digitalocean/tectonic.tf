@@ -26,13 +26,13 @@ module "bootkube" {
   experimental_enabled = "${var.tectonic_experimental}"
   master_count = 1
   etcd_cert_dns_names = [
-    "${var.tectonic_cluster_name}-etcd-0.${var.tectonic_base_domain}",
-    "${var.tectonic_cluster_name}-etcd-1.${var.tectonic_base_domain}",
-    "${var.tectonic_cluster_name}-etcd-2.${var.tectonic_base_domain}",
-    "${var.tectonic_cluster_name}-etcd-3.${var.tectonic_base_domain}",
-    "${var.tectonic_cluster_name}-etcd-4.${var.tectonic_base_domain}",
-    "${var.tectonic_cluster_name}-etcd-5.${var.tectonic_base_domain}",
-    "${var.tectonic_cluster_name}-etcd-6.${var.tectonic_base_domain}",
+    "etcd-0.etcd.${var.tectonic_cluster_name}.k8s.${var.tectonic_base_domain}",
+    "etcd-1.etcd.${var.tectonic_cluster_name}.k8s.${var.tectonic_base_domain}",
+    "etcd-2.etcd.${var.tectonic_cluster_name}.k8s.${var.tectonic_base_domain}",
+    "etcd-3.etcd.${var.tectonic_cluster_name}.k8s.${var.tectonic_base_domain}",
+    "etcd-4.etcd.${var.tectonic_cluster_name}.k8s.${var.tectonic_base_domain}",
+    "etcd-5.etcd.${var.tectonic_cluster_name}.k8s.${var.tectonic_base_domain}",
+    "etcd-6.etcd.${var.tectonic_cluster_name}.k8s.${var.tectonic_base_domain}",
   ]
 }
 
