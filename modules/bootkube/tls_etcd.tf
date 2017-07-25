@@ -14,7 +14,7 @@ resource "tls_self_signed_cert" "etcd-ca" {
   private_key_pem = "${tls_private_key.etcd-ca.private_key_pem}"
 
   subject {
-    common_name  = "etcd-ca"
+    common_name = "etcd-ca"
     organization = "etcd"
   }
 
@@ -45,7 +45,7 @@ resource "tls_cert_request" "etcd_server" {
   private_key_pem = "${tls_private_key.etcd_server.private_key_pem}"
 
   subject {
-    common_name  = "etcd"
+    common_name  = "${element(var.etcd_cert_dns_names, count.index)}"
     organization = "etcd"
   }
 
@@ -98,7 +98,7 @@ resource "tls_cert_request" "etcd_client" {
   private_key_pem = "${tls_private_key.etcd_client.private_key_pem}"
 
   subject {
-    common_name  = "etcd"
+    common_name = "${element(var.etcd_cert_dns_names, count.index)}"
     organization = "etcd"
   }
 }
@@ -137,7 +137,7 @@ resource "tls_cert_request" "etcd_peer" {
   private_key_pem = "${tls_private_key.etcd_peer.private_key_pem}"
 
   subject {
-    common_name  = "etcd"
+    common_name  = "${element(var.etcd_cert_dns_names, count.index)}"
     organization = "etcd"
   }
 

@@ -63,6 +63,7 @@ module "tectonic" {
   experimental = "${var.tectonic_experimental}"
   master_count = 1
   stats_url = "${var.tectonic_stats_url}"
+  image_re = "${var.tectonic_image_re}"
 }
 
 module "flannel-vxlan" {
