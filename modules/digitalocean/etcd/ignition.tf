@@ -106,7 +106,7 @@ ExecStart=/usr/lib/coreos/etcd-wrapper \
   --name=${var.cluster_name}-etcd-${count.index} \
   --advertise-client-urls=${var.tls_enabled ? "https" : "http"}://etcd-${count.index}.etcd.${var.cluster_domain}:2379 \
   ${var.tls_enabled
-      ? "--cert-file=/etc/ssl/etcd/client.crt --key-file=/etc/ssl/etcd/client.key --peer-cert-file=/etc/ssl/etcd/peer.crt --peer-key-file=/etc/ssl/etcd/peer.key --peer-trusted-ca-file=/etc/ssl/etcd/ca.crt -peer-client-cert-auth=true"
+      ? "--cert-file=/etc/ssl/etcd/server.crt --key-file=/etc/ssl/etcd/server.key --peer-cert-file=/etc/ssl/etcd/peer.crt --peer-key-file=/etc/ssl/etcd/peer.key --peer-trusted-ca-file=/etc/ssl/etcd/ca.crt -peer-client-cert-auth=true"
       : ""} \
   --initial-advertise-peer-urls=${var.tls_enabled ? "https" : "http"}://etcd-${count.index}.etcd.${var.cluster_domain}:2380 \
   --listen-client-urls=${var.tls_enabled ? "https" : "http"}://0.0.0.0:2379 \
