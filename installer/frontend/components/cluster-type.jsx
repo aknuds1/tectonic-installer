@@ -8,19 +8,13 @@ import { Field, Form } from '../form';
 import { PLATFORM_TYPE, PLATFORM_FORM } from '../cluster-config';
 import { TectonicGA } from '../tectonic-ga';
 import {
+  AWS_TF,
   DOCS,
   PLATFORM_NAMES,
   SELECTED_PLATFORMS,
   isSupported,
-  OptGroups,
+  optGroups,
 } from '../platforms';
-
-let defaultPlatformType = '';
-try {
-  defaultPlatformType = window.config.platforms[0];
-} catch (unused) {
-  // So tests pass
-}
 
 const ErrorComponent = connect(({clusterConfig}) => ({platform: clusterConfig[PLATFORM_TYPE]}))(
 ({error, platform}) => {
@@ -43,7 +37,7 @@ const ErrorComponent = connect(({clusterConfig}) => ({platform: clusterConfig[PL
 
 const platformForm = new Form(PLATFORM_FORM, [
   new Field(PLATFORM_TYPE, {
-    default: defaultPlatformType,
+    default: AWS_TF,
     validator: validate.nonEmpty,
   })], {
     validator: (data, cc) => {
@@ -56,7 +50,7 @@ const platformForm = new Form(PLATFORM_FORM, [
 );
 
 const platformOptions = [];
-_.each(OptGroups, optgroup => {
+_.each(optGroups, optgroup => {
   const [name, ...group] = optgroup;
   const platforms = _.filter(group, p => SELECTED_PLATFORMS.includes(p));
   if (platforms.length) {
@@ -83,7 +77,7 @@ export const ClusterType = () => <div>
     <div className="col-xs-9">
       <Connect field={PLATFORM_TYPE}>
         <Select onValue={(value) => {TectonicGA.sendEvent('Platform Changed', 'user input', value, value);}}>
-         {platformOptions}
+          {platformOptions}
         </Select>
       </Connect>
       <platformForm.Errors ErrorComponent={ErrorComponent} />
