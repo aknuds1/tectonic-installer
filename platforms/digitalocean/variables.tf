@@ -14,7 +14,7 @@ variable "tectonic_do_token" {
 
 variable "tectonic_do_ssh_keys" {
   type = "list"
-  description = "A list of SSH IDs to enable."
+  description = "A list of DigitalOcean SSH IDs to enable."
 }
 
 variable "tectonic_do_droplet_image" {

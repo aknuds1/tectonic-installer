@@ -25,6 +25,7 @@ module "bootkube" {
   etcd_tls_enabled = "${var.tectonic_etcd_tls_enabled}"
   experimental_enabled = "${var.tectonic_experimental}"
   master_count = 1
+  # TODO: Determine dynamically (refererencing module.etcd.endpoints causes dependency cycle)
   etcd_cert_dns_names = [
     "etcd-0.etcd.${var.tectonic_cluster_name}.k8s.${var.tectonic_base_domain}",
     "etcd-1.etcd.${var.tectonic_cluster_name}.k8s.${var.tectonic_base_domain}",

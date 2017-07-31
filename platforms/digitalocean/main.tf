@@ -70,5 +70,5 @@ module "workers" {
   ssh_keys = "${var.tectonic_do_ssh_keys}"
   user_data = "${module.ignition_workers.ignition}"
   extra_tags = "${var.tectonic_do_extra_tags}"
-  cluster_domain = "${module.masters.cluster_fqdn}"
+  cluster_domain = "${var.tectonic_cluster_name}.k8s.${var.tectonic_base_domain}"
 }
