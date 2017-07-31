@@ -1,8 +1,6 @@
 # Tectonic Changelog
 
-## Tectonic 1.7.1-tectonic.1 (2017-08-07)
-
-* Updates to Kubernetes v1.7.1.
+## Current
 
 ### Console
 

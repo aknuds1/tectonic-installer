@@ -21,7 +21,7 @@ module "etcd" {
   tls_zip = "${module.bootkube.etcd_tls_zip}"
 }
 
-module "ignition-masters" {
+module "ignition_masters" {
   source = "../../modules/digitalocean/ignition"
 
   kubelet_node_label = "node-role.kubernetes.io/master"
@@ -44,11 +44,11 @@ module "masters" {
   cluster_name = "${var.tectonic_cluster_name}"
   ssh_keys = "${var.tectonic_do_ssh_keys}"
   extra_tags = "${var.tectonic_do_extra_tags}"
-  user_data = "${module.ignition-masters.ignition}"
+  user_data = "${module.ignition_masters.ignition}"
   cluster_domain = "${var.tectonic_cluster_name}.k8s.${var.tectonic_base_domain}"
 }
 
-module "ignition-workers" {
+module "ignition_workers" {
   source = "../../modules/digitalocean/ignition"
 
   kubelet_node_label = "node-role.kubernetes.io/node"
@@ -68,7 +68,7 @@ module "workers" {
   droplet_region = "${var.tectonic_do_droplet_region}"
   droplet_image = "${var.tectonic_do_droplet_image}"
   ssh_keys = "${var.tectonic_do_ssh_keys}"
-  user_data = "${module.ignition-workers.ignition}"
+  user_data = "${module.ignition_workers.ignition}"
   extra_tags = "${var.tectonic_do_extra_tags}"
   cluster_domain = "${module.masters.cluster_fqdn}"
 }
