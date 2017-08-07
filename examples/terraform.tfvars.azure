@@ -23,7 +23,7 @@ tectonic_azure_client_secret = ""
 // (optional) Storage account type for the etcd node(s). Example: Premium_LRS.
 // Using Premium storage is constrained by the of instance specified in 'tectonic_azure_etcd_vm_size'.
 // See https://docs.microsoft.com/en-us/azure/storage/storage-premium-storage#supported-vms
-// tectonic_azure_etcd_storage_account_type = "Premium_LRS"
+// tectonic_azure_etcd_storage_type = "Premium_LRS"
 
 // (optional) Instance size for the etcd node(s). Example: Standard_DS2_v2.
 // tectonic_azure_etcd_vm_size = "Standard_DS2_v2"
@@ -97,13 +97,17 @@ tectonic_azure_client_secret = ""
 // Example: "/subscriptions/b520eabf-d6c0-4757-8a5e-0fa7d2fe12b5/resourceGroups/my-k8s-cluster/providers/Microsoft.Network/virtualNetworks/test-pre-vnet/subnets/my-k8s-subnet
 // tectonic_azure_external_worker_subnet_id = ""
 
+// (optional) A map of extra Azure tags to be applied to created resources.
+// [CAVEAT] Tags MUST NOT contain reserved characters '<,>,%,&,\,?,/' or control characters.
+// tectonic_azure_extra_tags = ""
+
 // An Azure location where the cluster will be built.
 tectonic_azure_location = ""
 
 // (optional) Storage account type for the master node(s). Example: Premium_LRS.
 // Using Premium storage is constrained by the of instance specified in 'tectonic_azure_master_vm_size'.
 // See https://docs.microsoft.com/en-us/azure/storage/storage-premium-storage#supported-vms
-// tectonic_azure_master_storage_account_type = "Premium_LRS"
+// tectonic_azure_master_storage_type = "Premium_LRS"
 
 // (optional) Instance size for the master node(s). Example: Standard_DS2_v2.
 // tectonic_azure_master_vm_size = "Standard_DS2_v2"
@@ -129,7 +133,7 @@ tectonic_azure_ssh_key = ""
 // (optional) Storage account type for the worker node(s). Example: Premium_LRS.
 // Using Premium storage is constrained by the of instance specified in 'tectonic_azure_worker_vm_size'.
 // See https://docs.microsoft.com/en-us/azure/storage/storage-premium-storage#supported-vms
-// tectonic_azure_worker_storage_account_type = "Premium_LRS"
+// tectonic_azure_worker_storage_type = "Premium_LRS"
 
 // (optional) Instance size for the worker node(s). Example: Standard_DS2_v2.
 // tectonic_azure_worker_vm_size = "Standard_DS2_v2"

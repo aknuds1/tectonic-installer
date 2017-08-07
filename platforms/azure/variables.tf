@@ -59,7 +59,7 @@ variable "tectonic_azure_etcd_vm_size" {
   default     = "Standard_DS2_v2"
 }
 
-variable "tectonic_azure_master_storage_account_type" {
+variable "tectonic_azure_master_storage_type" {
   type = "string"
 
   description = <<EOF
@@ -71,7 +71,7 @@ EOF
   default = "Premium_LRS"
 }
 
-variable "tectonic_azure_worker_storage_account_type" {
+variable "tectonic_azure_worker_storage_type" {
   type = "string"
 
   description = <<EOF
@@ -83,7 +83,7 @@ EOF
   default = "Premium_LRS"
 }
 
-variable "tectonic_azure_etcd_storage_account_type" {
+variable "tectonic_azure_etcd_storage_type" {
   type = "string"
 
   description = <<EOF
@@ -251,4 +251,15 @@ variable "tectonic_azure_client_secret" {
   type = "string"
 
   description = "The client secret to use."
+}
+
+variable "tectonic_azure_extra_tags" {
+  type = "map"
+
+  description = <<EOF
+(optional) A map of extra Azure tags to be applied to created resources.
+[CAVEAT] Tags MUST NOT contain reserved characters '<,>,%,&,\,?,/' or control characters.
+EOF
+
+  default = {}
 }

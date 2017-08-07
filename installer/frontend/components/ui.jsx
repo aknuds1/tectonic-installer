@@ -75,7 +75,7 @@ export const ErrorComponent = props => {
     return <props.ErrorComponent error={error} />;
   }
   if (error) {
-    return <Alert severity='error'>{error}</Alert>;
+    return <Alert severity="error">{error}</Alert>;
   }
   return <span />;
 };
@@ -191,7 +191,7 @@ export const Radio = props => {
 export const CheckBox = makeBooleanField('checkbox');
 export const ToggleButton = props => <button className={props.className} style={props.style} onClick={() => props.onValue(!props.value)}>
   {props.value ? 'Hide' : 'Show'}&nbsp;{props.children}
-  <i style={{marginLeft: 7}} className={classNames("fa", {"fa-chevron-up": props.value, "fa-chevron-down": !props.value})}></i>
+  <i style={{marginLeft: 7}} className={classNames('fa', {'fa-chevron-up': props.value, 'fa-chevron-down': !props.value})}></i>
 </button>;
 
 // A textarea/file-upload combo
@@ -597,23 +597,26 @@ export const PrivateKeyArea = (props) => {
   return <FileArea {...areaProps} />;
 };
 
-export const WaitingLi = ({done, error, cancel, children, substep}) => {
+export const WaitingLi = ({pending, done, error, cancel, children, substep}) => {
   const progressClasses = classNames({
     'wiz-launch-progress__step': !substep,
     'wiz-launch-progress__substep': substep,
+    'wiz-pending-fg': pending,
     'wiz-error-fg': error,
     'wiz-success-fg': done && !error,
-    'wiz-running-fg': !done && !error,
+    'wiz-cancel-fg': !done && !error && cancel,
+    'wiz-running-fg': !done && !error && !cancel && !pending,
   });
   const iconClasses = classNames('fa', 'fa-fw', {
+    'fa-circle-o': pending,
     'fa-exclamation-circle': error,
     'fa-check-circle': done && !error,
     'fa-ban': !done && !error && cancel,
-    'fa-spin fa-circle-o-notch': !done && !error && !cancel,
+    'fa-spin fa-circle-o-notch': !done && !error && !cancel && !pending,
   });
 
   return <li className={progressClasses}>
-    {!substep && <i className={iconClasses}></i>}&nbsp;{children}
+    {!substep && <i className={iconClasses} style={{margin: '0 3px 0 -3px'}}></i>}{children}
   </li>;
 };
 
@@ -730,7 +733,7 @@ export class DropdownMixin extends React.PureComponent {
     }
     const {dropdownElement} = this.refs;
 
-    if( event.target === dropdownElement || dropdownElement.contains(event.target)) {
+    if (event.target === dropdownElement || dropdownElement.contains(event.target)) {
       return;
     }
     this.hide();
@@ -778,6 +781,22 @@ export class Dropdown extends DropdownMixin {
           <a className="tectonic-dropdown-menu-title">{header}&nbsp;&nbsp;<i className="fa fa-angle-down" aria-hidden="true"></i></a>
           <ul className="dropdown-menu tectonic-dropdown-menu" style={{display: active ? 'block' : 'none'}}>{children}</ul>
         </div>
+      </div>
+    );
+  }
+}
+
+export class DropdownInline extends DropdownMixin {
+  render() {
+    const {active} = this.state;
+    const {items, header} = this.props;
+
+    return (
+      <div ref="dropdownElement" className="dropdown" onClick={this.toggle} style={{display: 'inline-block'}}>
+        <a>{header}&nbsp;&nbsp;<i className="fa fa-caret-down"></i></a>
+        <ul className="dropdown-menu--dark" style={{display: active ? 'block' : 'none'}}>
+          {items.map(([title, cb], i) => <li className="dropdown-menu--dark__item" key={i} onClick={cb}>{title}</li>)}
+        </ul>
       </div>
     );
   }
