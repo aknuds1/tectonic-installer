@@ -4,8 +4,6 @@ Following this guide will deploy a Tectonic cluster within your Azure account.
 
 Generally, the Azure platform templates adhere to the standards defined by the project [conventions][conventions] and [generic platform requirements][generic]. This document aims to document the implementation details specific to the Azure platform.
 
-<p style="background:#d9edf7; padding: 10px;" class="text-info"><strong>Alpha:</strong> These modules and instructions are currently considered alpha. See the <a href="../../platform-lifecycle.md">platform life cycle</a> for more details.</p>
-
 ## Prerequsities
 
 ### Go
@@ -71,8 +69,8 @@ Also make sure that the SSH known_hosts file doesn't have old records of the API
 Open a new terminal, and run the following commands to download and extract Tectonic Installer.
 
 ```bash
-$ curl -O https://releases.tectonic.com/tectonic-1.6.7-tectonic.2.tar.gz # download
-$ tar xzvf tectonic-1.6.7-tectonic.2.tar.gz # extract the tarball
+$ curl -O https://releases.tectonic.com/tectonic-1.7.1-tectonic.1.tar.gz # download
+$ tar xzvf tectonic-1.7.1-tectonic.1.tar.gz # extract the tarball
 $ cd tectonic
 ```
 
