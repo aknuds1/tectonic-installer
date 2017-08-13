@@ -13,13 +13,13 @@ export const SubmitDefinition = withNav(connect(
     ready: state.cluster.ready,
   }),
   dispatch => ({
-    onFinish: (dryRun=false) => dispatch(commitToServer(dryRun)),
+    onFinish: (dryRun = false) => dispatch(commitToServer(dryRun)),
   })
 )(({navNext, navPrevious, phase, response, ready, onFinish}) => {
   let feature =
     <div className="wiz-giant-button-container">
       <button className="btn btn-primary wiz-giant-button"
-              onClick={() => onFinish(false)}>
+        onClick={() => onFinish(false)}>
         Submit
       </button>
     </div>;
@@ -68,7 +68,7 @@ export const SubmitDefinition = withNav(connect(
   return (
     <div>
       <p>
-        { msg }
+        {msg}
         <span> After submission, the definition cannot be updated. Go <a onClick={!inProgress && navPrevious} className={inProgress && 'disabled'}>back</a> to update or make changes.</span>
       </p>
       <p>

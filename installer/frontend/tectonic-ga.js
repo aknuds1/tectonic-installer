@@ -18,7 +18,7 @@ const send = (obj) => {
       ga('TectonicInstaller.send', 'event', category, action, label, value);
       ga('CoreOS.send', 'event', category, action, label, value);
     }
-  } catch(err) {
+  } catch (err) {
     console.error(`Failed to send GA event: ${err.message}`);
   }
 };
@@ -44,7 +44,7 @@ export const TectonicGA = {
     send({ type: 'pageview', page});
   },
 
-  sendError: (message, stack='') => {
+  sendError: (message, stack = '') => {
     send({
       type: 'event',
       category: 'installerError',

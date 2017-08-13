@@ -198,7 +198,7 @@ export const DEFAULT_CLUSTER_CONFIG = {
 };
 
 
-export const toAWS_TF = (cc, FORMS, opts={}) => {
+export const toAWS_TF = (cc, FORMS, opts = {}) => {
   const controllers = FORMS[AWS_CONTROLLERS].getData(cc);
   const etcds = FORMS[AWS_ETCDS].getData(cc);
   const workers = FORMS[AWS_WORKERS].getData(cc);
@@ -217,7 +217,7 @@ export const toAWS_TF = (cc, FORMS, opts={}) => {
 
   const extraTags = {};
   _.each(cc[AWS_TAGS], ({key, value}) => {
-    if(key && value) {
+    if (key && value) {
       extraTags[key] = value;
     }
   });
@@ -300,7 +300,7 @@ export const toAWS_TF = (cc, FORMS, opts={}) => {
   return ret;
 };
 
-export const toBaremetal_TF = (cc, FORMS, opts={}) => {
+export const toBaremetal_TF = (cc, FORMS, opts = {}) => {
   const sshKey = FORMS[BM_SSH_KEY].getData(cc);
   const masters = cc[BM_MASTERS];
   const workers = cc[BM_WORKERS];

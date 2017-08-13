@@ -10,14 +10,13 @@ import { Router } from 'react-router-dom';
 import createHistory from 'history/createBrowserHistory';
 import Cookie from 'js-cookie';
 
-import { navChange, restoreActionTypes, validateAllFields } from './actions';
+import { clusterReadyActionTypes, restoreActionTypes, validateAllFields } from './actions';
 import { trail } from './trail';
 import { TectonicGA } from './tectonic-ga';
 import { savable } from './reducer';
 import { loadFacts, observeClusterStatus } from './server';
 import { store, dispatch } from './store';
 import { Base } from './components/base';
-import { clusterReadyActionTypes } from './actions';
 
 const history = createHistory();
 
@@ -36,16 +35,12 @@ window.reset = () => {
     .then(() => window.location = '/');
 };
 
-const setLocation = path => store.dispatch(navChange(path));
-
-const fixLocation = () => {
+export const fixLocation = () => {
   const state = store.getState();
   const t = trail(state);
-  const fixed = t.fixPath(state.path, state);
-  if (fixed !== state.path) {
-    setLocation(fixed);
-  }
-  if (fixed !== window.location.pathname) {
+  const {pathname} = history.location;
+  const fixed = t.fixPath(pathname, state);
+  if (fixed !== pathname) {
     history.push(fixed);
   }
 };
@@ -72,39 +67,27 @@ store.dispatch(validateAllFields(() => {
 
   try {
     observeClusterStatus(dispatch, store.getState)
-    .then(res => {
-      if (res && res.type === clusterReadyActionTypes.STATUS) {
-        setInterval(() => observeClusterStatus(dispatch, store.getState), 10000);
-      }
-      fixLocation();
-    });
+      .then(res => {
+        if (res && res.type === clusterReadyActionTypes.STATUS) {
+          setInterval(() => observeClusterStatus(dispatch, store.getState), 10000);
+        }
+        fixLocation();
+      });
   } catch (e) {
     console.error(`Error restoring state from sessionStorage: ${e.message || e.toString()}`);
   }
 
-  // Because route.onEnter doesn't monitor the state, there is a race condition where
-  //   - onEnter runs on URL, decides that URL is in trail(state(time0))
-  //   - state updates to state(time1) based on server events, etc
-  //   - base renders URL, which is not in trail(state(time1))
-  //   - mass hysteria
-  //
-  // As a result, we shuffle the state before the router sees it.
   history.listen(({pathname, state}) => {
     // Process next step / previous step navigation trigger if present
     if (state && (state.next || state.previous)) {
-      const storeState = store.getState();
-      const t = trail(storeState);
-      const currentPage = t.pageByPath.get(storeState.path);
+      const t = trail(store.getState());
+      const currentPage = t.pageByPath.get(history.location.pathname);
       const nextPage = state.next ? t.nextFrom(currentPage) : t.previousFrom(currentPage);
-      setLocation(_.get(nextPage, 'path'));
+      history.replace(_.get(nextPage, 'path'));
       return;
     }
-
-    setLocation(pathname);
     TectonicGA.sendPageView(pathname);
   });
-
-  store.subscribe(fixLocation);
 
   ReactDom.render(
     <Provider store={store}>
@@ -116,11 +99,11 @@ store.dispatch(validateAllFields(() => {
   );
 }));
 
-window.onerror = (message, source, lineno, colno, optError={}) => {
+window.onerror = (message, source, lineno, colno, optError = {}) => {
   try {
     const e = `${message} ${source} ${lineno} ${colno}`;
     TectonicGA.sendError(e, optError.stack);
-  } catch(err) {
+  } catch (err) {
     try {
       // eslint-disable-next-line no-console
       console.error(err);
