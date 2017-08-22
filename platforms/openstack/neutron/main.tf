@@ -89,8 +89,7 @@ module "etcd" {
 
   resolv_conf_content = <<EOF
 search ${var.tectonic_base_domain}
-nameserver 8.8.8.8
-nameserver 8.8.4.4
+${join("\n", formatlist("nameserver %s", var.tectonic_openstack_dns_nameservers))}
 EOF
 
   base_domain           = "${var.tectonic_base_domain}"
@@ -123,8 +122,7 @@ module "master_nodes" {
 
   resolv_conf_content = <<EOF
 search ${var.tectonic_base_domain}
-nameserver 8.8.8.8
-nameserver 8.8.4.4
+${join("\n", formatlist("nameserver %s", var.tectonic_openstack_dns_nameservers))}
 EOF
 
   kubeconfig_content           = "${module.bootkube.kubeconfig}"
@@ -149,8 +147,7 @@ module "worker_nodes" {
 
   resolv_conf_content = <<EOF
 search ${var.tectonic_base_domain}
-nameserver 8.8.8.8
-nameserver 8.8.4.4
+${join("\n", formatlist("nameserver %s", var.tectonic_openstack_dns_nameservers))}
 EOF
 
   kubeconfig_content           = "${module.bootkube.kubeconfig}"
@@ -177,6 +174,7 @@ module "secrets" {
 module "secgroups" {
   source                = "../../../modules/openstack/secgroups"
   cluster_name          = "${var.tectonic_cluster_name}"
+  cluster_cidr          = "${var.tectonic_openstack_subnet_cidr}"
   tectonic_experimental = "${var.tectonic_experimental}"
 }
 
@@ -188,7 +186,7 @@ module "dns" {
 
   admin_email = "${var.tectonic_admin_email}"
 
-  api_ips          = "${openstack_networking_floatingip_v2.master.*.address}"
+  api_ips          = "${openstack_networking_floatingip_v2.loadbalancer.*.address}"
   etcd_count       = "${var.tectonic_experimental ? 0 : var.tectonic_etcd_count}"
   etcd_ips         = "${openstack_networking_port_v2.etcd.*.all_fixed_ips}"
   etcd_tls_enabled = "${var.tectonic_etcd_tls_enabled}"
