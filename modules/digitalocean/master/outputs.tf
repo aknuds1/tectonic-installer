@@ -2,6 +2,10 @@ output "cluster_fqdn" {
   value = "${digitalocean_domain.cluster.id}"
 }
 
+output "console_fqdn" {
+  value = "${digitalocean_domain.console.id}"
+}
+
 output "first_node_address" {
   value = "${digitalocean_droplet.master_node.*.ipv4_address[0]}"
 }
