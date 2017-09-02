@@ -10,7 +10,6 @@ tectonic-license.txt
 terraform.tfstate*
 terraform.tfvars
 build/
-bin/
 modules/update-payload/generated/
 # Allow for user configuration
 custom.tf
