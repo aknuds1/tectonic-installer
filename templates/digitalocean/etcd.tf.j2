@@ -4,7 +4,7 @@ resource "digitalocean_droplet" "etcd_node" {
   image = "{{ droplet_image }}"
   region = "{{ region }}"
   size = "{{ etcd_size }}"
-  ssh_keys = {{ ssh_keys }}
+  ssh_keys = [{{ ssh_keys }}]
   tags = {{ extra_tags }}
   user_data = "${data.ignition_config.etcd.*.rendered[count.index]}"
 }

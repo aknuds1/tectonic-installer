@@ -2,41 +2,41 @@ module "bootkube" {
   source = "../../modules/bootkube"
 
   cloud_provider = ""
-  cluster_name = "${var.tectonic_cluster_name}"
+  cluster_name = "{{ cluster_name }}"
   kube_apiserver_url = "https://${module.masters.cluster_fqdn}:443"
   oidc_issuer_url = "https://${module.masters.console_fqdn}:443/identity"
   # Platform-independent variables wiring, do not modify.
-  container_images = "${var.tectonic_container_images}"
-  versions = "${var.tectonic_versions}"
-  ca_cert = "${var.tectonic_ca_cert}"
-  ca_key = "${var.tectonic_ca_key}"
-  ca_key_alg = "${var.tectonic_ca_key_alg}"
-  service_cidr = "${var.tectonic_service_cidr}"
-  cluster_cidr = "${var.tectonic_cluster_cidr}"
+  container_images = "{{ container_images }}"
+  versions = "{{ versions }}"
+  service_cidr = "{{ service_cidr }}"
+  cluster_cidr = "{{ cluster_cidr }}"
   advertise_address = "0.0.0.0"
   anonymous_auth = "false"
   oidc_username_claim = "email"
   oidc_groups_claim = "groups"
   oidc_client_id = "tectonic-kubectl"
   etcd_endpoints = "${module.etcd.endpoints}"
-  etcd_ca_cert = "${var.tectonic_etcd_ca_cert_path}"
-  etcd_client_cert = "${var.tectonic_etcd_client_cert_path}"
-  etcd_client_key = "${var.tectonic_etcd_client_key_path}"
-  etcd_tls_enabled = "${var.tectonic_etcd_tls_enabled}"
-  experimental_enabled = "${var.tectonic_experimental}"
+  etcd_tls_enabled = true
   master_count = 1
+  etcd_ca_cert = "/dev/null"
+  etcd_client_cert = "/dev/null"
+  etcd_client_key = "/dev/null"
+  ca_key = ""
+  ca_cert = ""
+  ca_key_alg = "RSA"
   # TODO: Determine dynamically (referencing module.etcd.endpoints causes dependency cycle)
   etcd_cert_dns_names = [
-    "etcd-0.etcd.${var.tectonic_cluster_name}.k8s.${var.tectonic_base_domain}",
-    "etcd-1.etcd.${var.tectonic_cluster_name}.k8s.${var.tectonic_base_domain}",
-    "etcd-2.etcd.${var.tectonic_cluster_name}.k8s.${var.tectonic_base_domain}",
-    "etcd-3.etcd.${var.tectonic_cluster_name}.k8s.${var.tectonic_base_domain}",
-    "etcd-4.etcd.${var.tectonic_cluster_name}.k8s.${var.tectonic_base_domain}",
-    "etcd-5.etcd.${var.tectonic_cluster_name}.k8s.${var.tectonic_base_domain}",
-    "etcd-6.etcd.${var.tectonic_cluster_name}.k8s.${var.tectonic_base_domain}",
+    "etcd-0.etcd.{{ cluster_domain }}",
+    "etcd-1.etcd.{{ cluster_domain }}",
+    "etcd-2.etcd.{{ cluster_domain }}",
+    "etcd-3.etcd.{{ cluster_domain }}",
+    "etcd-4.etcd.{{ cluster_domain }}",
+    "etcd-5.etcd.{{ cluster_domain }}",
+    "etcd-6.etcd.{{ cluster_domain }}",
   ]
 }
 
+{#
 module "tectonic" {
   source = "../../modules/tectonic"
 
@@ -181,3 +181,4 @@ resource "null_resource" "worker_nodes" {
     ]
   }
 }
+#}
