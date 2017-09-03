@@ -146,5 +146,11 @@ make apply
 make destroy
 ```
 
+#### Manual Testing
+In order to manually test the etcd cluster, SSH into one of the etcd nodes and issue the following command
+(setting `$CLUSTER_NAME` and `$DOMAIN_NAME` correspondingly):
+`sudo ETCDCTL_API=3 etcdctl --ca-file=/etc/ssl/etcd/ca.crt --cert-file=/etc/ssl/etcd/client.crt --key-file=/etc/ssl/etcd/client.key --endpoints=https://etcd-0.etcd.$CLUSTER_NAME.k8s.$DOMAIN_NAME:2379 cluster-health`.
+This should report that the cluster is healthy.
+
 [platform-lifecycle]: Documentation/platform-lifecycle.md
 [release-notes]: https://coreos.com/tectonic/releases/
