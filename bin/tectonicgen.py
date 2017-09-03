@@ -107,6 +107,10 @@ def _read_opts(args):
     return opts
 
 
+def _get_tf_list(l):
+    return '[{}]'.format(', '.join(['"{}"'.format(x) for x in l]))
+
+
 def _main():
     cl_parser = argparse.ArgumentParser()
     cl_parser.add_argument('settings')
@@ -133,6 +137,10 @@ def _main():
         initial_etcd_cluster_spec.append('{}=https://{}:2380'.format(
             etcd_name, etcd_address
         ))
+    etcd_dns_names = [
+        'etcd-{}.etcd.{}'.format(i, cluster_domain) for i in
+        range(opts['etcdCount'])
+    ]
 
     jinja_env = jinja2.Environment(
         loader=jinja2.FileSystemLoader(searchpath='templates/digitalocean'),
@@ -146,10 +154,11 @@ def _main():
             'region': opts['region'],
             'etcd_count': opts['etcdCount'],
             'etcd_size': opts['etcdSize'],
-            'ssh_keys': ', '.join(['"{}"'.format(x) for x in opts['sshKeys']]),
+            'ssh_keys': _get_tf_list(opts['sshKeys']),
             'extra_tags': opts['extraTags'],
             'base_domain': opts['baseDomain'],
             'cluster_domain': cluster_domain,
+            'console_domain': 'console.{}'.format(cluster_domain),
             'container_image': 'quay.io/coreos/etcd:v3.1.8',
             'swap_size': opts['swapSize'],
             'enable_swap': str(bool(opts['swapSize'].strip())).lower(),
@@ -158,6 +167,7 @@ def _main():
             'service_cidr': '10.3.0.0/16',
             'cluster_cidr': '10.2.0.0/16',
             'versions': _versions,
+            'etcd_dns_names': _get_tf_list(etcd_dns_names),
         })
         with open(
             os.path.join(build_dir, '{}.tf'.format(template_name)), 'wt'

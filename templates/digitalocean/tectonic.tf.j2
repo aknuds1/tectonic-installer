@@ -3,9 +3,8 @@ module "bootkube" {
 
   cloud_provider = ""
   cluster_name = "{{ cluster_name }}"
-  kube_apiserver_url = "https://${module.masters.cluster_fqdn}:443"
-  oidc_issuer_url = "https://${module.masters.console_fqdn}:443/identity"
-  # Platform-independent variables wiring, do not modify.
+  kube_apiserver_url = "https://{{ cluster_domain }}:443"
+  oidc_issuer_url = "https://{{ console_domain }}:443/identity"
   container_images = "{{ container_images }}"
   versions = "{{ versions }}"
   service_cidr = "{{ service_cidr }}"
@@ -15,7 +14,7 @@ module "bootkube" {
   oidc_username_claim = "email"
   oidc_groups_claim = "groups"
   oidc_client_id = "tectonic-kubectl"
-  etcd_endpoints = "${module.etcd.endpoints}"
+  etcd_endpoints = {{ etcd_dns_names }}
   etcd_tls_enabled = true
   master_count = 1
   etcd_ca_cert = "/dev/null"
@@ -24,16 +23,7 @@ module "bootkube" {
   ca_key = ""
   ca_cert = ""
   ca_key_alg = "RSA"
-  # TODO: Determine dynamically (referencing module.etcd.endpoints causes dependency cycle)
-  etcd_cert_dns_names = [
-    "etcd-0.etcd.{{ cluster_domain }}",
-    "etcd-1.etcd.{{ cluster_domain }}",
-    "etcd-2.etcd.{{ cluster_domain }}",
-    "etcd-3.etcd.{{ cluster_domain }}",
-    "etcd-4.etcd.{{ cluster_domain }}",
-    "etcd-5.etcd.{{ cluster_domain }}",
-    "etcd-6.etcd.{{ cluster_domain }}",
-  ]
+  etcd_cert_dns_names = {{ etcd_dns_names }}
 }
 
 {#
