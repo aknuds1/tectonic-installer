@@ -1,0 +1,247 @@
+data "ignition_config" "master" {
+  files = [
+    "${data.ignition_file.max_user_watches.id}",
+    "${data.ignition_file.init_assets.id}",
+    "${data.ignition_file.resolved_conf.id}",
+  ]
+
+  systemd = [
+    "${data.ignition_systemd_unit.docker.id}",
+    "${data.ignition_systemd_unit.locksmithd_master.id}",
+    "${data.ignition_systemd_unit.kubelet.id}",
+    "${data.ignition_systemd_unit.kubelet_env.id}",
+    "${data.ignition_systemd_unit.init_assets.id}",
+    "${data.ignition_systemd_unit.bootkube.id}",
+    "${data.ignition_systemd_unit.tectonic.id}",
+    "${data.ignition_systemd_unit.swap_master.id}",
+    "${data.ignition_systemd_unit.sshguard_master.id}",
+  ]
+}
+
+data "ignition_file" "resolved_conf" {
+  filesystem = "root"
+  path = "/etc/systemd/resolved.conf"
+  mode = "420"
+  content {
+    content = <<EOF
+[Resolve]
+Domains={{ cluster_domain }}
+EOF
+  }
+}
+
+data "ignition_systemd_unit" "docker" {
+  name = "docker.service"
+  enable = true
+  dropin = [
+    {
+      name = "10-dockeropts.conf"
+      content = "[Service]\nEnvironment=\"DOCKER_OPTS=--log-opt max-size=50m --log-opt max-file=3\"\n"
+    },
+  ]
+}
+
+data "ignition_systemd_unit" "locksmithd_master" {
+  name = "locksmithd.service"
+  mask = true
+}
+
+data "template_file" "kubelet" {
+  template = "${file("${path.module}/resources/services/kubelet.service")}"
+  vars {
+    cluster_dns_ip = "${module.bootkube.kube_dns_service_ip}"
+    node_label = "node-role.kubernetes.io/master"
+    node_taints_param = "--register-with-taints=node-role.kubernetes.io/master=:NoSchedule"
+  }
+}
+
+data "ignition_systemd_unit" "kubelet" {
+  name = "kubelet.service"
+  enable = true
+  content = "${data.template_file.kubelet.rendered}"
+}
+
+data "template_file" "kubelet_env" {
+  template = "${file("${path.module}/resources/services/kubelet-env.service")}"
+  vars {
+    kube_version_image_url = "{{ kube_version_image_url }}"
+    kube_version_image_tag = "{{ kube_version_image_tag }}"
+    kubelet_image_url = "{{ hyperkube_image_url }}"
+  }
+}
+
+data "ignition_systemd_unit" "kubelet_env" {
+  name = "kubelet-env.service"
+  enable = true
+  content = "${data.template_file.kubelet_env.rendered}"
+}
+
+data "ignition_file" "max_user_watches" {
+  filesystem = "root"
+  path = "/etc/sysctl.d/max-user-watches.conf"
+  mode = 0644
+  content {
+    content = "fs.inotify.max_user_watches=16184"
+  }
+}
+
+data "template_file" "init_assets" {
+  template = "${file("${path.module}/resources/init-assets.sh")}"
+  vars {
+    kubelet_image_url = "{{ hyperkube_image_url }}"
+    kubelet_image_tag = "{{ hyperkube_image_tag }}"
+  }
+}
+
+data "ignition_file" "init_assets" {
+  filesystem = "root"
+  path = "/opt/tectonic/init-assets.sh"
+  mode = "555"
+  content {
+    content = "${data.template_file.init_assets.rendered}"
+  }
+}
+
+data "ignition_systemd_unit" "init_assets" {
+  name = "init-assets.service"
+  enable = true
+  content = "${file("${path.module}/resources/services/init-assets.service")}"
+}
+
+data "ignition_systemd_unit" "bootkube" {
+  name = "bootkube.service"
+  content = "${module.bootkube.systemd_service}"
+  # Defer enabling until /opt/tectonic is populated
+  enable = false
+}
+
+data "ignition_systemd_unit" "tectonic" {
+  name = "tectonic.service"
+  content = "${module.tectonic.systemd_service}"
+  # Defer enabling until /opt/tectonic is populated
+  enable = false
+}
+
+data "ignition_systemd_unit" "swap_master" {
+  name = "swap.service"
+  enable = {{ enable_swap }}
+  content = <<EOF
+[Unit]
+Description=Turn on swap
+
+[Service]
+Type=oneshot
+ExecStartPre=-/usr/bin/rm -rf /var/vm
+ExecStartPre=/usr/bin/mkdir -p /var/vm
+ExecStartPre=/usr/bin/touch /var/vm/swapfile1
+ExecStartPre=/bin/bash -c "fallocate -l {{ swap_size }} /var/vm/swapfile1"
+ExecStartPre=/usr/bin/chmod 600 /var/vm/swapfile1
+ExecStartPre=/usr/sbin/mkswap /var/vm/swapfile1
+ExecStartPre=/usr/sbin/sysctl vm.swappiness=10
+ExecStart=/sbin/swapon /var/vm/swapfile1
+ExecStop=/sbin/swapoff /var/vm/swapfile1
+ExecStopPost=-/usr/bin/rm -rf /var/vm
+RemainAfterExit=true
+
+[Install]
+WantedBy=multi-user.target
+EOF
+}
+
+data "ignition_systemd_unit" "sshguard_master" {
+  name = "sshguard.service"
+  enable = true
+  content = <<EOF
+[Unit]
+Description=%p
+After=network-online.target
+
+[Service]
+TimeoutStartSec=0
+Restart=always
+RestartSec=5s
+
+# Set up sshguard tables
+ExecStartPre=-/usr/sbin/iptables -N sshguard
+ExecStartPre=-/usr/sbin/ip6tables -N sshguard
+
+# Link sshguard tables to main INPUT tables
+ExecStartPre=-/usr/sbin/iptables -D INPUT -j sshguard
+ExecStartPre=-/usr/sbin/ip6tables -D INPUT -j sshguard
+ExecStartPre=-/usr/sbin/iptables -A INPUT -j sshguard
+ExecStartPre=-/usr/sbin/ip6tables -A INPUT -j sshguard
+
+ExecStart=/bin/sh -c 'journalctl -afb -p info -n1 -o cat -t sshd | \
+   rkt run \
+      --insecure-options=image \
+      --interactive \
+      --net=host \
+      --stage1-name=coreos.com/rkt/stage1-fly:1.21.0 docker://mischief/sshguard \
+      --caps-retain=CAP_NET_ADMIN'
+
+[Install]
+WantedBy=multi-user.target
+
+[X-Fleet]
+Global=true
+EOF
+}
+
+resource "digitalocean_droplet" "master_node" {
+  count = 1
+  name = "{{ cluster_name }}-master-${count.index}"
+  image = "{{ droplet_image }}"
+  region = "{{ region }}"
+  size = "{{ master_size }}"
+  ssh_keys = {{ ssh_keys }}
+  tags = {{ extra_tags }}
+  user_data = "${data.ignition_config.master.rendered}"
+}
+
+resource "digitalocean_loadbalancer" "console" {
+  name = "{{ cluster_name }}-con"
+  region = "{{ region }}"
+  droplet_ids = ["${digitalocean_droplet.master_node.*.id}"]
+
+  forwarding_rule {
+    entry_port = 80
+    entry_protocol = "tcp"
+    target_port = 32001
+    target_protocol = "tcp"
+  }
+
+  forwarding_rule {
+    entry_port = 443
+    entry_protocol = "tcp"
+    target_port = 32000
+    target_protocol = "tcp"
+  }
+
+  healthcheck {
+    port = 32002
+    protocol = "http"
+    path = "/healthz"
+    check_interval_seconds = 5
+    response_timeout_seconds = 3
+    healthy_threshold = 2
+    unhealthy_threshold = 2
+  }
+}
+
+resource "digitalocean_domain" "cluster" {
+  name = "{{ cluster_domain }}"
+  ip_address = "${digitalocean_droplet.master_node.*.ipv4_address[0]}"
+}
+
+resource "digitalocean_domain" "console" {
+  name = "console.{{ cluster_domain }}"
+  ip_address = "${digitalocean_loadbalancer.console.ip}"
+}
+
+resource "digitalocean_record" "master" {
+  count = 1
+  domain = "${digitalocean_domain.cluster.id}"
+  type = "A"
+  name = "{{ cluster_name }}-master-${count.index}"
+  value = "${element(digitalocean_droplet.master_node.*.ipv4_address, count.index)}"
+}
