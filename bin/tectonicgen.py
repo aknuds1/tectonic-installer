@@ -58,9 +58,6 @@ def _main():
     build_dir = os.path.join('build', opts['clusterName'])
     if not os.path.exists(build_dir):
         os.makedirs(opts['clusterName'])
-    terraform_dir = os.path.join(build_dir, 'terraform')
-    if not os.path.exists(terraform_dir):
-        os.makedirs(terraform_dir)
 
     cluster_domain = '{}.k8s.{}'.format(
         opts['clusterName'], opts['baseDomain']
@@ -77,23 +74,34 @@ def _main():
         loader=jinja2.FileSystemLoader(searchpath='templates/digitalocean'),
         undefined=jinja2.StrictUndefined
     )
-    template = jinja_env.get_template('etcd.tf.j2')
-    output = template.render({
-        'cluster_name': opts['clusterName'],
-        'droplet_image': opts['dropletImage'],
-        'region': opts['region'],
-        'etcd_count': opts['etcdCount'],
-        'etcd_size': opts['etcdSize'],
-        'ssh_keys': opts['sshKeys'],
-        'extra_tags': opts['extraTags'],
-        'cluster_domain': opts['baseDomain'],
-        'container_image': 'quay.io/coreos/etcd:v3.1.8',
-        'swap_size': opts['swapSize'],
-        'enable_swap': bool(opts['swapSize'].strip()),
-        'initial_etcd_cluster_str': ','.join(initial_etcd_cluster_spec),
-    })
-    with open(os.path.join(terraform_dir, 'etcd.tf'), 'wt') as f:
-        f.write('{}\n'.format(output))
+    for template_name in ['etcd', 'tectonic', ]:
+        template = jinja_env.get_template('{}.tf.j2'.format(template_name))
+        output = template.render({
+            'cluster_name': opts['clusterName'],
+            'droplet_image': opts['dropletImage'],
+            'region': opts['region'],
+            'etcd_count': opts['etcdCount'],
+            'etcd_size': opts['etcdSize'],
+            'ssh_keys': ', '.join(['"{}"'.format(x) for x in opts['sshKeys']]),
+            'extra_tags': opts['extraTags'],
+            'cluster_domain': opts['baseDomain'],
+            'container_image': 'quay.io/coreos/etcd:v3.1.8',
+            'swap_size': opts['swapSize'],
+            'enable_swap': str(bool(opts['swapSize'].strip())).lower(),
+            'initial_etcd_cluster_str': ','.join(initial_etcd_cluster_spec),
+        })
+        with open(
+            os.path.join(build_dir, '{}.tf'.format(template_name)), 'wt'
+        ) as f:
+            f.write('{}\n'.format(output))
+
+    for module in ['bootkube', ]:
+        target = os.path.join(build_dir, module)
+        if os.path.exists(target):
+            os.remove(target)
+        os.symlink(
+            os.path.join('../../modules', module), target
+        )
 
 
 _main()
