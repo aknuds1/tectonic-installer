@@ -120,7 +120,8 @@ ExecStart=
 ExecStart=/usr/lib/coreos/etcd-wrapper \
   --name={{ cluster_name }}-etcd-${count.index} \
   --advertise-client-urls=https://etcd-${count.index}.etcd.{{ cluster_domain }}:2379 \
-  --cert-file=/etc/ssl/etcd/server.crt --key-file=/etc/ssl/etcd/server.key --peer-cert-file=/etc/ssl/etcd/peer.crt \ --peer-key-file=/etc/ssl/etcd/peer.key --peer-trusted-ca-file=/etc/ssl/etcd/ca.crt --peer-client-cert-auth=true" \
+  --cert-file=/etc/ssl/etcd/server.crt --key-file=/etc/ssl/etcd/server.key --peer-cert-file=/etc/ssl/etcd/peer.crt \
+  --peer-key-file=/etc/ssl/etcd/peer.key --peer-trusted-ca-file=/etc/ssl/etcd/ca.crt --peer-client-cert-auth=true" \
   --initial-advertise-peer-urls=https://etcd-${count.index}.etcd.{{ cluster_domain }}:2380 \
   --listen-client-urls=https://0.0.0.0:2379 \
   --listen-peer-urls=https://0.0.0.0:2380 \

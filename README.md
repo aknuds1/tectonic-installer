@@ -70,7 +70,21 @@ doToken: example
 sshKeys: [1]
 ```
 
-Assuming the above configuration file is named example.yaml, invoke tectonicgen as follows: `./bin/tectonicgen.py example.yaml`. Then Terraform configuration will be output in build/coreos-testing/terraform/.
+Assuming the above configuration file is named example.yaml, invoke tectonicgen as follows: `./bin/tectonicgen.py example.yaml`. Then Terraform configuration will be output in build/coreos-testing/. In order to provision the cluster via Terraform, do the following:
+
+```
+cd build/coreos-testing
+terraform init
+terraform apply
+```
+
+After initializing the Terraform state for the first time, you can apply changes to the configuration as follows:
+
+```
+# Assuming changes have been applied through ./bin/tectonicgen.py
+terraform get -update
+terraform apply
+```
 
 **Choose your platform**
 
