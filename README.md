@@ -7,7 +7,7 @@ Goals of the project:
 - Install [Self-Hosted Kubernetes Clusters](https://github.com/kubernetes/community/blob/master/contributors/design-proposals/self-hosted-kubernetes.md)
 - Secure by default (uses TLS, RBAC by default, OIDC AuthN, etcd)
 - Automatable install process for scripts and CI/CD
-- Deploy on any infrastructure: Amazon AWS, Microsoft Azure, OpenStack, Google Cloud, bare metal
+- Deploy on any infrastructure: Amazon AWS, Microsoft Azure, OpenStack, Google Cloud, DigitalOcean, bare metal
 - Run on any OS: Container Linux (the default), [RHEL](Documentation/install/rhel/installing-workers.md#installing-tectonic-workers-on-red-hat-enterprise-linux), Ubuntu, and others
 - Customizable and modular: Change DNS providers, security settings, authentication providers
 - Highly Available by default: Deploy all Kubernetes components HA, use etcd Operator
@@ -59,6 +59,18 @@ The [latest Terraform binary](https://www.terraform.io/downloads.html) may not a
 The [Yarn](https://yarnpkg.com) JavaScript package manager is required for building the frontend code. On OS X, install using Homebrew: `brew install yarn`.
 
 #### Common Usage
+
+The *bin/tectonicgen.py* tool is used to generate the Terraform configuration used to bootstrap the Kubernetes cluster. It needs to be configured via a YAML file, with parameters (mandatory and optional) describing how to create the cluster. An example configuration looks as follows:
+
+```
+platform: digitalocean
+clusterName: coreos-testing
+baseDomain: example.com
+doToken: example
+sshKeys: [1]
+```
+
+Assuming the above configuration file is named example.yaml, invoke tectonicgen as follows: `./bin/tectonicgen.py example.yaml`. Then Terraform configuration will be output in build/coreos-testing/terraform/.
 
 **Choose your platform**
 
