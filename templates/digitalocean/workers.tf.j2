@@ -1,0 +1,26 @@
+module "ignition_workers" {
+  source = "./ignition"
+
+  kube_dns_service_ip = "module.bootkube.kube_dns_service_ip"
+  node_label = "node-role.kubernetes.io/node"
+  node_taints_param = ""
+}
+
+resource "digitalocean_droplet" "worker_node" {
+  count = "{{ worker_count }}"
+  name = "{{ cluster_name }}-worker-${count.index}"
+  image = "{{ droplet_image }}"
+  region = "{{ region }}"
+  size = "{{ worker_size }}"
+  ssh_keys = {{ ssh_keys }}
+  tags = {{ extra_tags }}
+  user_data = "${module.ignition_workers.ignition}"
+}
+
+resource "digitalocean_record" "worker" {
+  count = "{{ worker_count }}"
+  domain = "{{ cluster_domain }}"
+  type = "A"
+  name = "{{ cluster_name }}-worker-${count.index}"
+  value = "${element(digitalocean_droplet.worker_node.*.ipv4_address, count.index)}"
+}

@@ -1,30 +1,3 @@
 provider "digitalocean" {
   token = "{{ do_token }}"
 }
-
-{#
-module "ignition_workers" {
-  source = "../../modules/digitalocean/ignition"
-
-  kubelet_node_label = "node-role.kubernetes.io/node"
-  kubelet_node_taints = ""
-  kube_dns_service_ip = "${module.bootkube.kube_dns_service_ip}"
-  container_images = "${var.tectonic_container_images}"
-  swap_size = "${var.tectonic_do_worker_swap}"
-  cluster_domain = "${var.tectonic_cluster_name}.k8s.${var.tectonic_base_domain}"
-}
-
-module "workers" {
-  source = "../../modules/digitalocean/worker"
-
-  droplet_count = "${var.tectonic_worker_count}"
-  cluster_name = "${var.tectonic_cluster_name}"
-  droplet_size = "${var.tectonic_do_worker_droplet_size}"
-  droplet_region = "${var.tectonic_do_droplet_region}"
-  droplet_image = "${var.tectonic_do_droplet_image}"
-  ssh_keys = "${var.tectonic_do_ssh_keys}"
-  user_data = "${module.ignition_workers.ignition}"
-  extra_tags = "${var.tectonic_do_extra_tags}"
-  cluster_domain = "${module.masters.cluster_fqdn}"
-}
-#}

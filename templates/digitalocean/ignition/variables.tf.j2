@@ -1,0 +1,21 @@
+variable "kube_dns_service_ip" {
+  type = "string"
+}
+
+variable "node_label" {
+  type = "string"
+}
+
+variable "node_taints_param" {
+  type = "string"
+}
+
+variable "bootkube_service" {
+  type = "string"
+  default = ""
+}
+
+variable "tectonic_service" {
+  type = "string"
+  default = ""
+}

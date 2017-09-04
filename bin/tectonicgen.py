@@ -28,6 +28,7 @@ def _read_opts(args):
         'sshKeys': Or(str, list),
         'adminEmail': str,
         'adminPasswordHash': str,
+        Optional('workerCount', default=3): int,
         Optional('updateChannel', default='tectonic-1.7-production'): str,
         Optional('licensePath'): str,
         Optional('pullSecretPath'): str,
@@ -145,6 +146,77 @@ _versions = {
 }
 
 
+def _render_template(
+    root, fname, opts, build_dir, template_dir, cluster_domain,
+    initial_etcd_cluster_spec, license_path, pull_secret_path,
+):
+    etcd_dns_names = [
+        'etcd-{}.etcd.{}'.format(i, cluster_domain) for i in
+        range(opts['etcdCount'])
+    ]
+    jinja_env = jinja2.Environment(
+        loader=jinja2.FileSystemLoader(searchpath='.'),
+        undefined=jinja2.StrictUndefined
+    )
+    template = jinja_env.get_template(os.path.join(root, fname))
+    output = template.render({
+        'do_token': opts['doToken'],
+        'cluster_name': opts['clusterName'],
+        'droplet_image': opts['dropletImage'],
+        'region': opts['region'],
+        'etcd_count': opts['etcdCount'],
+        'etcd_size': opts['etcdSize'],
+        'master_size': opts['masterSize'],
+        'ssh_keys': _get_tf_list(opts['sshKeys']),
+        'extra_tags': _get_tf_list(opts['extraTags']),
+        'base_domain': opts['baseDomain'],
+        'cluster_domain': cluster_domain,
+        'console_domain': 'console.{}'.format(cluster_domain),
+        'container_image': 'quay.io/coreos/etcd:v3.1.8',
+        'swap_size': opts['swapSize'],
+        'enable_swap': _get_tf_bool(opts['swapSize'].strip()),
+        'initial_etcd_cluster_str': ','.join(initial_etcd_cluster_spec),
+        'service_cidr': '10.3.0.0/16',
+        'cluster_cidr': '10.2.0.0/16',
+        'etcd_dns_names': _get_tf_list(etcd_dns_names),
+        'container_images': _get_tf_map(_container_images),
+        'disable_tectonic': opts['disableTectonic'],
+        'versions': _get_tf_map(_versions),
+        'tectonic_license_path': license_path,
+        'pull_secret_path': pull_secret_path,
+        'admin_email': opts['adminEmail'],
+        'admin_password_hash': opts['adminPasswordHash'],
+        'update_channel': opts['updateChannel'],
+        'update_app_id': opts['updateAppId'],
+        'update_server': opts['updateServer'],
+        'stats_url': opts['statsUrl'],
+        'image_re': opts['imageRe'],
+        'flannel_image': _container_images['flannel'],
+        'flannel_cni_image': _container_images['flannel_cni'],
+        'kube_version_image_url':
+            _container_images['kube_version'].split(':')[0],
+        'kube_version_image_tag':
+            _container_images['kube_version'].split(':')[1],
+        'hyperkube_image_url':
+            _container_images['hyperkube'].split(':')[0],
+        'hyperkube_image_tag':
+            _container_images['hyperkube'].split(':')[1],
+        'do_ssh_key_path': opts['doSshKeyPath'],
+        'worker_count': opts['workerCount'],
+        'worker_size': opts['workerSize'],
+    })
+    dpath = os.path.relpath(root, template_dir)
+    tgt_fpath = os.path.normpath(
+        os.path.join(build_dir, dpath, os.path.splitext(fname)[0])
+    )
+    tgt_dpath = os.path.dirname(tgt_fpath)
+    if not os.path.exists(tgt_dpath):
+        os.makedirs(tgt_dpath)
+    print('Rendering {}'.format(tgt_fpath))
+    with open(tgt_fpath, 'wt') as f:
+        f.write('{}\n'.format(output))
+
+
 def _main():
     cl_parser = argparse.ArgumentParser()
     cl_parser.add_argument('settings')
@@ -171,10 +243,6 @@ def _main():
         initial_etcd_cluster_spec.append('{}=https://{}:2380'.format(
             etcd_name, etcd_address
         ))
-    etcd_dns_names = [
-        'etcd-{}.etcd.{}'.format(i, cluster_domain) for i in
-        range(opts['etcdCount'])
-    ]
     if not opts['disableTectonic']:
         license_path_src = os.path.abspath(opts['licensePath'])
         license_path = os.path.basename(license_path_src)
@@ -190,60 +258,13 @@ def _main():
         license_path = '/dev/null'
         pull_secret_path = '/dev/null'
 
-    jinja_env = jinja2.Environment(
-        loader=jinja2.FileSystemLoader(searchpath='templates/digitalocean'),
-        undefined=jinja2.StrictUndefined
-    )
-    for template_name in ['main', 'etcd', 'tectonic', 'masters', ]:
-        template = jinja_env.get_template('{}.tf.j2'.format(template_name))
-        output = template.render({
-            'do_token': opts['doToken'],
-            'cluster_name': opts['clusterName'],
-            'droplet_image': opts['dropletImage'],
-            'region': opts['region'],
-            'etcd_count': opts['etcdCount'],
-            'etcd_size': opts['etcdSize'],
-            'master_size': opts['masterSize'],
-            'ssh_keys': _get_tf_list(opts['sshKeys']),
-            'extra_tags': _get_tf_list(opts['extraTags']),
-            'base_domain': opts['baseDomain'],
-            'cluster_domain': cluster_domain,
-            'console_domain': 'console.{}'.format(cluster_domain),
-            'container_image': 'quay.io/coreos/etcd:v3.1.8',
-            'swap_size': opts['swapSize'],
-            'enable_swap': _get_tf_bool(opts['swapSize'].strip()),
-            'initial_etcd_cluster_str': ','.join(initial_etcd_cluster_spec),
-            'service_cidr': '10.3.0.0/16',
-            'cluster_cidr': '10.2.0.0/16',
-            'etcd_dns_names': _get_tf_list(etcd_dns_names),
-            'container_images': _get_tf_map(_container_images),
-            'disable_tectonic': opts['disableTectonic'],
-            'versions': _get_tf_map(_versions),
-            'tectonic_license_path': license_path,
-            'pull_secret_path': pull_secret_path,
-            'admin_email': opts['adminEmail'],
-            'admin_password_hash': opts['adminPasswordHash'],
-            'update_channel': opts['updateChannel'],
-            'update_app_id': opts['updateAppId'],
-            'update_server': opts['updateServer'],
-            'stats_url': opts['statsUrl'],
-            'image_re': opts['imageRe'],
-            'flannel_image': _container_images['flannel'],
-            'flannel_cni_image': _container_images['flannel_cni'],
-            'kube_version_image_url':
-                _container_images['kube_version'].split(':')[0],
-            'kube_version_image_tag':
-                _container_images['kube_version'].split(':')[1],
-            'hyperkube_image_url':
-                _container_images['hyperkube'].split(':')[0],
-            'hyperkube_image_tag':
-                _container_images['hyperkube'].split(':')[1],
-            'do_ssh_key_path': opts['doSshKeyPath'],
-        })
-        with open(
-            os.path.join(build_dir, '{}.tf'.format(template_name)), 'wt'
-        ) as f:
-            f.write('{}\n'.format(output))
+    template_dir = 'templates/digitalocean'
+    for root, dnames, fnames in os.walk(template_dir):
+        for fname in [fname for fname in fnames if fname.endswith('.j2')]:
+            _render_template(
+                root, fname, opts, build_dir, template_dir, cluster_domain,
+                initial_etcd_cluster_spec, license_path, pull_secret_path,
+            )
 
     resources_path = os.path.join(build_dir, 'resources')
     if os.path.exists(resources_path):

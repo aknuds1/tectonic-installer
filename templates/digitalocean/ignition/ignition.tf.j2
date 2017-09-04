@@ -1,0 +1,215 @@
+data "ignition_file" "resolved_conf" {
+  filesystem = "root"
+  path = "/etc/systemd/resolved.conf"
+  mode = "420"
+  content {
+    content = <<EOF
+[Resolve]
+Domains={{ cluster_domain }}
+EOF
+  }
+}
+
+data "ignition_systemd_unit" "docker" {
+  name = "docker.service"
+  enable = true
+  dropin = [
+    {
+      name = "10-dockeropts.conf"
+      content = "[Service]\nEnvironment=\"DOCKER_OPTS=--log-opt max-size=50m --log-opt max-file=3\"\n"
+    },
+  ]
+}
+
+data "ignition_systemd_unit" "locksmithd" {
+  name = "locksmithd.service"
+  mask = true
+}
+
+data "template_file" "kubelet" {
+  template = "${file("${path.root}/resources/services/kubelet.service")}"
+  vars {
+    cluster_dns_ip = "${var.kube_dns_service_ip}"
+    node_label = "${var.node_label}"
+    node_taints_param = "${var.node_taints_param}"
+  }
+}
+
+data "ignition_systemd_unit" "kubelet" {
+  name = "kubelet.service"
+  enable = true
+  content = "${data.template_file.kubelet.rendered}"
+}
+
+data "ignition_systemd_unit" "kubelet_env" {
+  name = "kubelet-env.service"
+  enable = true
+  content = <<EOF
+[Unit]
+Description=Determine the Kubelet Image Version
+ConditionPathExists=!/etc/kubernetes/kubelet.env
+
+[Service]
+ExecStartPre=/usr/bin/mkdir -p /etc/kubernetes
+ExecStartPre=/usr/bin/bash -c "docker run --rm -v /etc/kubernetes:/etc/kubernetes {{ kube_version_image_url }}:{{ kube_version_image_tag }} --kubeconfig=/etc/kubernetes/kubeconfig > /etc/kubernetes/kube.version"
+ExecStart=/usr/bin/bash -c "echo KUBELET_IMAGE_URL={{ hyperkube_image_url }} > /etc/kubernetes/kubelet.env; echo KUBELET_IMAGE_TAG=$(tr '+' '_' < /etc/kubernetes/kube.version) >> /etc/kubernetes/kubelet.env; rm /etc/kubernetes/kube.version"
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+EOF
+}
+
+data "ignition_file" "max_user_watches" {
+  filesystem = "root"
+  path = "/etc/sysctl.d/max-user-watches.conf"
+  mode = 0644
+  content {
+    content = "fs.inotify.max_user_watches=16184"
+  }
+}
+
+data "ignition_systemd_unit" "swap" {
+  name = "swap.service"
+  enable = {{ enable_swap }}
+  content = <<EOF
+[Unit]
+Description=Turn on swap
+
+[Service]
+Type=oneshot
+ExecStartPre=-/usr/bin/rm -rf /var/vm
+ExecStartPre=/usr/bin/mkdir -p /var/vm
+ExecStartPre=/usr/bin/touch /var/vm/swapfile1
+ExecStartPre=/bin/bash -c "fallocate -l {{ swap_size }} /var/vm/swapfile1"
+ExecStartPre=/usr/bin/chmod 600 /var/vm/swapfile1
+ExecStartPre=/usr/sbin/mkswap /var/vm/swapfile1
+ExecStartPre=/usr/sbin/sysctl vm.swappiness=10
+ExecStart=/sbin/swapon /var/vm/swapfile1
+ExecStop=/sbin/swapoff /var/vm/swapfile1
+ExecStopPost=-/usr/bin/rm -rf /var/vm
+RemainAfterExit=true
+
+[Install]
+WantedBy=multi-user.target
+EOF
+}
+
+data "ignition_systemd_unit" "sshguard" {
+  name = "sshguard.service"
+  enable = true
+  content = <<EOF
+[Unit]
+Description=%p
+After=network-online.target
+
+[Service]
+TimeoutStartSec=0
+Restart=always
+RestartSec=5s
+
+# Set up sshguard tables
+ExecStartPre=-/usr/sbin/iptables -N sshguard
+ExecStartPre=-/usr/sbin/ip6tables -N sshguard
+
+# Link sshguard tables to main INPUT tables
+ExecStartPre=-/usr/sbin/iptables -D INPUT -j sshguard
+ExecStartPre=-/usr/sbin/ip6tables -D INPUT -j sshguard
+ExecStartPre=-/usr/sbin/iptables -A INPUT -j sshguard
+ExecStartPre=-/usr/sbin/ip6tables -A INPUT -j sshguard
+
+ExecStart=/bin/sh -c 'journalctl -afb -p info -n1 -o cat -t sshd | \
+   rkt run \
+      --insecure-options=image \
+      --interactive \
+      --net=host \
+      --stage1-name=coreos.com/rkt/stage1-fly:1.21.0 docker://mischief/sshguard \
+      --caps-retain=CAP_NET_ADMIN'
+
+[Install]
+WantedBy=multi-user.target
+
+[X-Fleet]
+Global=true
+EOF
+}
+
+data "ignition_file" "init_assets" {
+  filesystem = "root"
+  path = "/opt/tectonic/init-assets.sh"
+  mode = "555"
+  content {
+    content = <<EOF
+#!/bin/bash
+set -e
+
+# Populate the kubelet.env file
+mkdir -p /etc/kubernetes
+echo "KUBELET_IMAGE_URL={{ hyperkube_image_url }}" > /etc/kubernetes/kubelet.env
+echo "KUBELET_IMAGE_TAG={{ hyperkube_image_tag }}" >> /etc/kubernetes/kubelet.env
+
+exit 0
+EOF
+  }
+}
+
+data "ignition_systemd_unit" "init_assets" {
+  name = "init-assets.service"
+  enable = true
+  content = <<EOF
+[Unit]
+Description=Initialize Tectonic Assets
+ConditionPathExists=!/opt/tectonic/init-assets.done
+Before=bootkube.service kubelet-env.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=true
+WorkingDirectory=/opt/tectonic
+
+User=root
+Group=root
+
+ExecStart=/usr/bin/bash /opt/tectonic/init-assets.sh
+ExecStartPost=/bin/touch /opt/tectonic/init-assets.done
+
+[Install]
+WantedBy=multi-user.target
+RequiredBy=bootkube.service kubelet-env.service
+EOF
+}
+
+data "ignition_systemd_unit" "bootkube" {
+  name = "bootkube.service"
+  content = "${var.bootkube_service}"
+  # Defer enabling until /opt/tectonic is populated
+  enable = false
+}
+
+data "ignition_systemd_unit" "tectonic" {
+  name = "tectonic.service"
+  content = "${var.tectonic_service}"
+  # Defer enabling until /opt/tectonic is populated
+  enable = false
+}
+
+data "ignition_config" "main" {
+  files = [
+    "${data.ignition_file.max_user_watches.id}",
+    "${data.ignition_file.resolved_conf.id}",
+    "${data.ignition_file.init_assets.id}",
+  ]
+
+  systemd = [
+    "${data.ignition_systemd_unit.docker.id}",
+    "${data.ignition_systemd_unit.locksmithd.id}",
+    "${data.ignition_systemd_unit.kubelet.id}",
+    "${data.ignition_systemd_unit.kubelet_env.id}",
+    "${data.ignition_systemd_unit.init_assets.id}",
+    "${data.ignition_systemd_unit.bootkube.id}",
+    "${data.ignition_systemd_unit.tectonic.id}",
+    "${data.ignition_systemd_unit.swap.id}",
+    "${data.ignition_systemd_unit.sshguard.id}",
+  ]
+}
