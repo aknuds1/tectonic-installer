@@ -43,7 +43,7 @@ def quay_creds = [
   )
 ]
 
-def default_builder_image = 'quay.io/coreos/tectonic-builder:v1.36'
+def default_builder_image = 'quay.io/coreos/tectonic-builder:v1.37'
 def tectonic_smoke_test_env_image = 'quay.io/coreos/tectonic-smoke-test-env:v4.0'
 
 pipeline {
@@ -170,99 +170,61 @@ pipeline {
               }
             }
           },
-          "SmokeTest Terraform: AWS (non-TLS)": {
+          "SmokeTest AWS Network Policy RSpec": {
             node('worker && ec2') {
               withCredentials(creds) {
-                withDockerContainer(params.builder_image) {
-                  ansiColor('xterm') {
-                    checkout scm
-                    unstash 'installer'
-                    timeout(5) {
+                withDockerContainer(tectonic_smoke_test_env_image) {
+                  sshagent(['aws-smoke-test-ssh-key']) {
+                    ansiColor('xterm') {
+                      checkout scm
+                      unstash 'installer'
+                      unstash 'smoke'
                       sh """#!/bin/bash -ex
-                      . ${WORKSPACE}/tests/smoke/aws/smoke.sh assume-role "$TECTONIC_INSTALLER_ROLE"
-                      ${WORKSPACE}/tests/smoke/aws/smoke.sh plan vars/aws.tfvars
+                        cd tests/rspec
+                        bundler exec rspec spec/aws_network_policy_spec.rb
                       """
+                      deleteDir()
                     }
-                    deleteDir()
                   }
                 }
               }
             }
           },
-          "SmokeTest Terraform: AWS (experimental)": {
+          "SmokeTest AWS Exp RSpec": {
             node('worker && ec2') {
               withCredentials(creds) {
-                withDockerContainer(params.builder_image) {
-                  ansiColor('xterm') {
-                    checkout scm
-                    unstash 'installer'
-                    timeout(5) {
+                withDockerContainer(tectonic_smoke_test_env_image) {
+                  sshagent(['aws-smoke-test-ssh-key']) {
+                    ansiColor('xterm') {
+                      checkout scm
+                      unstash 'installer'
+                      unstash 'smoke'
                       sh """#!/bin/bash -ex
-                      . ${WORKSPACE}/tests/smoke/aws/smoke.sh assume-role "$TECTONIC_INSTALLER_ROLE"
-                      ${WORKSPACE}/tests/smoke/aws/smoke.sh plan vars/aws-exp.tfvars
+                        cd tests/rspec
+                        bundler exec rspec spec/aws_exp_spec.rb
                       """
+                      deleteDir()
                     }
-                    deleteDir()
                   }
                 }
               }
             }
           },
-          "SmokeTest Terraform: AWS (network policy)": {
+          "SmokeTest AWS custom ca RSpec": {
             node('worker && ec2') {
               withCredentials(creds) {
-                withDockerContainer(params.builder_image) {
-                  ansiColor('xterm') {
-                    checkout scm
-                    unstash 'installer'
-                    unstash 'smoke'
-                    timeout(45) {
+                withDockerContainer(tectonic_smoke_test_env_image) {
+                  sshagent(['aws-smoke-test-ssh-key']) {
+                    ansiColor('xterm') {
+                      checkout scm
+                      unstash 'installer'
+                      unstash 'smoke'
                       sh """#!/bin/bash -ex
-                      . ${WORKSPACE}/tests/smoke/aws/smoke.sh assume-role "$TECTONIC_INSTALLER_ROLE"
-                      ${WORKSPACE}/tests/smoke/aws/smoke.sh plan vars/aws-net-policy.tfvars
-                      ${WORKSPACE}/tests/smoke/aws/smoke.sh create vars/aws-net-policy.tfvars
-                      ${WORKSPACE}/tests/smoke/aws/smoke.sh test vars/aws-net-policy.tfvars
+                        cd tests/rspec
+                        bundler exec rspec spec/aws_ca_spec.rb
                       """
+                      deleteDir()
                     }
-                    catchError {
-                      timeout (5) {
-                        sshagent(['aws-smoke-test-ssh-key']) {
-                          sh """#!/bin/bash
-                          # Running without -ex because we don't care if this fails
-                          . ${WORKSPACE}/tests/smoke/aws/smoke.sh common vars/aws-net-policy.tfvars
-                          ${WORKSPACE}/tests/smoke/aws/cluster-foreach.sh ${WORKSPACE}/tests/smoke/forensics.sh
-                          """
-                        }
-                      }
-                    }
-                    retry(3) {
-                      timeout(15) {
-                        sh """#!/bin/bash -ex
-                        . ${WORKSPACE}/tests/smoke/aws/smoke.sh assume-role "$TECTONIC_INSTALLER_ROLE"
-                        ${WORKSPACE}/tests/smoke/aws/smoke.sh destroy vars/aws-net-policy.tfvars
-                        """
-                      }
-                    }
-                    deleteDir()
-                  }
-                }
-              }
-            }
-          },
-          "SmokeTest Terraform: AWS (custom ca)": {
-            node('worker && ec2') {
-              withCredentials(creds) {
-                withDockerContainer(params.builder_image) {
-                  ansiColor('xterm') {
-                    checkout scm
-                    unstash 'installer'
-                    timeout(5) {
-                      sh """#!/bin/bash -ex
-                      . ${WORKSPACE}/tests/smoke/aws/smoke.sh assume-role "$TECTONIC_INSTALLER_ROLE"
-                      ${WORKSPACE}/tests/smoke/aws/smoke.sh plan vars/aws-ca.tfvars
-                      """
-                    }
-                    deleteDir()
                   }
                 }
               }
@@ -302,6 +264,9 @@ pipeline {
                               }
                               catch (error) {
                                 notifySlack()
+                                sh """#!/bin/bash -x
+                                  ${WORKSPACE}/tests/smoke/azure/smoke.sh destroy_azure_cli vars/basic.tfvars
+                                """
                               }
                             }
                           }
@@ -348,6 +313,9 @@ pipeline {
                               }
                               catch (error) {
                                 notifySlack()
+                                sh """#!/bin/bash -x
+                                  ${WORKSPACE}/tests/smoke/azure/smoke.sh destroy_azure_cli vars/exper.tfvars
+                                """
                               }
                             }
                           }
@@ -397,6 +365,9 @@ pipeline {
                               }
                               catch (error) {
                                 notifySlack()
+                                sh """#!/bin/bash -x
+                                  ${WORKSPACE}/tests/smoke/azure/smoke.sh destroy_azure_cli vars/dns.tfvars
+                                """
                               }
                             }
                           }
@@ -536,6 +507,9 @@ pipeline {
                               }
                               catch (error) {
                                 notifySlack()
+                                sh """#!/bin/bash -x
+                                  ${WORKSPACE}/tests/smoke/azure/smoke.sh destroy_azure_cli vars/example.tfvars
+                                """
                               }
                             }
                           }

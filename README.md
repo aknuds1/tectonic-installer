@@ -99,26 +99,44 @@ PLATFORM=azure CLUSTER=my-cluster make destroy
 
 #### Tests
 
-Tests are run for all approved pull requests via Jenkins. See the [Jenkinsfile](./Jenkinsfile) for details.
+We have different set of tests:
 
-Tests can be run locally by:
+##### Basic tests
 
+Our basic set of tests includes:
+- Code linting
+- UI tests
+- Backend unit tests
 
-**AWS**
+They are run on **every** PR.
 
+##### Smoke tests
+
+In addition to our basic set of tests we have smoke tests. These test the
+Tectonic installer on our supported platforms.
+- AWS
+- Azure
+- Bare metal
+
+They can be run on a PR by applying the *run-smoke-tests* GitHub label.
+
+Further details can be found in our [Jenkinsfile](./Jenkinsfile) which serves as
+the single source of truth.
+
+To run a smoke test locally you need to set the following environment variables:
 ```
-export PLATFORM="aws"
-export AWS_REGION="us-east-1"
-export {TF_VAR_tectonic_cluster_name,CLUSTER}=my-smoke-test
-export TF_VAR_tectonic_license_path=/path/to/license.txt
-export TF_VAR_tectonic_pull_secret_path=/path/to/pull-secret.json
-
-make localconfig
-ln -sf ../../test/aws.tfvars build/${TF_VAR_tectonic_cluster_name}/terraform.tfvars
-make plan
-make apply
-make destroy
+CLUSTER
+AWS_ACCESS_KEY_ID
+AWS_SECRET_ACCESS_KEY
+TF_VAR_tectonic_aws_ssh_key
+TF_VAR_tectonic_license_path
+TF_VAR_tectonic_pull_secret_path
+TF_VAR_base_domain
+TF_VAR_tectonic_admin_email
+TF_VAR_tectonic_admin_password_hash
 ```
+and run `make tests/smoke TEST=spec/aws_spec.rb`
+
 
 [platform-lifecycle]: Documentation/platform-lifecycle.md
 [release-notes]: https://coreos.com/tectonic/releases/

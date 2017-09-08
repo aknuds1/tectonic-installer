@@ -37,7 +37,7 @@ RUN chmod 777 -R /go
 
 ### Install Shellcheck, Terraform, NodeJS and Yarn
 ENV SHELLCHECK_VERSION="v0.4.6"
-ENV TERRAFORM_VERSION="v0.9.11-coreos.2"
+ENV TERRAFORM_VERSION="v0.10.4-coreos.1"
 ENV NODE_VERSION="v8.1.2"
 ENV YARN_VERSION="v0.24.6"
 ENV MATCHBOXVERSION="v0.6.1"
@@ -76,6 +76,9 @@ RUN cd /tmp && \
     rm -f /tmp/yarn.tar.gz && \
     mv /tmp/dist /usr/local/yarn && \
     ln -s /usr/local/yarn/bin/yarn /usr/local/bin/yarn
+
+# Install Azure-cli
+RUN yarn global add azure-cli
 
 # Install Shellcheck
 RUN cd /tmp && \

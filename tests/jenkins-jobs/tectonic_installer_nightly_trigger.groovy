@@ -3,7 +3,7 @@
 folder("triggers")
 
 job("triggers/tectonic-installer-nightly-trigger") {
-  logRotator(10, 10)
+  logRotator(10, 1000)
   description('Tectonic Installer nightly builds against master. Changes here will be reverted automatically.')
 
   wrappers {
@@ -38,7 +38,18 @@ job("triggers/tectonic-installer-nightly-trigger") {
       includeCustomMessage(true)
       notifyBackToNormal(true)
       notifyFailure(true)
+      notifyRepeatedFailure(true)
       room('#tectonic-installer-ci')
+      teamDomain('coreos')
+    }
+    slackNotifier {
+      authTokenCredentialId('tectonic-slack-token')
+      customMessage("Tectonic Installer Nightly Build - Master Branch")
+      includeCustomMessage(true)
+      notifyBackToNormal(true)
+      notifyFailure(true)
+      notifyRepeatedFailure(true)
+      room('#tectonic-installer')
       teamDomain('coreos')
     }
   }

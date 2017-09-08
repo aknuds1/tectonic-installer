@@ -45,7 +45,11 @@ job("builders/tectonic-builder-docker-image") {
       docker build -t \${TECTONIC_BUILDER_IMAGE} --build-arg TERRAFORM_URL=\${TERRAFORM_UPSTREAM_URL} -f images/tectonic-builder/Dockerfile .
     fi
 
-    if [ !\${DRY_RUN} = true  ] ; then
+    if \${DRY_RUN};
+    then
+      echo "Just build the image"
+    else
+      echo "Pushing the Image to quay"
       docker login quay.io -u \${QUAY_USERNAME} -p \${QUAY_PASSWD}
       docker push \${TECTONIC_BUILDER_IMAGE}
     fi
@@ -61,6 +65,7 @@ job("builders/tectonic-builder-docker-image") {
       includeCustomMessage(true)
       notifyBackToNormal(true)
       notifyFailure(true)
+      notifyRepeatedFailure(true)
       room('#tectonic-installer-ci')
       teamDomain('coreos')
     }

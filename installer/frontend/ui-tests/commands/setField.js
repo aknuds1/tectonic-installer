@@ -1,9 +1,9 @@
-// Simply sets a field's value then asserts that the field actually changed to that value
-exports.command = function(selector, value, clearFirst = false) {
-  this.waitForElementVisible(selector, 10000);
-  if (clearFirst) {
-    this.clearValue(selector);
-  }
-  this.setValue(selector, value);
-  this.expect.element(selector).to.have.value.that.equals(value).before(1000);
+// Nightwatch's setValue() command actually appends to any existing value, so use this helper to clear any existing
+// value first (see github.com/nightwatchjs/nightwatch/issues/4).
+exports.command = function(selector, value) {
+  this.expect.element(selector).to.be.visible;
+  this.clearValue(selector)
+    .setValue(selector, value)
+    .expect.element(selector).to.have.value.that.equals(value);
+  return this;
 };

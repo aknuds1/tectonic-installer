@@ -1,51 +1,55 @@
 CLUSTER ?= demo
 PLATFORM ?= aws
 TMPDIR ?= /tmp
+GOOS=$(shell uname -s | tr '[:upper:]' '[:lower:]')
+GOARCH=amd64
 TOP_DIR := $(patsubst %/,%,$(dir $(abspath $(lastword $(MAKEFILE_LIST)))))
 BUILD_DIR = $(TOP_DIR)/build/$(CLUSTER)
-INSTALLER_BIN = $(TOP_DIR)/installer/bin/$(shell uname | tr '[:upper:]' '[:lower:]')/installer
+PLUGIN_DIR = $(BUILD_DIR)/terraform.d/plugins/$(GOOS)_$(GOARCH)
+INSTALLER_PATH = $(TOP_DIR)/installer/bin/$(shell uname | tr '[:upper:]' '[:lower:]')
+INSTALLER_BIN = $(INSTALLER_PATH)/installer
 TF_DOCS := $(shell which terraform-docs 2> /dev/null)
 TF_EXAMPLES := $(shell which terraform-examples 2> /dev/null)
-TF_RC := $(TOP_DIR)/.terraformrc
-TF_CMD = TERRAFORM_CONFIG=$(TF_RC) terraform
+TF_CMD = terraform
 export TF_VAR_tectonic_cluster_name = $(CLUSTER)
+
+include ./makelib/*.mk
 
 $(info Using build directory [${BUILD_DIR}])
 
 .PHONY: all
-all: apply
+all: $(INSTALLER_BIN) custom-providers
 
 $(INSTALLER_BIN):
 	$(MAKE) build -C $(TOP_DIR)/installer
-
-installer-env: $(INSTALLER_BIN) terraformrc.example
-	sed "s|<PATH_TO_INSTALLER>|$(INSTALLER_BIN)|g" terraformrc.example > $(TF_RC)
 
 .PHONY: localconfig
 localconfig:
 	mkdir -p $(BUILD_DIR)
 	cp examples/*$(subst /,-,$(PLATFORM)) $(BUILD_DIR)/terraform.tfvars
 
+$(PLUGIN_DIR):
+	mkdir -p $(PLUGIN_DIR)
+	ln -s $(INSTALLER_PATH)/terraform-provider-* $(PLUGIN_DIR)
+
 .PHONY: terraform-init
-terraform-init: installer-env
+terraform-init: custom-providers $(PLUGIN_DIR)
 ifneq ($(shell $(TF_CMD) version | grep -E "Terraform v0\.1[0-9]\.[0-9]+"), )
 	cd $(BUILD_DIR) && $(TF_CMD) init $(TF_INIT_OPTIONS) $(TOP_DIR)/platforms/$(PLATFORM)
+else
+	cd $(BUILD_DIR) && $(TF_CMD) get $(TF_GET_OPTIONS) $(TOP_DIR)/platforms/$(PLATFORM)
 endif
 
-.PHONY: terraform-get
-terraform-get: terraform-init
-	cd $(BUILD_DIR) && $(TF_CMD) get $(TF_GET_OPTIONS) $(TOP_DIR)/platforms/$(PLATFORM)
-
 .PHONY: plan
-plan: installer-env terraform-get
+plan: terraform-init
 	cd $(BUILD_DIR) && $(TF_CMD) plan $(TF_PLAN_OPTIONS) $(TOP_DIR)/platforms/$(PLATFORM)
 
 .PHONY: apply
-apply: installer-env terraform-get
+apply: terraform-init
 	cd $(BUILD_DIR) && $(TF_CMD) apply $(TF_APPLY_OPTIONS) $(TOP_DIR)/platforms/$(PLATFORM)
 
 .PHONY: destroy
-destroy: installer-env terraform-get
+destroy: terraform-init
 	cd $(BUILD_DIR) && $(TF_CMD) destroy $(TF_DESTROY_OPTIONS) -force $(TOP_DIR)/platforms/$(PLATFORM)
 
 .PHONY: payload
@@ -119,7 +123,7 @@ examples:
 			platforms/vmware/variables.tf)
 
 .PHONY: clean
-clean: destroy
+clean:
 	rm -rf $(BUILD_DIR)
 	$(MAKE) clean -C $(TOP_DIR)/installer
 	rm -f $(TF_RC)
@@ -138,9 +142,32 @@ structure-check:
 SMOKE_SOURCES := $(shell find $(TOP_DIR)/tests/smoke -name '*.go')
 .PHONY: bin/smoke
 bin/smoke: $(SMOKE_SOURCES)
-	@CGO_ENABLED=0 go test ./tests/smoke/ -c -o bin/smoke
+	@CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go test ./tests/smoke/ -c -o bin/smoke
 
 .PHONY: vendor-smoke
 vendor-smoke: $(TOP_DIR)/tests/smoke/glide.yaml
 	@cd $(TOP_DIR)/tests/smoke && glide up -v
 	@cd $(TOP_DIR)/tests/smoke && glide-vc --use-lock-file --no-tests --only-code
+
+.PHONY: smoke-test-env-docker-image
+smoke-test-env-docker-image:
+	docker build -t quay.io/coreos/tectonic-smoke-test-env -f images/tectonic-smoke-test-env/Dockerfile .
+
+.PHONY: tests/smoke
+tests/smoke: bin/smoke smoke-test-env-docker-image
+	docker run \
+	--rm \
+	-it \
+	-v ${CURDIR}:${CURDIR} \
+	-w ${CURDIR}/tests/rspec \
+	-e CLUSTER \
+	-e AWS_ACCESS_KEY_ID \
+	-e AWS_SECRET_ACCESS_KEY \
+	-e TF_VAR_tectonic_aws_ssh_key \
+	-e TF_VAR_tectonic_license_path \
+	-e TF_VAR_tectonic_pull_secret_path \
+	-e TF_VAR_base_domain \
+	-e TF_VAR_tectonic_admin_email \
+	-e TF_VAR_tectonic_admin_password_hash \
+	quay.io/coreos/tectonic-smoke-test-env \
+	/bin/bash -c "bundler exec rspec ${TEST}"

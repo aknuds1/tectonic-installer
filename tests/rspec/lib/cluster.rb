@@ -5,12 +5,10 @@ require 'securerandom'
 require 'jenkins'
 require 'tfvars_file'
 require 'fileutils'
+require 'name_generator'
 
 # Cluster represents a k8s cluster
 class Cluster
-  MAX_NAME_LENGTH = 28
-  RANDOM_HASH_LENGTH = 5
-
   attr_reader :tfvars_file, :kubeconfig, :manifest_path, :build_path
 
   def initialize(tfvars_file)
@@ -18,25 +16,30 @@ class Cluster
 
     # Enable local testers to specify a static cluster name
     # S3 buckets can only handle lower case names
-    @name = (ENV['CLUSTER'] || generate_name(tfvars_file.prefix)).downcase
+    @name = NameGenerator.generate(tfvars_file.prefix)
 
     @build_path = File.join(File.realpath('../../'), "build/#{@name}")
     @manifest_path = File.join(@build_path, 'generated')
     @kubeconfig = File.join(manifest_path, 'auth/kubeconfig')
-  end
 
-  def start
     check_prerequisites
     localconfig
     prepare_assets
-    plan
+  end
+
+  def plan
+    succeeded = system(env_variables, 'make -C ../.. plan')
+    raise 'Planning cluster failed' unless succeeded
+  end
+
+  def start
     apply
     wait_til_ready
   end
 
   def stop
     destroy
-    clean
+    clean if Jenkins.environment?
   end
 
   def check_prerequisites
@@ -73,14 +76,11 @@ class Cluster
     raise 'Run localconfig failed' unless succeeded
   end
 
-  def plan
-    succeeded = system(env_variables, 'make -C ../.. plan')
-    raise 'Planning cluster failed' unless succeeded
-  end
-
   def apply
-    succeeded = system(env_variables, 'make -C ../.. apply')
-    raise 'Applying cluster failed' unless succeeded
+    3.times do
+      return if system(env_variables, 'make -C ../.. apply')
+    end
+    raise 'Applying cluster failed'
   end
 
   def destroy
@@ -110,19 +110,5 @@ class Cluster
     end
 
     raise 'kubectl cluster-info never returned with successful error code'
-  end
-
-  def generate_name(prefix)
-    name = prefix
-
-    if Jenkins.environment?
-      build_id = ENV['BUILD_ID']
-      branch_name = ENV['BRANCH_NAME']
-      name = "#{prefix}-#{branch_name}-#{build_id}"
-    end
-
-    name = name[0..(MAX_NAME_LENGTH - RANDOM_HASH_LENGTH - 1)]
-    name += SecureRandom.hex[0...RANDOM_HASH_LENGTH]
-    name
   end
 end
