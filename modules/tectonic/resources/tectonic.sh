@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 set -e
 
 if [ "$#" -ne "3" ]; then
@@ -15,19 +15,20 @@ KUBECTL="/kubectl --kubeconfig=$KUBECONFIG"
 
 # Setup helper functions
 
-function kubectl() {
-  local i=0
+kubectl() {
+  i=0
 
   echo "Executing kubectl" "$@"
   while true; do
-    (( i++ )) && (( i == 100 )) && echo "kubectl failed, giving up" && exit 1
+    i=$((i+1))
+    [ $i -eq 100 ] && echo "kubectl failed, giving up" && exit 1
 
     set +e
     out=$($KUBECTL "$@" 2>&1)
     status=$?
     set -e
 
-    if [[ "$out" == *"AlreadyExists"* ]]; then
+    if echo "$out" | grep -q "AlreadyExists"; then
       echo "$out, skipping"
       return
     fi
@@ -42,20 +43,33 @@ function kubectl() {
   done
 }
 
-function wait_for_tpr() {
+wait_for_crd() {
   set +e
-  local i=0
+  i=0
+
+  echo "Waiting for CRD $2"
+  until $KUBECTL -n "$1" get customresourcedefinition "$2"; do
+    i=$((i+1))
+    echo "CRD $2 not available yet, retrying in 5 seconds ($i)"
+    sleep 5
+  done
+  set -e
+}
+
+wait_for_tpr() {
+  set +e
+  i=0
 
   echo "Waiting for TPR $2"
   until $KUBECTL -n "$1" get thirdpartyresources "$2"; do
-    (( i++ ))
+    i=$((i+1))
     echo "TPR $2 not available yet, retrying in 5 seconds ($i)"
     sleep 5
   done
   set -e
 }
 
-function wait_for_pods() {
+wait_for_pods() {
   set +e
   echo "Waiting for pods in namespace $1"
   while true; do
@@ -78,7 +92,7 @@ function wait_for_pods() {
     fi
   
     stat=$(echo "$out"| tail -n +2 | grep -v '^Running')
-    if [[ "$stat" == "" ]]; then
+    if [ -z "$stat" ]; then
       return
     fi
   
@@ -96,7 +110,7 @@ set +e
 i=0
 echo "Waiting for Kubernetes API..."
 until $KUBECTL cluster-info; do
-  (( i++ ))
+  i=$((i+1))
   echo "Cluster not available yet, waiting for 5 seconds ($i)"
   sleep 5
 done
@@ -127,6 +141,23 @@ kubectl create -f secrets/ingress-tls.yaml
 kubectl create -f secrets/ca-cert.yaml
 kubectl create -f secrets/identity-grpc-client.yaml
 kubectl create -f secrets/identity-grpc-server.yaml
+
+echo "Creating Ingress"
+kubectl create -f ingress/default-backend/configmap.yaml
+kubectl create -f ingress/default-backend/service.yaml
+kubectl create -f ingress/default-backend/deployment.yaml
+kubectl create -f ingress/ingress.yaml
+
+# shellcheck disable=SC2154
+if [ "${ingress_kind}" = "HostPort" ]; then
+  kubectl create -f ingress/hostport/service.yaml
+  kubectl create -f ingress/hostport/daemonset.yaml
+elif [ "${ingress_kind}" = "NodePort" ]; then
+  kubectl create -f ingress/nodeport/service.yaml
+  kubectl create -f ingress/nodeport/deployment.yaml
+else
+  echo "Unrecognized Ingress Kind: ${ingress_kind}"
+fi
 
 echo "Creating Tectonic Identity"
 kubectl create -f identity/configmap.yaml
@@ -183,22 +214,9 @@ kubectl create -f monitoring/tectonic-monitoring-auth-prometheus-deployment.yaml
 kubectl create -f monitoring/tectonic-monitoring-auth-prometheus-svc.yaml
 kubectl create -f monitoring/tectonic-monitoring-ingress.yaml
 
-echo "Creating Ingress"
-kubectl create -f ingress/default-backend/configmap.yaml
-kubectl create -f ingress/default-backend/service.yaml
-kubectl create -f ingress/default-backend/deployment.yaml
-kubectl create -f ingress/ingress.yaml
-
-# shellcheck disable=SC2154
-if [ "${ingress_kind}" = "HostPort" ]; then
-  kubectl create -f ingress/hostport/service.yaml
-  kubectl create -f ingress/hostport/daemonset.yaml
-elif [ "${ingress_kind}" = "NodePort" ]; then
-  kubectl create -f ingress/nodeport/service.yaml
-  kubectl create -f ingress/nodeport/deployment.yaml
-else
-  echo "Unrecognized Ingress Kind: ${ingress_kind}"
-fi
+echo "Creating Etcd Operator"
+# Operator in the tectonic-system namespace used for etcd as a service
+kubectl create -f etcd/etcd-operator.yaml
 
 echo "Creating Heapster / Stats Emitter"
 kubectl create -f heapster/service.yaml
@@ -212,17 +230,19 @@ kubectl create -f updater/migration-status-kind.yaml
 kubectl create -f updater/node-agent.yaml
 kubectl create -f updater/tectonic-monitoring-config.yaml
 
-wait_for_tpr tectonic-system channel-operator-config.coreos.com
+wait_for_crd tectonic-system channeloperatorconfigs.tco.coreos.com
 kubectl create -f updater/tectonic-channel-operator-config.yaml
 
 kubectl create -f updater/operators/kube-version-operator.yaml
 kubectl create -f updater/operators/tectonic-channel-operator.yaml
 kubectl create -f updater/operators/tectonic-prometheus-operator.yaml
+kubectl create -f updater/operators/tectonic-cluo-operator.yaml
 
-wait_for_tpr tectonic-system app-version.coreos.com
+wait_for_crd tectonic-system appversions.tco.coreos.com
 kubectl create -f updater/app_versions/app-version-tectonic-cluster.yaml
 kubectl create -f updater/app_versions/app-version-kubernetes.yaml
 kubectl create -f updater/app_versions/app-version-tectonic-monitoring.yaml
+kubectl create -f updater/app_versions/app-version-tectonic-cluo.yaml
 
 if [ "$EXPERIMENTAL" = "true" ]; then
   echo "Creating Experimental resources"
@@ -230,9 +250,6 @@ if [ "$EXPERIMENTAL" = "true" ]; then
   kubectl create -f updater/app_versions/app-version-tectonic-etcd.yaml
   kubectl create -f updater/operators/tectonic-etcd-operator.yaml
 fi
-
-echo "Creating Container Linux Updater"
-kubectl create -f updater/operators/container-linux-update-operator.yaml
 
 # wait for Tectonic pods
 wait_for_pods tectonic-system

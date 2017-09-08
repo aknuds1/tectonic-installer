@@ -4,21 +4,20 @@ import { connect } from 'react-redux';
 
 import { commitToServer } from '../server';
 import { commitPhases } from '../actions';
+import { withNav } from '../nav';
 
-export const SubmitDefinition = connect(
+export const SubmitDefinition = withNav(connect(
   state => ({
     phase: state.commitState.phase,
     response: state.commitState.response,
     ready: state.cluster.ready,
   }),
-  dispatch => ({
-    onFinish: (dryRun=false) => dispatch(commitToServer(dryRun)),
-  })
-)(({phase, response, ready, onFinish, navigatePrevious, navigateNext}) => {
+  {onFinish: commitToServer}
+)(({navNext, navPrevious, phase, response, ready, onFinish}) => {
   let feature =
     <div className="wiz-giant-button-container">
       <button className="btn btn-primary wiz-giant-button"
-              onClick={() => onFinish(false)}>
+        onClick={() => onFinish(false)}>
         Submit
       </button>
     </div>;
@@ -50,9 +49,9 @@ export const SubmitDefinition = connect(
     );
     pager = (
       <div className="wiz-form__actions">
-        <button className="btn btn-primary wiz-form__actions__next"
-           onClick={navigateNext}
-           >Next Step</button>
+        <button className="btn btn-primary wiz-form__actions__next" onClick={navNext}>
+          Next Step
+        </button>
       </div>
     );
   }
@@ -67,11 +66,13 @@ export const SubmitDefinition = connect(
   return (
     <div>
       <p>
-        { msg }
-        <span> After submission, the definition cannot be updated. Go <a onClick={!inProgress && navigatePrevious} className={inProgress && 'disabled'}>back</a> to update or make changes.</span>
+        {msg}
+        <span> After submission, the definition cannot be updated. Go <a onClick={!inProgress && navPrevious} className={inProgress && 'disabled'}>back</a> to update or make changes.</span>
       </p>
       <p>
-        You'll be able to download your <a href="https://coreos.com/tectonic/docs/latest/admin/assets-zip.html" target="_blank">assets zip file</a> after the definition is submitted.
+        {/* eslint-disable react/jsx-no-target-blank */}
+        You'll be able to download your <a href="https://coreos.com/tectonic/docs/latest/admin/assets-zip.html" rel="noopener" target="_blank">assets zip file</a> after the definition is submitted.
+        {/* eslint-enable react/jsx-no-target-blank */}
       </p>
       <br />
       {feature}
@@ -85,7 +86,7 @@ export const SubmitDefinition = connect(
       {pager}
     </div>
   );
-});
+}));
 SubmitDefinition.canNavigateForward = ({cluster}) => {
   return cluster.ready;
 };

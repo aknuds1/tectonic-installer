@@ -3,7 +3,7 @@
 // 1. login as the admin user to the Tectonic Console.
 // 2. generate DNS zones for some providers.
 // 
-// Note: This field MUST be set manually prior to creating the cluster.
+// Note: This field MUST be in all lower-case e-mail address format and set manually prior to creating the cluster.
 tectonic_admin_email = ""
 
 // The bcrypt hash of admin user password to login to the Tectonic Console.
@@ -19,6 +19,11 @@ tectonic_admin_password_hash = ""
 // 
 // Note: This field MUST be set manually prior to creating the cluster.
 // This applies only to cloud platforms.
+// 
+// [Azure-specific NOTE]
+// To use Azure-provided DNS, `tectonic_base_domain` should be set to `""`
+// If using DNS records, ensure that `tectonic_base_domain` is set to a properly configured external DNS zone.
+// Instructions for configuring delegated domains for Azure DNS can be found here: https://docs.microsoft.com/en-us/azure/dns/dns-delegate-domain-azure-dns
 tectonic_base_domain = ""
 
 // (optional) The content of the PEM-encoded CA certificate, used to generate Tectonic Console's server certificate.
@@ -30,7 +35,7 @@ tectonic_base_domain = ""
 // tectonic_ca_key = ""
 
 // (optional) The algorithm used to generate tectonic_ca_key.
-// The default value is currently recommend.
+// The default value is currently recommended.
 // This field is mandatory if `tectonic_ca_cert` is set.
 // tectonic_ca_key_alg = "RSA"
 
@@ -95,7 +100,7 @@ tectonic_cluster_name = ""
 // The number of etcd nodes to be created.
 // If set to zero, the count of etcd nodes will be determined automatically.
 // 
-// Note: This is currently only supported on AWS.
+// Note: This is not supported on bare metal.
 tectonic_etcd_count = "0"
 
 // (optional) List of external etcd v3 servers to connect with (hostnames/IPs only).
@@ -113,6 +118,9 @@ tectonic_etcd_count = "0"
 tectonic_experimental = false
 
 // The path to the tectonic licence file.
+// You can download the Tectonic license file from your Account overview page at [1].
+// 
+// [1] https://account.coreos.com/overview
 // 
 // Note: This field MUST be set manually prior to creating the cluster unless `tectonic_vanilla_k8s` is set to `true`.
 tectonic_license_path = ""
@@ -221,6 +229,15 @@ tectonic_metal_worker_macs = ""
 tectonic_metal_worker_names = ""
 
 // The path the pull secret file in JSON format.
+// This is known to be a "Docker pull secret" as produced by the docker login [1] command.
+// A sample JSON content is shown in [2].
+// You can download the pull secret from your Account overview page at [3].
+// 
+// [1] https://docs.docker.com/engine/reference/commandline/login/
+// 
+// [2] https://coreos.com/os/docs/latest/registry-authentication.html#manual-registry-auth-setup
+// 
+// [3] https://account.coreos.com/overview
 // 
 // Note: This field MUST be set manually prior to creating the cluster unless `tectonic_vanilla_k8s` is set to `true`.
 tectonic_pull_secret_path = ""

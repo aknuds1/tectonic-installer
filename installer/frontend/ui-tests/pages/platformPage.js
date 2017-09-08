@@ -1,38 +1,15 @@
-const awsPlatformPageCommands = {
-  selectPlatform() {
-    return this
-      .waitForElementVisible('select#platformType', 100000)
-      .click('@awsPlatform')
-      .click('@nextStep');
-  },
-};
-
-const bareMetalplatformPageCommands = {
-  selectBareMetalPlatform() {
-    return this
-      .waitForElementVisible('select#platformType', 100000)
-      .click('@bareMetalPlatform')
-      .click('@nextStep');
+const platformPageCommands = {
+  test(platformEl) {
+    this.expect.element('select#platformType').to.be.visible.before(60000);
+    return this.selectOption(platformEl);
   },
 };
 
 module.exports = {
-
-  url: () => {
-    return this.api.launchUrl + '/define/cluster-type';
-  },
-
-  commands: [awsPlatformPageCommands,bareMetalplatformPageCommands],
+  url: () => `${this.api.launchUrl}/define/cluster-type`,
+  commands: [platformPageCommands],
   elements: {
-    awsPlatform: {
-      selector: 'option[value="aws-tf"]',
-    },
-    bareMetalPlatform: {
-      selector: 'option[value="bare-metal-tf"]',
-    },
-    nextStep: {
-      selector:'//*[text()[contains(.,"Next Step")]]',
-      locateStrategy: 'xpath',
-    },
+    awsPlatform: 'option[value="aws-tf"]',
+    bareMetalPlatform: 'option[value="bare-metal-tf"]',
   },
 };

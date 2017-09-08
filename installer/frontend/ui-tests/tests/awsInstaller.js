@@ -1,63 +1,60 @@
-const _ = require('lodash');
+const fs = require('fs');
+const path = require('path');
 
 const log = require('../utils/log');
-const installerInput = require('../utils/awsInstallerInput');
+const wizard = require('../utils/wizard');
 const tfvarsUtil = require('../utils/terraformTfvars');
 
-const REQUIRED_ENV_VARS = ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "TF_VAR_tectonic_license_path", "TF_VAR_tectonic_pull_secret_path"];
+// Expected Terraform tfvars file variables
+// TODO: Confusingly, this is also used as input to the tests
+const jsonPath = path.join(__dirname, '..', '..', '__tests__', 'examples', 'aws.json');
+// eslint-disable-next-line no-sync
+const json = JSON.parse(fs.readFileSync(jsonPath, 'utf8')).variables;
+
+const testPage = (page, nextInitiallyDisabled) => wizard.testPage(page, 'aws', json, nextInitiallyDisabled);
+
+const REQUIRED_ENV_VARS = ['AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY', 'TF_VAR_tectonic_license_path', 'TF_VAR_tectonic_pull_secret_path'];
 
 module.exports = {
+  before () {
+    const missing = REQUIRED_ENV_VARS.filter(ev => !process.env[ev]);
+    if (missing.length) {
+      console.error(`Missing environment variables: ${missing.join(', ')}.\n`);
+      process.exit(1);
+    }
+  },
+
   after (client) {
     client.getLog('browser', log.logger);
     client.end();
   },
 
-  'Tectonic Installer AWS Test': (client) => {
-    const missing = _.filter(REQUIRED_ENV_VARS, ev => !process.env[ev]);
-    if (missing.length) {
-      console.error(`Missing environment variables: ${missing.join(', ')}.\n`);
-      process.exit(1);
-    }
-
-    const expectedJson = installerInput.buildExpectedJson();
-    expectedJson.tectonic_cluster_name = `awstest-${new Date().getTime().toString()}`;
-    expectedJson.tectonic_dns_name = expectedJson.tectonic_cluster_name;
+  'AWS: Platform': client => {
     const platformPage = client.page.platformPage();
-    const awsCredentialsPage = client.page.awsCredentialsPage();
-    const clusterInfoPage = client.page.clusterInfoPage();
-    const certificateAuthorityPage = client.page.certificateAuthorityPage();
-    const keysPage = client.page.keysPage();
-    const nodesPage = client.page.nodesPage();
-    const networkingPage = client.page.networkingPage();
-    const consoleLoginPage = client.page.consoleLoginPage();
+    platformPage.navigate(client.launch_url);
+    platformPage.test('@awsPlatform');
+    platformPage.expect.element(wizard.nextStep).to.not.have.attribute('class').which.contains('disabled');
+    platformPage.click(wizard.nextStep);
+  },
+
+  'AWS: AWS Credentials': ({page}) => testPage(page.awsCredentialsPage()),
+  'AWS: Cluster Info': ({page}) => testPage(page.clusterInfoPage()),
+  'AWS: Certificate Authority': ({page}) => testPage(page.certificateAuthorityPage(), false),
+  'AWS: SSH Key': ({page}) => testPage(page.keysPage()),
+  'AWS: Define Nodes': ({page}) => testPage(page.nodesPage(), false),
+  'AWS: Networking': ({page}) => testPage(page.networkingPage()),
+  'AWS: Console Login': ({page}) => testPage(page.consoleLoginPage()),
+
+  'AWS: Submit': client => {
     const submitPage = client.page.submitPage();
-
-    platformPage.navigate(client.launch_url).selectPlatform();
-    awsCredentialsPage.enterAwsCredentials()
-      .waitForElementPresent(awsCredentialsPage.el('@region', expectedJson.tectonic_aws_region), 60000)
-      .click(awsCredentialsPage.el('@region', expectedJson.tectonic_aws_region))
-      .nextStep();
-
-    clusterInfoPage.enterClusterInfo(expectedJson.tectonic_cluster_name);
-    certificateAuthorityPage.click('@nextStep');
-
-    keysPage.selectSshKeys();
-    nodesPage.click('@etcdOption')
-      .waitForElementVisible('@nextStep', 10000)
-      .click('@nextStep');
-    networkingPage.provideNetworkingDetails();
-    consoleLoginPage.enterLoginCredentails(expectedJson.tectonic_admin_email);
     submitPage.click('@manuallyBoot');
-    client.pause(10000);
+    submitPage.expect.element('a[href="/terraform/assets"]').to.be.visible;
     client.getCookie('tectonic-installer', result => {
       tfvarsUtil.returnTerraformTfvars(client.launch_url, result.value, (err, actualJson) => {
         if (err) {
           return client.assert.fail(err);
         }
-        const msg = tfvarsUtil.compareJson(actualJson, expectedJson);
-        if (msg) {
-          return client.assert.fail(msg);
-        }
+        tfvarsUtil.assertDeepEqual(client, actualJson, json);
       });
     });
   },

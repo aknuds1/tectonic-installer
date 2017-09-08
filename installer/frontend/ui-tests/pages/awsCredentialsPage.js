@@ -1,39 +1,33 @@
-const util = require('util');
-
 const awsCredentialsPageCommands = {
-  enterAwsCredentials() {
-    return this
-      .setValue('@awsAccessKey', process.env.AWS_ACCESS_KEY_ID)
-      .setValue('@secretAccesskey', process.env.AWS_SECRET_ACCESS_KEY);
+  test(json) {
+    const regionOption = `select#awsRegion option[value=${json.tectonic_aws_region}]`;
+
+    this.expect.element('@sessionTokenFalse').to.be.selected;
+
+    if (process.env.AWS_SESSION_TOKEN) {
+      this
+        .setField('@sessionTokenTrue')
+        .setField('@awsAccessKey', process.env.AWS_ACCESS_KEY_ID)
+        .setField('@secretAccesskey', process.env.AWS_SECRET_ACCESS_KEY)
+        .setField('@sessionToken', process.env.AWS_SESSION_TOKEN);
+    } else {
+      this
+        .setField('@awsAccessKey', process.env.AWS_ACCESS_KEY_ID)
+        .setField('@secretAccesskey', process.env.AWS_SECRET_ACCESS_KEY);
+    }
+
+    this.expect.element(regionOption).to.be.visible.before(60000);
+    return this.selectOption(regionOption);
   },
 };
 
 module.exports = {
-  url: '',
-  commands: [
-    awsCredentialsPageCommands, {
-      el: function(elementName, data) {
-        const element = this.elements[elementName.slice(1)];
-        return util.format(element.selector, data);
-      },
-    }, {
-      nextStep() {
-        return this
-          .click('@nextStep');
-      },
-    },
-  ],
+  commands: [awsCredentialsPageCommands],
   elements: {
-    awsAccessKey: {
-      selector: 'input[id=accessKeyId]',
-    },
-    secretAccesskey: {
-      selector: 'input[id=secretAccessKey]',
-    },
-    region: "option[value='%s']",
-    nextStep: {
-      selector:'//*[text()[contains(.,"Next Step")]]',
-      locateStrategy: 'xpath',
-    },
+    awsAccessKey: 'input#accessKeyId',
+    secretAccesskey: 'input#secretAccessKey',
+    sessionToken: 'input#awsSessionToken',
+    sessionTokenTrue: 'input#stsEnabledTrue',
+    sessionTokenFalse: 'input#stsEnabledFalse',
   },
 };

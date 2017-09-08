@@ -1,21 +1,19 @@
 const networkingPageCommands = {
-  provideNetworkingDetails() {
+  test(json) {
     return this
-      .waitForElementPresent('@domain', 10000)
-      .click('@domain')
-      .click('@nextStep');
+      .selectOption('#awsHostedZoneId option[value=Z1ILIMNSJGTMO2]')
+      .selectOption('#awsSplitDNS option[value=off]')
+      .click('@advanced')
+      .setField('#podCIDR', json.tectonic_cluster_cidr)
+      .setField('#serviceCIDR', json.tectonic_service_cidr);
   },
 };
 
 module.exports = {
-  url: '',
   commands: [networkingPageCommands],
   elements: {
-    domain: {
-      selector: 'option[value=Z1ILIMNSJGTMO2]',
-    },
-    nextStep: {
-      selector:'//*[text()[contains(.,"Next Step")]]',
+    advanced: {
+      selector: '//*[text()[contains(.,"Advanced Settings")]]',
       locateStrategy: 'xpath',
     },
   },

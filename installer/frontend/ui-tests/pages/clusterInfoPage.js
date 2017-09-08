@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 
 const clusterInfoPageCommands = {
-  enterClusterInfo(clusterName) {
+  test(json, platform) {
     const parentDir = path.resolve(__dirname, '..');
     const coreOSLicensePath = path.join(parentDir, 'tectonic-license.txt');
     const configPath = path.join(parentDir, 'config.json');
@@ -14,31 +14,30 @@ const clusterInfoPageCommands = {
     fs.writeFileSync(configPath, pull_secret);
     /* eslint-enable no-sync */
 
-    return this
-      .setValue('@name', clusterName)
+    this
+      .setField('@name', json.tectonic_cluster_name)
       .setValue('@coreOSLicenseUpload', coreOSLicensePath)
-      .setValue('@pullSecretUpload', configPath)
-      .click('@nextStep');
+      .setValue('@pullSecretUpload', configPath);
+    if (platform === 'aws') {
+      this
+        .click('.list-add')
+        .setField('input[id="awsTags.1.key"]', 'test_tag')
+        .setField('input[id="awsTags.1.value"]', 'testing');
+    }
+    return this;
   },
 };
 
 module.exports = {
-  url: '',
   commands: [clusterInfoPageCommands],
   elements: {
-    name: {
-      selector: 'input[id=clusterName]',
-    },
+    name: 'input#clusterName',
     coreOSLicenseUpload: {
       selector: '//*[text()[contains(.,"tectonic-license.txt")]]/input[@type="file"]',
       locateStrategy: 'xpath',
     },
     pullSecretUpload: {
       selector: '//*[text()[contains(.,"config.json")]]/input[@type="file"]',
-      locateStrategy: 'xpath',
-    },
-    nextStep: {
-      selector:'//*[text()[contains(.,"Next Step")]]',
       locateStrategy: 'xpath',
     },
   },

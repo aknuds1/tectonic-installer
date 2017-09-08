@@ -28,7 +28,7 @@ common() {
     # Set required configuration
     CLUSTER="$TEST_NAME-$BRANCH_NAME-$BUILD_ID"
     MAX_LENGTH=28
-    
+
     LENGTH=${#CLUSTER}
     if [ "$LENGTH" -gt "$MAX_LENGTH" ]
     then
@@ -45,11 +45,11 @@ common() {
         CLUSTER="$CLUSTER${APPEND_STR:0:APPEND}"
         echo "Cluster name too short. Appended to $CLUSTER"
     fi
-    
+
     CLUSTER=$(echo "${CLUSTER}" | awk '{print tolower($0)}')
     export CLUSTER
     export TF_VAR_tectonic_cluster_name=$CLUSTER
-    
+
     echo "cluster name: $CLUSTER"
 
     mkdir -p "$HOME/.ssh"
@@ -78,6 +78,17 @@ destroy() {
     make destroy
 }
 
+destroy_azure_cli() {
+    common "$1"
+    echo "Destroying using Azure Cli - ${CLUSTER} ..."
+    azure telemetry --disable
+    azure login -u "${ARM_CLIENT_ID}" --service-principal --tenant "${ARM_TENANT_ID}" -p "${ARM_CLIENT_SECRET}"
+    azure group list
+    azure group delete -q -v -n "tectonic-cluster-${CLUSTER}"
+    azure group list
+    azure logout -u "${ARM_CLIENT_ID}"
+}
+
 plan() {
     common "$1"
     make plan | filter
@@ -89,13 +100,13 @@ test_cluster() {
     CONFIG=$WORKSPACE/build/$CLUSTER/terraform.tfvars
     MASTER_COUNT=$(grep tectonic_master_count "$CONFIG" | awk -F "=" '{gsub(/"/, "", $2); print $2}')
     WORKER_COUNT=$(grep tectonic_worker_count "$CONFIG" | awk -F "=" '{gsub(/"/, "", $2); print $2}')
-    export NODE_COUNT=$(( MASTER_COUNT + WORKER_COUNT ))
-    export TEST_KUBECONFIG=$WORKSPACE/build/$CLUSTER/generated/auth/kubeconfig
-    export MANIFEST_PATHS=$WORKSPACE/build/$CLUSTER/generated/
+    export SMOKE_NODE_COUNT=$(( MASTER_COUNT + WORKER_COUNT ))
+    export SMOKE_KUBECONFIG=$WORKSPACE/build/$CLUSTER/generated/auth/kubeconfig
+    export SMOKE_MANIFEST_PATHS=$WORKSPACE/build/$CLUSTER/generated/
     # shellcheck disable=SC2155
-    export MANIFEST_EXPERIMENTAL=$(grep tectonic_experimental "$CONFIG" | awk -F "=" '{gsub(/"/, "", $2); print $2}' | tr -d ' ')
+    export SMOKE_MANIFEST_EXPERIMENTAL=$(grep tectonic_experimental "$CONFIG" | awk -F "=" '{gsub(/"/, "", $2); print $2}' | tr -d ' ')
     # shellcheck disable=SC2155
-    export CALICO_NETWORK_POLICY=$(grep tectonic_calico_network_policy "$CONFIG" | awk -F "=" '{gsub(/"/, "", $2); print $2}' | tr -d ' ')
+    export SMOKE_CALICO_NETWORK_POLICY=$(grep tectonic_calico_network_policy "$CONFIG" | awk -F "=" '{gsub(/"/, "", $2); print $2}' | tr -d ' ')
     bin/smoke -test.v -test.parallel=1 --cluster
 }
 
@@ -107,6 +118,7 @@ usage() {
     printf "The commands are:\n\n"
     printf "\t create <tfvars>                              create a Tectonic cluster parameterized by <tfvars>\n"
     printf "\t destroy <tfvars>                             destroy the Tectonic cluster parameterized by <tfvars>\n"
+    printf "\t destroy_azure_cli <tfvars>                   destroy the Tectonic cluster using azure cli command and the cluster name\n"
     printf "\t plan <tfvars>                                plan a Tectonic cluster parameterized by <tfvars>\n"
     printf "\t                                              path <policy> and trust policy at file path <trust-policy>\n"
     printf "\t test <tfvars>                                test a Tectonic cluster parameterized by <tfvars>\n"
@@ -119,13 +131,15 @@ main () {
         usage
         exit 1
     fi
-    
+
     shift
     case $COMMAND in
         create)
             create "$@";;
         destroy)
             destroy "$@";;
+        destroy_azure_cli)
+            destroy_azure_cli "$@";;
         plan)
             plan "$@";;
         test)

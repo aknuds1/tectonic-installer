@@ -3,7 +3,7 @@
 // 1. login as the admin user to the Tectonic Console.
 // 2. generate DNS zones for some providers.
 // 
-// Note: This field MUST be set manually prior to creating the cluster.
+// Note: This field MUST be in all lower-case e-mail address format and set manually prior to creating the cluster.
 tectonic_admin_email = ""
 
 // The bcrypt hash of admin user password to login to the Tectonic Console.
@@ -18,7 +18,7 @@ tectonic_admin_password_hash = ""
 // Example: `[ { key = "foo", value = "bar", propagate_at_launch = true } ]`
 // tectonic_autoscaling_group_extra_tags = ""
 
-// Instance size for the etcd node(s). Example: `t2.medium`. Read the [etcd recommended hardware] (https://coreos.com/etcd/docs/latest/op-guide/hardware.html) guide for best performance
+// Instance size for the etcd node(s). Example: `t2.medium`. Read the [etcd recommended hardware](https://coreos.com/etcd/docs/latest/op-guide/hardware.html) guide for best performance
 tectonic_aws_etcd_ec2_type = "t2.medium"
 
 // (optional) List of additional security group IDs for etcd nodes.
@@ -27,6 +27,7 @@ tectonic_aws_etcd_ec2_type = "t2.medium"
 // tectonic_aws_etcd_extra_sg_ids = ""
 
 // The amount of provisioned IOPS for the root block device of etcd nodes.
+// Ignored if the volume type is not io1.
 tectonic_aws_etcd_root_volume_iops = "100"
 
 // The size of the volume in gigabytes for the root block device of etcd nodes.
@@ -53,10 +54,6 @@ tectonic_aws_etcd_root_volume_type = "gp2"
 // 
 // Example: `vpc-123456`
 // tectonic_aws_external_vpc_id = ""
-
-// If set to true, create public facing ingress resources (ELB, A-records).
-// If set to false, a "private" cluster will be created with an internal ELB only.
-tectonic_aws_external_vpc_public = true
 
 // (optional) List of subnet IDs within an existing VPC to deploy worker nodes into.
 // Required to use an existing VPC and the list must match the AZ count.
@@ -90,6 +87,7 @@ tectonic_aws_master_ec2_type = "t2.medium"
 // tectonic_aws_master_iam_role_name = ""
 
 // The amount of provisioned IOPS for the root block device of master nodes.
+// Ignored if the volume type is not io1.
 tectonic_aws_master_root_volume_iops = "100"
 
 // The size of the volume in gigabytes for the root block device of master nodes.
@@ -97,6 +95,14 @@ tectonic_aws_master_root_volume_size = "30"
 
 // The type of volume for the root block device of master nodes.
 tectonic_aws_master_root_volume_type = "gp2"
+
+// (optional) If set to true, create private-facing ingress resources (ELB, A-records).
+// If set to false, no private-facing ingress resources will be provisioned and all DNS records will be created in the public Route53 zone.
+// tectonic_aws_private_endpoints = true
+
+// (optional) If set to true, create public-facing ingress resources (ELB, A-records).
+// If set to false, no public-facing ingress resources will be created.
+// tectonic_aws_public_endpoints = true
 
 // The target AWS region for the cluster.
 tectonic_aws_region = "eu-west-1"
@@ -130,6 +136,7 @@ tectonic_aws_worker_ec2_type = "t2.medium"
 // tectonic_aws_worker_iam_role_name = ""
 
 // The amount of provisioned IOPS for the root block device of worker nodes.
+// Ignored if the volume type is not io1.
 tectonic_aws_worker_root_volume_iops = "100"
 
 // The size of the volume in gigabytes for the root block device of worker nodes.
@@ -145,6 +152,11 @@ tectonic_aws_worker_root_volume_type = "gp2"
 // 
 // Note: This field MUST be set manually prior to creating the cluster.
 // This applies only to cloud platforms.
+// 
+// [Azure-specific NOTE]
+// To use Azure-provided DNS, `tectonic_base_domain` should be set to `""`
+// If using DNS records, ensure that `tectonic_base_domain` is set to a properly configured external DNS zone.
+// Instructions for configuring delegated domains for Azure DNS can be found here: https://docs.microsoft.com/en-us/azure/dns/dns-delegate-domain-azure-dns
 tectonic_base_domain = ""
 
 // (optional) The content of the PEM-encoded CA certificate, used to generate Tectonic Console's server certificate.
@@ -156,7 +168,7 @@ tectonic_base_domain = ""
 // tectonic_ca_key = ""
 
 // (optional) The algorithm used to generate tectonic_ca_key.
-// The default value is currently recommend.
+// The default value is currently recommended.
 // This field is mandatory if `tectonic_ca_cert` is set.
 // tectonic_ca_key_alg = "RSA"
 
@@ -224,7 +236,7 @@ tectonic_cluster_name = ""
 // The number of etcd nodes to be created.
 // If set to zero, the count of etcd nodes will be determined automatically.
 // 
-// Note: This is currently only supported on AWS.
+// Note: This is not supported on bare metal.
 tectonic_etcd_count = "0"
 
 // (optional) List of external etcd v3 servers to connect with (hostnames/IPs only).
@@ -242,6 +254,9 @@ tectonic_etcd_count = "0"
 tectonic_experimental = false
 
 // The path to the tectonic licence file.
+// You can download the Tectonic license file from your Account overview page at [1].
+// 
+// [1] https://account.coreos.com/overview
 // 
 // Note: This field MUST be set manually prior to creating the cluster unless `tectonic_vanilla_k8s` is set to `true`.
 tectonic_license_path = ""
@@ -251,6 +266,15 @@ tectonic_license_path = ""
 tectonic_master_count = "1"
 
 // The path the pull secret file in JSON format.
+// This is known to be a "Docker pull secret" as produced by the docker login [1] command.
+// A sample JSON content is shown in [2].
+// You can download the pull secret from your Account overview page at [3].
+// 
+// [1] https://docs.docker.com/engine/reference/commandline/login/
+// 
+// [2] https://coreos.com/os/docs/latest/registry-authentication.html#manual-registry-auth-setup
+// 
+// [3] https://account.coreos.com/overview
 // 
 // Note: This field MUST be set manually prior to creating the cluster unless `tectonic_vanilla_k8s` is set to `true`.
 tectonic_pull_secret_path = ""

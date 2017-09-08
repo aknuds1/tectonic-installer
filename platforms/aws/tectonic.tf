@@ -4,8 +4,8 @@ module "bootkube" {
 
   cluster_name = "${var.tectonic_cluster_name}"
 
-  kube_apiserver_url = "https://${module.masters.api_internal_fqdn}:443"
-  oidc_issuer_url    = "https://${module.masters.ingress_internal_fqdn}/identity"
+  kube_apiserver_url = "https://${var.tectonic_aws_private_endpoints ? module.masters.api_internal_fqdn : module.masters.api_external_fqdn}:443"
+  oidc_issuer_url    = "https://${var.tectonic_aws_private_endpoints ? module.masters.ingress_internal_fqdn : module.masters.ingress_external_fqdn}/identity"
 
   # Platform-independent variables wiring, do not modify.
   container_images = "${var.tectonic_container_images}"
@@ -25,7 +25,7 @@ module "bootkube" {
   oidc_groups_claim   = "groups"
   oidc_client_id      = "tectonic-kubectl"
 
-  etcd_endpoints   = ["${module.etcd.endpoints}"]
+  etcd_endpoints   = "${module.etcd.endpoints}"
   etcd_ca_cert     = "${var.tectonic_etcd_ca_cert_path}"
   etcd_client_cert = "${var.tectonic_etcd_client_cert_path}"
   etcd_client_key  = "${var.tectonic_etcd_client_key_path}"
@@ -74,8 +74,8 @@ module "tectonic" {
 
   cluster_name = "${var.tectonic_cluster_name}"
 
-  base_address       = "${module.masters.ingress_internal_fqdn}"
-  kube_apiserver_url = "https://${module.masters.api_internal_fqdn}:443"
+  base_address       = "${var.tectonic_aws_private_endpoints ? module.masters.ingress_internal_fqdn : module.masters.ingress_external_fqdn}"
+  kube_apiserver_url = "https://${var.tectonic_aws_private_endpoints ? module.masters.api_internal_fqdn : module.masters.api_external_fqdn}:443"
 
   # Platform-independent variables wiring, do not modify.
   container_images = "${var.tectonic_container_images}"
@@ -102,6 +102,8 @@ module "tectonic" {
   experimental      = "${var.tectonic_experimental}"
   master_count      = "${var.tectonic_master_count}"
   stats_url         = "${var.tectonic_stats_url}"
+
+  image_re = "${var.tectonic_image_re}"
 }
 
 module "flannel-vxlan" {
@@ -117,7 +119,7 @@ module "flannel-vxlan" {
 module "calico-network-policy" {
   source = "../../modules/net/calico-network-policy"
 
-  kube_apiserver_url = "https://${module.masters.api_internal_fqdn}:443"
+  kube_apiserver_url = "https://${var.tectonic_aws_private_endpoints ? module.masters.api_internal_fqdn : module.masters.api_external_fqdn}:443"
   calico_image       = "${var.tectonic_container_images["calico"]}"
   calico_cni_image   = "${var.tectonic_container_images["calico_cni"]}"
   cluster_cidr       = "${var.tectonic_cluster_cidr}"
@@ -139,6 +141,6 @@ data "archive_file" "assets" {
   #
   # Additionally, data sources do not support managing any lifecycle whatsoever,
   # and therefore, the archive is never deleted. To avoid cluttering the module
-  # folder, we write it in the TerraForm managed hidden folder `.terraform`.
+  # folder, we write it in the Terraform managed hidden folder `.terraform`.
   output_path = "./.terraform/generated_${sha1("${module.tectonic.id} ${module.bootkube.id} ${module.flannel-vxlan.id} ${module.calico-network-policy.id}")}.zip"
 }

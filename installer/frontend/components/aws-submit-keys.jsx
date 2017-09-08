@@ -16,14 +16,14 @@ const awsSshForm = new Form('AWSSSHForm', [
     dependencies: [AWS_REGION_FORM],
     getExtraStuff: (dispatch, isNow) => dispatch(awsActions.getSsh(null, null, isNow)).then(options => ({options: _.sortBy(options, 'label')})),
   })], {
-    validator: (data, cc) => {
-      const key = data[AWS_SSH];
-      const options = _.get(cc, ['extra', AWS_SSH, 'options']);
-      if (options && key && !_.some(options, o => o.value === key)) {
-        return `SSH key ${key} does not exist in this region.`;
-      }
-    },
-  }
+  validator: (data, cc) => {
+    const key = data[AWS_SSH];
+    const options = _.get(cc, ['extra', AWS_SSH, 'options']);
+    if (options && key && !_.some(options, o => o.value === key)) {
+      return `SSH key ${key} does not exist in this region.`;
+    }
+  },
+}
 );
 
 const Title = connect(
@@ -35,7 +35,9 @@ const Title = connect(
 export const AWS_SubmitKeys = () => <div>
   <div className="row form-group">
     <div className="col-xs-12">
-      <a href="https://coreos.com/tectonic/docs/latest/install/aws/requirements.html#ssh-key" target="_blank">Generate a new key</a> if you don't have an existing one in this region.
+      {/* eslint-disable react/jsx-no-target-blank */}
+      <a href="https://coreos.com/tectonic/docs/latest/install/aws/requirements.html#ssh-key" rel="noopener" target="_blank">Generate a new key</a> if you don't have an existing one in this region.
+      {/* eslint-enable react/jsx-no-target-blank */}
     </div>
   </div>
   <div className="row form-group">

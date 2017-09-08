@@ -29,7 +29,7 @@ resource "aws_launch_configuration" "worker_conf" {
   key_name             = "${var.ssh_key}"
   security_groups      = ["${var.sg_ids}"]
   iam_instance_profile = "${aws_iam_instance_profile.worker_profile.arn}"
-  user_data            = "${var.user_data}"
+  user_data            = "${data.ignition_config.main.rendered}"
 
   lifecycle {
     create_before_destroy = true
@@ -43,7 +43,7 @@ resource "aws_launch_configuration" "worker_conf" {
   root_block_device {
     volume_type = "${var.root_volume_type}"
     volume_size = "${var.root_volume_size}"
-    iops        = "${var.root_volume_type == "io1" ? var.root_volume_iops : 100}"
+    iops        = "${var.root_volume_type == "io1" ? var.root_volume_iops : 0}"
   }
 }
 
@@ -51,7 +51,7 @@ resource "aws_autoscaling_group" "workers" {
   name                 = "${var.cluster_name}-workers"
   desired_capacity     = "${var.instance_count}"
   max_size             = "${var.instance_count * 3}"
-  min_size             = "1"
+  min_size             = "${var.instance_count}"
   launch_configuration = "${aws_launch_configuration.worker_conf.id}"
   vpc_zone_identifier  = ["${var.subnet_ids}"]
 
