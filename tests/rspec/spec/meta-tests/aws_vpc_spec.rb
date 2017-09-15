@@ -1,9 +1,11 @@
+# frozen_string_literal: true
+
 require 'aws_vpc'
 require 'aws_iam'
 
 describe AWSVPC do
   before(:all) do
-    AWSIAM.assume_role if Jenkins.environment?
+    # AWSIAM.assume_role if Jenkins.environment?
     @vpc = described_class.new('test-vpc')
   end
 

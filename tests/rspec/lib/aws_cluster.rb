@@ -13,7 +13,7 @@ class AwsCluster < Cluster
   def initialize(tfvars_file)
     if Jenkins.environment?
       export_random_region_if_not_defined
-      AWSIAM.assume_role
+      # AWSIAM.assume_role
     end
 
     super(tfvars_file)
@@ -39,7 +39,15 @@ class AwsCluster < Cluster
 
   def credentials_defined?
     credential_names = %w[AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY]
-    EnvVar.set?(credential_names)
+    profile_name = %w[AWS_PROFILE]
+    session_token = %w[
+      AWS_ACCESS_KEY_ID
+      AWS_SECRET_ACCESS_KEY
+      AWS_SESSION_TOKEN
+    ]
+    EnvVar.set?(credential_names) ||
+      EnvVar.set?(profile_name) ||
+      EnvVar.set?(session_token)
   end
 
   def ssh_key_defined?

@@ -10,7 +10,6 @@ resource "template_dir" "tectonic" {
 
   vars {
     addon_resizer_image                = "${var.container_images["addon_resizer"]}"
-    config_reload_image                = "${var.container_images["config_reload"]}"
     console_image                      = "${var.container_images["console"]}"
     error_server_image                 = "${var.container_images["error_server"]}"
     heapster_image                     = "${var.container_images["heapster"]}"
@@ -18,14 +17,7 @@ resource "template_dir" "tectonic" {
     ingress_controller_image           = "${var.container_images["ingress_controller"]}"
     kube_version_operator_image        = "${var.container_images["kube_version_operator"]}"
     node_agent_image                   = "${var.container_images["node_agent"]}"
-    node_exporter_image                = "${var.container_images["node_exporter"]}"
-    kube_state_metrics_image           = "${var.container_images["kube_state_metrics"]}"
-    prometheus_operator_image          = "${var.container_images["prometheus_operator"]}"
     etcd_operator_image                = "${var.container_images["etcd_operator"]}"
-    tectonic_monitoring_auth_image     = "${var.container_images["tectonic_monitoring_auth"]}"
-    prometheus_image                   = "${var.container_images["prometheus"]}"
-    prometheus_config_reload_image     = "${var.container_images["prometheus_config_reload"]}"
-    alertmanager_image                 = "${var.container_images["alertmanager"]}"
     stats_emitter_image                = "${var.container_images["stats_emitter"]}"
     stats_extender_image               = "${var.container_images["stats_extender"]}"
     tectonic_channel_operator_image    = "${var.container_images["tectonic_channel_operator"]}"
@@ -33,10 +25,20 @@ resource "template_dir" "tectonic" {
     tectonic_etcd_operator_image       = "${var.container_images["tectonic_etcd_operator"]}"
     tectonic_cluo_operator_image       = "${var.container_images["tectonic_cluo_operator"]}"
 
+    tectonic_monitoring_auth_base_image = "${var.container_base_images["tectonic_monitoring_auth"]}"
+    config_reload_base_image            = "${var.container_base_images["config_reload"]}"
+    addon_resizer_base_image            = "${var.container_base_images["addon_resizer"]}"
+    kube_state_metrics_base_image       = "${var.container_base_images["kube_state_metrics"]}"
+    prometheus_operator_base_image      = "${var.container_base_images["prometheus_operator"]}"
+    prometheus_config_reload_base_image = "${var.container_base_images["prometheus_config_reload"]}"
+    prometheus_base_image               = "${var.container_base_images["prometheus"]}"
+    alertmanager_base_image             = "${var.container_base_images["alertmanager"]}"
+    node_exporter_base_image            = "${var.container_base_images["node_exporter"]}"
+    grafana_base_image                  = "${var.container_base_images["grafana"]}"
+    grafana_watcher_base_image          = "${var.container_base_images["grafana_watcher"]}"
+
     kubernetes_version             = "${var.versions["kubernetes"]}"
     monitoring_version             = "${var.versions["monitoring"]}"
-    prometheus_version             = "${var.versions["prometheus"]}"
-    alertmanager_version           = "${var.versions["alertmanager"]}"
     tectonic_version               = "${var.versions["tectonic"]}"
     etcd_version                   = "${var.versions["etcd"]}"
     tectonic_etcd_operator_version = "${var.versions["tectonic-etcd"]}"
@@ -57,25 +59,26 @@ resource "template_dir" "tectonic" {
     admin_password_hash = "${var.admin_password_hash}"
 
     console_base_address = "${var.base_address}"
+    console_base_host    = "${element(split(":", var.base_address), 0)}"
     console_client_id    = "${var.console_client_id}"
     console_secret       = "${random_id.console_secret.b64}"
     console_callback     = "https://${var.base_address}/auth/callback"
 
     tectonic_monitoring_auth_cookie_secret = "${base64encode(random_id.tectonic_monitoring_auth_cookie_secret.b64)}"
 
-    alertmanager_external_url = "https://${var.base_address}/alertmanager"
-    alertmanager_callback     = "https://${var.base_address}/alertmanager/auth/callback"
-    prometheus_external_url   = "https://${var.base_address}/prometheus"
-    prometheus_callback       = "https://${var.base_address}/prometheus/auth/callback"
+    alertmanager_callback = "https://${var.base_address}/alertmanager/auth/callback"
+    prometheus_callback   = "https://${var.base_address}/prometheus/auth/callback"
+    grafana_callback      = "https://${var.base_address}/grafana/auth/callback"
 
     ingress_kind     = "${var.ingress_kind}"
-    ingress_tls_cert = "${base64encode(tls_locally_signed_cert.ingress.cert_pem)}"
-    ingress_tls_key  = "${base64encode(tls_private_key.ingress.private_key_pem)}"
+    ingress_ca_cert  = "${base64encode(var.ingress_ca_cert_pem)}"
+    ingress_tls_cert = "${base64encode(var.ingress_cert_pem)}"
+    ingress_tls_key  = "${base64encode(var.ingress_key_pem)}"
 
-    identity_server_tls_cert = "${base64encode(tls_locally_signed_cert.identity_server.cert_pem)}"
-    identity_server_tls_key  = "${base64encode(tls_private_key.identity_server.private_key_pem)}"
-    identity_client_tls_cert = "${base64encode(tls_locally_signed_cert.identity_client.cert_pem)}"
-    identity_client_tls_key  = "${base64encode(tls_private_key.identity_client.private_key_pem)}"
+    identity_server_tls_cert = "${base64encode(var.identity_server_cert_pem)}"
+    identity_server_tls_key  = "${base64encode(var.identity_server_key_pem)}"
+    identity_client_tls_cert = "${base64encode(var.identity_client_cert_pem)}"
+    identity_client_tls_key  = "${base64encode(var.identity_client_key_pem)}"
 
     kubectl_client_id = "${var.kubectl_client_id}"
     kubectl_secret    = "${random_id.kubectl_secret.b64}"
@@ -128,4 +131,21 @@ resource "local_file" "tectonic_rkt" {
 # tectonic.service (available as output variable)
 data "template_file" "tectonic_service" {
   template = "${file("${path.module}/resources/tectonic.service")}"
+}
+
+data "ignition_systemd_unit" "tectonic_service" {
+  name    = "tectonic.service"
+  enable  = false
+  content = "${data.template_file.tectonic_service.rendered}"
+}
+
+# tectonic.path (available as output variable)
+data "template_file" "tectonic_path" {
+  template = "${file("${path.module}/resources/tectonic.path")}"
+}
+
+data "ignition_systemd_unit" "tectonic_path" {
+  name    = "tectonic.path"
+  enable  = true
+  content = "${data.template_file.tectonic_path.rendered}"
 }

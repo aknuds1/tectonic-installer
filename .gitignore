@@ -11,6 +11,8 @@ terraform.tfstate*
 terraform.tfvars
 build/
 bin/
+bin_test/
+matchbox/
 modules/update-payload/generated/
 # Allow for user configuration
 custom.tf

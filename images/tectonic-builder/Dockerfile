@@ -16,11 +16,16 @@
 # docker push quay.io/coreos/tectonic-builder:<next-semver>-upstream-terraform
 ###
 
-FROM golang:1.8.3-stretch
+FROM golang:1.9-stretch
 
 ### For golang testing stuff
 RUN go get -u github.com/golang/lint/golint
 RUN go get github.com/jstemmer/go-junit-report
+
+### Tools used by 'make structure-check'
+RUN go get github.com/segmentio/terraform-docs
+RUN go get github.com/s-urbaniak/terraform-examples
+RUN go get github.com/bronze1man/yaml2json
 
 ### License parser
 RUN go get github.com/coreos/license-bill-of-materials

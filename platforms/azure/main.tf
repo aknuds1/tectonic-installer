@@ -1,4 +1,5 @@
 provider "azurerm" {
+  version       = "0.1.7"
   environment   = "${var.tectonic_azure_cloud_environment}"
   client_secret = "${var.tectonic_azure_client_secret}"
 }
@@ -43,6 +44,8 @@ module "vnet" {
   external_nsg_worker_id    = "${var.tectonic_azure_external_nsg_worker_id}"
 
   extra_tags = "${var.tectonic_azure_extra_tags}"
+
+  private_cluster = "${var.tectonic_azure_private_cluster}"
 }
 
 module "etcd" {
@@ -65,13 +68,13 @@ module "etcd" {
   cl_channel            = "${var.tectonic_cl_channel}"
 
   tls_enabled        = "${var.tectonic_etcd_tls_enabled}"
-  tls_ca_crt_pem     = "${module.bootkube.etcd_ca_crt_pem}"
-  tls_server_crt_pem = "${module.bootkube.etcd_server_crt_pem}"
-  tls_server_key_pem = "${module.bootkube.etcd_server_key_pem}"
-  tls_client_crt_pem = "${module.bootkube.etcd_client_crt_pem}"
-  tls_client_key_pem = "${module.bootkube.etcd_client_key_pem}"
-  tls_peer_crt_pem   = "${module.bootkube.etcd_peer_crt_pem}"
-  tls_peer_key_pem   = "${module.bootkube.etcd_peer_key_pem}"
+  tls_ca_crt_pem     = "${module.etcd_certs.etcd_ca_crt_pem}"
+  tls_server_crt_pem = "${module.etcd_certs.etcd_server_crt_pem}"
+  tls_server_key_pem = "${module.etcd_certs.etcd_server_key_pem}"
+  tls_client_crt_pem = "${module.etcd_certs.etcd_client_crt_pem}"
+  tls_client_key_pem = "${module.etcd_certs.etcd_client_key_pem}"
+  tls_peer_crt_pem   = "${module.etcd_certs.etcd_peer_crt_pem}"
+  tls_peer_key_pem   = "${module.etcd_certs.etcd_peer_key_pem}"
 
   extra_tags = "${var.tectonic_azure_extra_tags}"
 }
@@ -109,31 +112,31 @@ module "ignition_masters" {
 module "masters" {
   source = "../../modules/azure/master-as"
 
-  bootkube_service          = "${module.bootkube.systemd_service}"
-  cl_channel                = "${var.tectonic_cl_channel}"
-  cloud_provider_config     = "${jsonencode(data.null_data_source.cloud_provider.inputs)}"
-  cluster_id                = "${module.tectonic.cluster_id}"
-  cluster_name              = "${var.tectonic_cluster_name}"
-  extra_tags                = "${var.tectonic_azure_extra_tags}"
-  kubeconfig_content        = "${module.bootkube.kubeconfig}"
-  location                  = "${var.tectonic_azure_location}"
-  master_count              = "${var.tectonic_master_count}"
-  network_interface_ids     = "${module.vnet.master_network_interface_ids}"
-  public_ssh_key            = "${var.tectonic_azure_ssh_key}"
-  resource_group_name       = "${module.resource_group.name}"
-  storage_id                = "${module.resource_group.storage_id}"
-  storage_type              = "${var.tectonic_azure_master_storage_type}"
-  tectonic_service          = "${module.tectonic.systemd_service}"
-  tectonic_service_disabled = "${var.tectonic_vanilla_k8s}"
-  vm_size                   = "${var.tectonic_azure_master_vm_size}"
+  cl_channel            = "${var.tectonic_cl_channel}"
+  cloud_provider_config = "${jsonencode(data.null_data_source.cloud_provider.inputs)}"
+  cluster_id            = "${module.tectonic.cluster_id}"
+  cluster_name          = "${var.tectonic_cluster_name}"
+  extra_tags            = "${var.tectonic_azure_extra_tags}"
+  kubeconfig_content    = "${module.bootkube.kubeconfig}"
+  location              = "${var.tectonic_azure_location}"
+  master_count          = "${var.tectonic_master_count}"
+  network_interface_ids = "${module.vnet.master_network_interface_ids}"
+  public_ssh_key        = "${var.tectonic_azure_ssh_key}"
+  resource_group_name   = "${module.resource_group.name}"
+  storage_id            = "${module.resource_group.storage_id}"
+  storage_type          = "${var.tectonic_azure_master_storage_type}"
+  vm_size               = "${var.tectonic_azure_master_vm_size}"
 
   ign_azure_udev_rules_id   = "${module.ignition_masters.azure_udev_rules_id}"
-  ign_docker_dropin_id      = "${module.ignition_masters.docker_dropin_id}"
+  ign_bootkube_path_unit_id = "${module.bootkube.systemd_path_unit_id}"
+  ign_bootkube_service_id   = "${module.bootkube.systemd_service_id}"
   ign_docker_dropin_id      = "${module.ignition_masters.docker_dropin_id}"
   ign_kubelet_env_id        = "${module.ignition_masters.kubelet_env_id}"
   ign_kubelet_service_id    = "${module.ignition_masters.kubelet_service_id}"
   ign_locksmithd_service_id = "${module.ignition_masters.locksmithd_service_id}"
   ign_max_user_watches_id   = "${module.ignition_masters.max_user_watches_id}"
+  ign_tectonic_path_unit_id = "${var.tectonic_vanilla_k8s ? "" : module.tectonic.systemd_path_unit_id}"
+  ign_tectonic_service_id   = "${module.tectonic.systemd_service_id}"
   ign_tx_off_service_id     = "${module.ignition_masters.tx_off_service_id}"
 }
 

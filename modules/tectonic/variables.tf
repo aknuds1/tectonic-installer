@@ -7,6 +7,11 @@ variable "container_images" {
   type        = "map"
 }
 
+variable "container_base_images" {
+  description = "Container base images to use. Leave blank for defaults."
+  type        = "map"
+}
+
 variable "versions" {
   description = "Versions of the components to use. Leave blank for defaults."
   type        = "map"
@@ -41,16 +46,6 @@ variable "ca_generated" {
 
 variable "ca_cert" {
   description = "Contents of a PEM-encoded CA certificate, used to generate Tectonic Console's server certificate. Leave blank to generate a new CA."
-  type        = "string"
-}
-
-variable "ca_key_alg" {
-  description = "Algorithm used to generate ca_key. Example: RSA."
-  type        = "string"
-}
-
-variable "ca_key" {
-  description = "Contents of a PEM-encoded CA key, used to generate Tectonic Console's server certificate. Leave blank to generate a new CA."
   type        = "string"
 }
 
@@ -127,5 +122,33 @@ variable "image_re" {
 (internal) Regular expression used to extract repo and tag components from image strings
 EOF
 
+  type = "string"
+}
+
+variable "ingress_ca_cert_pem" {
+  type = "string"
+}
+
+variable "ingress_cert_pem" {
+  type = "string"
+}
+
+variable "ingress_key_pem" {
+  type = "string"
+}
+
+variable "identity_server_cert_pem" {
+  type = "string"
+}
+
+variable "identity_server_key_pem" {
+  type = "string"
+}
+
+variable "identity_client_cert_pem" {
+  type = "string"
+}
+
+variable "identity_client_key_pem" {
   type = "string"
 }

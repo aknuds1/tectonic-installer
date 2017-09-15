@@ -1,5 +1,7 @@
-# Grafiti contains helper functions to use the http://github.com/coreos/grafiti
-# tool
+# frozen_string_literal: true
+
+# Grafiti contains helper functions to use the http://github.com/coreos/grafiti tool
+#
 class Grafiti
   attr_reader :build_path
   attr_reader :tmp_dir

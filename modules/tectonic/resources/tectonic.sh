@@ -119,10 +119,6 @@ set -e
 # wait for Kubernetes pods
 wait_for_pods kube-system
 
-# Creating resources
-echo "Creating Tectonic Namespace"
-kubectl create -f namespace.yaml
-
 echo "Creating Initial Roles"
 kubectl delete -f rbac/role-admin.yaml
 
@@ -167,52 +163,6 @@ kubectl create -f identity/deployment.yaml
 echo "Creating Tectonic Console"
 kubectl create -f console/service.yaml
 kubectl create -f console/deployment.yaml
-
-echo "Creating Tectonic Monitoring"
-kubectl create -f monitoring/prometheus-operator-cluster-role-binding.yaml
-kubectl create -f monitoring/prometheus-operator-cluster-role.yaml
-kubectl create -f monitoring/prometheus-operator-service-account.yaml
-kubectl create -f monitoring/prometheus-operator-svc.yaml
-kubectl create -f monitoring/prometheus-operator.yaml
-
-wait_for_tpr tectonic-system prometheus.monitoring.coreos.com
-wait_for_tpr tectonic-system alertmanager.monitoring.coreos.com
-wait_for_tpr tectonic-system service-monitor.monitoring.coreos.com
-
-kubectl create -f monitoring/alertmanager-config.yaml
-kubectl create -f monitoring/alertmanager-service.yaml
-kubectl create -f monitoring/alertmanager.yaml
-kubectl create -f monitoring/kube-controller-manager-svc.yaml
-kubectl create -f monitoring/kube-scheduler-svc.yaml
-kubectl create -f monitoring/kube-state-metrics-cluster-role-binding.yaml
-kubectl create -f monitoring/kube-state-metrics-cluster-role.yaml
-kubectl create -f monitoring/kube-state-metrics-deployment.yaml
-kubectl create -f monitoring/kube-state-metrics-service-account.yaml
-kubectl create -f monitoring/kube-state-metrics-service.yaml
-kubectl create -f monitoring/node-exporter-ds.yaml
-kubectl create -f monitoring/node-exporter-svc.yaml
-kubectl create -f monitoring/prometheus-k8s-cluster-role-binding.yaml
-kubectl create -f monitoring/prometheus-k8s-cluster-role.yaml
-kubectl create -f monitoring/prometheus-k8s-rules.yaml
-kubectl create -f monitoring/prometheus-k8s-service-account.yaml
-kubectl create -f monitoring/prometheus-k8s-service-monitor-alertmanager.yaml
-kubectl create -f monitoring/prometheus-k8s-service-monitor-apiserver.yaml
-kubectl create -f monitoring/prometheus-k8s-service-monitor-kube-controller-manager.yaml
-kubectl create -f monitoring/prometheus-k8s-service-monitor-kube-scheduler.yaml
-kubectl create -f monitoring/prometheus-k8s-service-monitor-kube-state-metrics.yaml
-kubectl create -f monitoring/prometheus-k8s-service-monitor-kubelet.yaml
-kubectl create -f monitoring/prometheus-k8s-service-monitor-node-exporter.yaml
-kubectl create -f monitoring/prometheus-k8s-service-monitor-prometheus.yaml
-kubectl create -f monitoring/prometheus-k8s-service-monitor-prometheus-operator.yaml
-kubectl create -f monitoring/prometheus-k8s.yaml
-kubectl create -f monitoring/prometheus-svc.yaml
-
-kubectl create -f monitoring/tectonic-monitoring-auth-secret.yaml
-kubectl create -f monitoring/tectonic-monitoring-auth-alertmanager-deployment.yaml
-kubectl create -f monitoring/tectonic-monitoring-auth-alertmanager-svc.yaml
-kubectl create -f monitoring/tectonic-monitoring-auth-prometheus-deployment.yaml
-kubectl create -f monitoring/tectonic-monitoring-auth-prometheus-svc.yaml
-kubectl create -f monitoring/tectonic-monitoring-ingress.yaml
 
 echo "Creating Etcd Operator"
 # Operator in the tectonic-system namespace used for etcd as a service

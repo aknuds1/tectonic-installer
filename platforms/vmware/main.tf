@@ -1,3 +1,7 @@
+provider "vsphere" {
+  version = "0.2.2"
+}
+
 module "etcd" {
   source         = "../../modules/vmware/etcd"
   instance_count = "${var.tectonic_experimental ? 0 : var.tectonic_etcd_count }"
@@ -8,13 +12,13 @@ module "etcd" {
   base_domain        = "${var.tectonic_base_domain}"
   external_endpoints = ["${compact(var.tectonic_etcd_servers)}"]
 
-  tls_ca_crt_pem     = "${module.bootkube.etcd_ca_crt_pem}"
-  tls_server_crt_pem = "${module.bootkube.etcd_server_crt_pem}"
-  tls_server_key_pem = "${module.bootkube.etcd_server_key_pem}"
-  tls_client_crt_pem = "${module.bootkube.etcd_client_crt_pem}"
-  tls_client_key_pem = "${module.bootkube.etcd_client_key_pem}"
-  tls_peer_key_pem   = "${module.bootkube.etcd_peer_key_pem}"
-  tls_peer_crt_pem   = "${module.bootkube.etcd_peer_crt_pem}"
+  tls_ca_crt_pem     = "${module.etcd_certs.etcd_ca_crt_pem}"
+  tls_server_crt_pem = "${module.etcd_certs.etcd_server_crt_pem}"
+  tls_server_key_pem = "${module.etcd_certs.etcd_server_key_pem}"
+  tls_client_crt_pem = "${module.etcd_certs.etcd_client_crt_pem}"
+  tls_client_key_pem = "${module.etcd_certs.etcd_client_key_pem}"
+  tls_peer_crt_pem   = "${module.etcd_certs.etcd_peer_crt_pem}"
+  tls_peer_key_pem   = "${module.etcd_certs.etcd_peer_key_pem}"
 
   hostname   = "${var.tectonic_vmware_etcd_hostnames}"
   dns_server = "${var.tectonic_vmware_node_dns}"
@@ -53,10 +57,7 @@ module "masters" {
   ip_address       = "${var.tectonic_vmware_master_ip}"
   gateway          = "${var.tectonic_vmware_master_gateway}"
 
-  container_images          = "${var.tectonic_container_images}"
-  bootkube_service          = "${module.bootkube.systemd_service}"
-  tectonic_service          = "${module.tectonic.systemd_service}"
-  tectonic_service_disabled = "${var.tectonic_vanilla_k8s}"
+  container_images = "${var.tectonic_container_images}"
 
   vmware_datacenter       = "${var.tectonic_vmware_datacenter}"
   vmware_cluster          = "${var.tectonic_vmware_cluster}"
@@ -71,12 +72,16 @@ module "masters" {
   private_key             = "${var.tectonic_vmware_ssh_private_key_path}"
   image_re                = "${var.tectonic_image_re}"
 
+  ign_bootkube_path_unit_id  = "${module.bootkube.systemd_path_unit_id}"
+  ign_bootkube_service_id    = "${module.bootkube.systemd_service_id}"
   ign_docker_dropin_id       = "${module.ignition_masters.docker_dropin_id}"
   ign_kubelet_env_id         = "${module.ignition_masters.kubelet_env_id}"
   ign_kubelet_env_service_id = "${module.ignition_masters.kubelet_env_service_id}"
   ign_kubelet_service_id     = "${module.ignition_masters.kubelet_service_id}"
   ign_locksmithd_service_id  = "${module.ignition_masters.locksmithd_service_id}"
   ign_max_user_watches_id    = "${module.ignition_masters.max_user_watches_id}"
+  ign_tectonic_path_unit_id  = "${var.tectonic_vanilla_k8s ? "" : module.tectonic.systemd_path_unit_id}"
+  ign_tectonic_service_id    = "${module.tectonic.systemd_service_id}"
 }
 
 module "ignition_workers" {
@@ -101,8 +106,6 @@ module "workers" {
   gateway          = "${var.tectonic_vmware_worker_gateway}"
 
   container_images = "${var.tectonic_container_images}"
-  bootkube_service = ""
-  tectonic_service = ""
 
   vmware_datacenter       = "${var.tectonic_vmware_datacenter}"
   vmware_cluster          = "${var.tectonic_vmware_cluster}"
