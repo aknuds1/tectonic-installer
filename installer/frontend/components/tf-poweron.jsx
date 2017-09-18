@@ -27,11 +27,11 @@ const estimateTerraformProgress = terraform => {
 
   let done = output.match(/.*: Creation complete/g) || [];
 
-  // Ignore resources from the bootkube, flannel-vxlan and tectonic modules because they all complete very quickly
-  done = done.filter(c => !/module\.(bootkube|flannel-vxlan|tectonic)/.test(c));
+  // Ignore resources that complete very quickly
+  done = done.filter(c => /(aws_route53_zone|aws_s3_bucket|module\.masters|module\.vpc|module\.workers)\./.test(c));
 
   // Approximate number of AWS resources we expect Terraform to create
-  const total = 82;
+  const total = 80;
 
   // We have some output, but are not finished, so don't show the progress as either completely empty or full
   return _.clamp(done.length / total, 0.01, 0.99);
@@ -298,7 +298,7 @@ export const TF_PowerOn = connect(stateToProps, dispatchToProps)(
           <div className="col-xs-12 wiz-launch-progress">
             <Step done={statusMsg === 'success'} error={tfError}>
               {tfError
-                ? <span><span className="wiz-running-fg">{tfTitle}:</span> [Failure] Terraform {action} failed</span>
+                ? <span><span className="wiz-running-fg">{tfTitle}:</span> [Failure] {_.startCase(action)} failed</span>
                 : tfTitle}
               {output && !isApplySuccess &&
                 <div className="pull-right" style={{fontSize: '13px'}}>
