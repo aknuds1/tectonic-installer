@@ -13,7 +13,6 @@ TF_EXAMPLES := $(shell which terraform-examples 2> /dev/null)
 TF_CMD = terraform
 TEST_COMMAND = /bin/bash -c "bundler exec rspec ${TEST}"
 export TF_VAR_tectonic_cluster_name = $(CLUSTER)
-
 include ./makelib/*.mk
 
 $(info Using build directory [${BUILD_DIR}])
