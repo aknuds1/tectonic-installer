@@ -22,12 +22,16 @@ output "kubelet_service_rendered" {
   value = "${data.template_file.kubelet.rendered}"
 }
 
-output "kubelet_env_service_id" {
-  value = "${data.ignition_systemd_unit.kubelet_env.id}"
+output "k8s_node_bootstrap_service_id" {
+  value = "${data.ignition_systemd_unit.k8s_node_bootstrap.id}"
 }
 
-output "kubelet_env_service_rendered" {
-  value = "${data.template_file.kubelet_env_service.rendered}"
+output "k8s_node_bootstrap_service_rendered" {
+  value = "${data.template_file.k8s_node_bootstrap.rendered}"
+}
+
+output "init_assets_service_id" {
+  value = "${data.ignition_systemd_unit.init_assets.id}"
 }
 
 output "s3_puller_id" {
@@ -38,16 +42,24 @@ output "s3_puller_rendered" {
   value = "${data.template_file.s3_puller.rendered}"
 }
 
+output "gcs_puller_id" {
+  value = "${data.ignition_file.gcs_puller.id}"
+}
+
+output "gcs_puller_rendered" {
+  value = "${data.template_file.gcs_puller.rendered}"
+}
+
 output "locksmithd_service_id" {
   value = "${data.ignition_systemd_unit.locksmithd.id}"
 }
 
-output "kubelet_env_id" {
-  value = "${data.ignition_file.kubelet_env.id}"
+output "installer_kubelet_env_id" {
+  value = "${data.ignition_file.installer_kubelet_env.id}"
 }
 
-output "kubelet_env_rendered" {
-  value = "${data.template_file.kubelet_env.rendered}"
+output "installer_kubelet_env_rendered" {
+  value = "${data.template_file.installer_kubelet_env.rendered}"
 }
 
 output "tx_off_service_id" {
@@ -64,4 +76,20 @@ output "azure_udev_rules_id" {
 
 output "azure_udev_rules_rendered" {
   value = "${data.template_file.azure_udev_rules.rendered}"
+}
+
+output "etcd_dropin_id_list" {
+  value = "${data.ignition_systemd_unit.etcd.*.id}"
+}
+
+output "etcd_dropin_rendered_list" {
+  value = "${data.template_file.etcd.*.rendered}"
+}
+
+output "coreos_metadata_dropin_id" {
+  value = "${data.ignition_systemd_unit.coreos_metadata.id}"
+}
+
+output "coreos_metadata_dropin_rendered" {
+  value = "${data.template_file.coreos_metadata.rendered}"
 }

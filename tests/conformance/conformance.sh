@@ -7,15 +7,16 @@ export PLATFORM=aws
 export CLUSTER="tf-${PLATFORM}-${BUILD_ID}"
 export TF_VAR_tectonic_pull_secret_path=${TF_VAR_tectonic_pull_secret_path}
 export TF_VAR_tectonic_license_path=${TF_VAR_tectonic_license_path}
-export TECTONIC_BUILDER=quay.io/coreos/tectonic-builder:v1.36
-export KUBE_CONFORMANCE=quay.io/coreos/kube-conformance:v1.7.1_coreos.0
+export TECTONIC_BUILDER=quay.io/coreos/tectonic-builder:v1.39
+export KUBE_CONFORMANCE=quay.io/coreos/kube-conformance:v1.7.5_coreos.0
+export TF_VAR_tectonic_base_domain="tectonic.dev.coreos.systems"
 
 # Create an env var file
 # shellcheck disable=SC2154
 {
 cat <<EOF > env.list
 PLATFORM=aws
-CLUSTER="tf-${PLATFORM}-${BUILD_ID}"
+CLUSTER=${CLUSTER}
 TF_VAR_tectonic_cluster_name=$(echo "${CLUSTER}" | awk '{print tolower($0)}')
 AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
 AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
@@ -24,7 +25,8 @@ TF_VAR_tectonic_pull_secret_path=${TF_VAR_tectonic_pull_secret_path}
 TF_VAR_tectonic_license_path=${TF_VAR_tectonic_license_path}
 TF_VAR_tectonic_aws_ssh_key="jenkins"
 TF_VAR_tectonic_admin_email=${TF_VAR_tectonic_admin_email}
-TF_VAR_tectonic_admin_password_hash=${TF_VAR_tectonic_admin_password_hash}
+TF_VAR_tectonic_admin_password=${TF_VAR_tectonic_admin_password}
+TF_VAR_tectonic_base_domain=${TF_VAR_tectonic_base_domain}
 EOF
 }
 
@@ -42,7 +44,7 @@ EOF
 trap cleanup EXIT
 
 export KUBECTL=${WORKSPACE}/kubectl
-curl -o "${KUBECTL}" https://storage.googleapis.com/kubernetes-release/release/v1.6.3/bin/linux/amd64/kubectl && chmod +x "${KUBECTL}"
+curl -o "${KUBECTL}" https://storage.googleapis.com/kubernetes-release/release/v1.7.5/bin/linux/amd64/kubectl && chmod +x "${KUBECTL}"
 
 function kubectl() {
     local i=0
@@ -110,7 +112,9 @@ docker run --env-file ./env.list -i -v ${WORKSPACE}:${PROJECT} ${MNT_SECRETS} -w
 mkdir -p ${PROJECT}/build/${CLUSTER}/
 ln -sf ${PROJECT}/tests/smoke/aws/vars/aws.tfvars ${PROJECT}/build/${CLUSTER}/terraform.tfvars
 
+echo "Make PLAN ****"
 make plan
+echo "Make APPLY ****"
 make apply
 EOF
 

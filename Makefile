@@ -11,7 +11,7 @@ INSTALLER_BIN = $(INSTALLER_PATH)/installer
 TF_DOCS := $(shell which terraform-docs 2> /dev/null)
 TF_EXAMPLES := $(shell which terraform-examples 2> /dev/null)
 TF_CMD = terraform
-TEST_COMMAND = /bin/bash -c "bundler exec rspec ${TEST}"
+TEST_COMMAND = /bin/bash -c "bundler exec rspec spec/${TEST}"
 export TF_VAR_tectonic_cluster_name = $(CLUSTER)
 include ./makelib/*.mk
 
@@ -51,10 +51,6 @@ apply: terraform-init
 .PHONY: destroy
 destroy: terraform-init
 	cd $(BUILD_DIR) && $(TF_CMD) destroy $(TF_DESTROY_OPTIONS) -force $(TOP_DIR)/platforms/$(PLATFORM)
-
-.PHONY: payload
-payload:
-	@${TOP_DIR}/modules/update-payload/make-update-payload.sh > /dev/null
 
 define terraform-docs
 	$(if $(TF_DOCS),,$(error "terraform-docs revision >= a8b59f8 is required (https://github.com/segmentio/terraform-docs)"))
@@ -96,6 +92,10 @@ docs:
 			'This document gives an overview of variables used in the VMware platform of the Tectonic SDK.', \
 			platforms/vmware/variables.tf)
 
+	$(call terraform-docs, Documentation/variables/gcp.md, \
+			'This document gives an overview of variables used in the Google Cloud platform of the Tectonic SDK.', \
+			platforms/gcp/variables.tf)
+
 .PHONY: examples
 examples:
 	$(call terraform-examples, examples/terraform.tfvars.aws, \
@@ -122,6 +122,10 @@ examples:
 			config.tf, \
 			platforms/vmware/variables.tf)
 
+	$(call terraform-examples, \
+			examples/terraform.tfvars.gcp, \
+			config.tf, \
+			platforms/gcp/variables.tf)
 .PHONY: clean
 clean:
 	rm -rf $(BUILD_DIR)
@@ -137,7 +141,6 @@ structure-check:
 
 	@if $(MAKE) docs && ! git diff --exit-code; then echo "outdated docs (run 'make docs' to fix)"; exit 1; fi
 	@if $(MAKE) examples && ! git diff --exit-code; then echo "outdated examples (run 'make examples' to fix)"; exit 1; fi
-	@if $(TOP_DIR)/modules/update-payload/make-update-payload.sh && ! git diff --exit-code; then echo "outdated payload (run '$(TOP_DIR)/modules/update-payload/make-update-payload.sh' to fix)"; exit 1; fi
 
 SMOKE_SOURCES := $(shell find $(TOP_DIR)/tests/smoke -name '*.go')
 .PHONY: bin/smoke
@@ -148,6 +151,12 @@ bin/smoke: $(SMOKE_SOURCES)
 vendor-smoke: $(TOP_DIR)/tests/smoke/glide.yaml
 	@cd $(TOP_DIR)/tests/smoke && glide up -v
 	@cd $(TOP_DIR)/tests/smoke && glide-vc --use-lock-file --no-tests --only-code
+
+.PHONY: e2e-docker-image
+e2e-docker-image: images/kubernetes-e2e/Dockerfile
+	  @E2E_IMAGE="quay.io/coreos/kube-conformance:$$(grep "ARG E2E_REF" $< | cut -d "=" -f2 | sed 's/+/_/') \
+	  echo "Building E2E image $${E2E_IMAGE}"; \
+	  docker build -t $${E2E_IMAGE} $(dir $<)
 
 .PHONY: smoke-test-env-docker-image
 smoke-test-env-docker-image:
@@ -173,14 +182,17 @@ tests/smoke: bin/smoke smoke-test-env-docker-image
 	-e ARM_ENVIRONMENT \
 	-e ARM_SUBSCRIPTION_ID \
 	-e ARM_TENANT_ID \
+	-e GOOGLE_APPLICATION_CREDENTIALS \
+	-e GOOGLE_CREDENTIALS \
+	-e GOOGLE_CLOUD_KEYFILE_JSON \
+	-e GCLOUD_KEYFILE_JSON \
 	-e TF_VAR_tectonic_aws_region \
 	-e TF_VAR_tectonic_aws_ssh_key \
+	-e TF_VAR_tectonic_azure_location \
 	-e TF_VAR_tectonic_license_path \
 	-e TF_VAR_tectonic_pull_secret_path \
 	-e TF_VAR_base_domain \
-	-e TF_VAR_tectonic_admin_email \
-	-e TF_VAR_tectonic_admin_password_hash \
-	-e TECTONIC_TESTS_DONT_CLEANUP \
+	-e TECTONIC_TESTS_DONT_CLEAN_UP \
 	--cap-add NET_ADMIN \
 	--device /dev/net/tun \
 	quay.io/coreos/tectonic-smoke-test-env \

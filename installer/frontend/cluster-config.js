@@ -1,10 +1,7 @@
 import _ from 'lodash';
-import bcrypt from 'bcryptjs';
 
 import { BARE_METAL_TF } from './platforms';
 import { keyToAlg } from './utils';
-
-const bcryptCost = 12;
 
 // TODO: (ggreer) clean up key names. Warning: Doing this will break progress files.
 export const AWS_ACCESS_KEY_ID = 'awsAccessKeyId';
@@ -49,7 +46,6 @@ export const EXTERNAL_ETCD_CLIENT = 'externalETCDClient';
 export const ETCD_OPTION = 'etcdOption';
 
 export const DRY_RUN = 'dryRun';
-export const ENTITLEMENTS = 'entitlements';
 export const PLATFORM_TYPE = 'platformType';
 export const PULL_SECRET = 'pullSecret';
 export const SSH_AUTHORIZED_KEY = 'sshAuthorizedKey';
@@ -83,8 +79,6 @@ export const BM_SSH_KEY = 'bm_sshKey';
 export const CREDS = 'creds';
 export const LICENSING = 'licensing';
 export const PLATFORM_FORM = 'platform';
-export const EXPERIMENTAL_FEATURES = 'experimentalFeatures';
-
 
 export const SPLIT_DNS_ON = 'on';
 export const SPLIT_DNS_OFF = 'off';
@@ -93,10 +87,9 @@ export const SPLIT_DNS_OPTIONS = {
   [SPLIT_DNS_OFF]: 'Do not create a private zone.',
 };
 
-const SELF_HOSTED = 'selfHosted';
 const EXTERNAL = 'external';
 const PROVISIONED = 'provisioned';
-export const ETCD_OPTIONS = { SELF_HOSTED, EXTERNAL, PROVISIONED };
+export const ETCD_OPTIONS = { EXTERNAL, PROVISIONED };
 
 export const toVPCSubnet = (region, subnets, deselected) => {
   const vpcSubnets = {};
@@ -181,7 +174,6 @@ export const DEFAULT_CLUSTER_CONFIG = {
   [CLUSTER_NAME]: '',
   [CONTROLLER_DOMAIN]: '',
   [DRY_RUN]: false,
-  [ENTITLEMENTS]: {},
   [PULL_SECRET]: '',
   [RETRY]: false, // whether we're retrying a terraform apply
   [STS_ENABLED]: false,
@@ -196,7 +188,7 @@ export const DEFAULT_CLUSTER_CONFIG = {
 };
 
 
-export const toAWS_TF = (cc, FORMS, opts = {}) => {
+export const toAWS_TF = (cc, FORMS) => {
   const controllers = FORMS[AWS_CONTROLLERS].getData(cc);
   const etcds = FORMS[AWS_ETCDS].getData(cc);
   const workers = FORMS[AWS_WORKERS].getData(cc);
@@ -233,7 +225,7 @@ export const toAWS_TF = (cc, FORMS, opts = {}) => {
     },
     variables: {
       // eslint-disable-next-line no-sync
-      tectonic_admin_password_hash: bcrypt.hashSync(cc[ADMIN_PASSWORD], opts.salt || bcrypt.genSaltSync(bcryptCost)),
+      tectonic_admin_password: cc[ADMIN_PASSWORD],
       tectonic_aws_region: cc[AWS_REGION],
       tectonic_admin_email: cc[ADMIN_EMAIL],
       tectonic_aws_master_ec2_type: controllers[INSTANCE_TYPE],
@@ -253,7 +245,6 @@ export const toAWS_TF = (cc, FORMS, opts = {}) => {
       tectonic_worker_count: workers[NUMBER_OF_INSTANCES],
       // TODO: shouldn't hostedZoneID be specified somewhere?
       tectonic_dns_name: cc[CLUSTER_SUBDOMAIN],
-      tectonic_experimental: cc[ETCD_OPTION] === SELF_HOSTED,
     },
   };
 
@@ -297,7 +288,7 @@ export const toAWS_TF = (cc, FORMS, opts = {}) => {
   return ret;
 };
 
-export const toBaremetal_TF = (cc, FORMS, opts = {}) => {
+export const toBaremetal_TF = (cc, FORMS) => {
   const sshKey = FORMS[BM_SSH_KEY].getData(cc);
   const masters = cc[BM_MASTERS];
   const workers = cc[BM_WORKERS];
@@ -311,7 +302,7 @@ export const toBaremetal_TF = (cc, FORMS, opts = {}) => {
     retry: cc[RETRY],
     variables: {
       // eslint-disable-next-line no-sync
-      tectonic_admin_password_hash: bcrypt.hashSync(cc[ADMIN_PASSWORD], opts.salt || bcrypt.genSaltSync(bcryptCost)),
+      tectonic_admin_password: cc[ADMIN_PASSWORD],
       tectonic_cluster_name: cc[CLUSTER_NAME],
       tectonic_admin_email: cc[ADMIN_EMAIL],
       tectonic_metal_cl_version: cc[BM_OS_TO_USE],
@@ -332,7 +323,6 @@ export const toBaremetal_TF = (cc, FORMS, opts = {}) => {
       tectonic_cluster_cidr: cc[POD_CIDR],
       tectonic_service_cidr: cc[SERVICE_CIDR],
       tectonic_dns_name: cc[CLUSTER_SUBDOMAIN],
-      tectonic_experimental: cc[ETCD_OPTION] === SELF_HOSTED,
       tectonic_base_domain: 'unused',
     },
   };

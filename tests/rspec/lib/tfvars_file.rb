@@ -2,7 +2,7 @@
 
 require 'json'
 
-PLATFORMS = %w[aws azure metal vmware].freeze
+PLATFORMS = %w[aws azure metal vmware gcp].freeze
 
 # TFVarsFile represents a Terraform configuration file describing a Tectonic
 # cluster configuration
@@ -46,6 +46,16 @@ class TFVarsFile
   end
 
   private
+
+  def method_missing(method_name, *arguments, &block)
+    data.fetch(method_name.to_s)
+  rescue KeyError
+    super
+  end
+
+  def respond_to_missing?(method_name, include_private = false)
+    data.keys.any? { |k| k == method_name.to_s } || super
+  end
 
   def master_count
     data['tectonic_master_count'].to_i

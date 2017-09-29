@@ -6,11 +6,11 @@
 // Note: This field MUST be in all lower-case e-mail address format and set manually prior to creating the cluster.
 tectonic_admin_email = ""
 
-// The bcrypt hash of admin user password to login to the Tectonic Console.
-// Use the bcrypt-hash tool (https://github.com/coreos/bcrypt-tool/releases/tag/v1.0.0) to generate it.
+// The admin user password to login to the Tectonic Console.
 // 
-// Note: This field MUST be set manually prior to creating the cluster.
-tectonic_admin_password_hash = ""
+// Note: This field MUST be set manually prior to creating the cluster. Backslashes and double quotes must
+// also be escaped.
+tectonic_admin_password = ""
 
 // The base DNS domain of the cluster. It must NOT contain a trailing period. Some
 // DNS providers will automatically add this if necessary.
@@ -39,18 +39,18 @@ tectonic_base_domain = ""
 // This field is mandatory if `tectonic_ca_cert` is set.
 // tectonic_ca_key_alg = "RSA"
 
-// [ALPHA] If set to true, calico network policy support will be deployed.
+// (optional) [ALPHA] If set to true, calico network policy support will be deployed.
 // WARNING: Enabling an alpha feature means that future updates may become unsupported.
 // This should only be enabled on clusters that are meant to be short-lived to begin validating the alpha feature.
-tectonic_calico_network_policy = false
+// tectonic_calico_network_policy = false
 
-// The Container Linux update channel.
+// (optional) The Container Linux update channel.
 // 
 // Examples: `stable`, `beta`, `alpha`
-tectonic_cl_channel = "stable"
+// tectonic_cl_channel = "stable"
 
-// This declares the IP range to assign Kubernetes pod IPs in CIDR notation.
-tectonic_cluster_cidr = "10.2.0.0/16"
+// (optional) This declares the IP range to assign Kubernetes pod IPs in CIDR notation.
+// tectonic_cluster_cidr = "10.2.0.0/16"
 
 // The name of the cluster.
 // If used in a cloud-environment, this will be prepended to `tectonic_base_domain` resulting in the URL to the Tectonic console.
@@ -143,11 +143,9 @@ tectonic_master_count = "1"
 // Note: This field MUST be set manually prior to creating the cluster unless `tectonic_vanilla_k8s` is set to `true`.
 tectonic_pull_secret_path = ""
 
-// This declares the IP range to assign Kubernetes service cluster IPs in CIDR notation. The maximum size of this IP range is /12
-tectonic_service_cidr = "10.3.0.0/16"
-
-// The Tectonic statistics collection URL to which to report.
-tectonic_stats_url = "https://stats-collector.tectonic.com"
+// (optional) This declares the IP range to assign Kubernetes service cluster IPs in CIDR notation.
+// The maximum size of this IP range is /12
+// tectonic_service_cidr = "10.3.0.0/16"
 
 // If set to true, a vanilla Kubernetes cluster will be deployed, omitting any Tectonic assets.
 tectonic_vanilla_k8s = false
@@ -167,7 +165,7 @@ tectonic_vmware_etcd_datastore = ""
 // Default Gateway IP address for etcd nodes(s)
 tectonic_vmware_etcd_gateway = ""
 
-// Terraform map of etcd node(s) Hostnames, Example: 
+// Terraform map of etcd node(s) Hostnames, Example:
 //   tectonic_vmware_etcd_hostnames = {
 //   "0" = "mycluster-etcd-0"
 //   "1" = "mycluster-etcd-1"
@@ -175,7 +173,7 @@ tectonic_vmware_etcd_gateway = ""
 // }
 tectonic_vmware_etcd_hostnames = ""
 
-// Terraform map of etcd node(s) IP Addresses, Example: 
+// Terraform map of etcd node(s) IP Addresses, Example:
 //   tectonic_vmware_etcd_ip = {
 //   "0" = "192.168.246.10/24"
 //   "1" = "192.168.246.11/24"
@@ -201,14 +199,14 @@ tectonic_vmware_master_datastore = ""
 // Default Gateway IP address for Master nodes(s)
 tectonic_vmware_master_gateway = ""
 
-// Terraform map of Master node(s) Hostnames, Example: 
+// Terraform map of Master node(s) Hostnames, Example:
 //   tectonic_vmware_master_hostnames = {
 //   "0" = "mycluster-master-0"
 //   "1" = "mycluster-master-1"
 // }
 tectonic_vmware_master_hostnames = ""
 
-// Terraform map of Master node(s) IP Addresses, Example: 
+// Terraform map of Master node(s) IP Addresses, Example:
 //   tectonic_vmware_master_ip = {
 //   "0" = "192.168.246.20/24"
 //   "1" = "192.168.246.21/24"
@@ -251,14 +249,14 @@ tectonic_vmware_worker_datastore = ""
 // Default Gateway IP address for Master nodes(s)
 tectonic_vmware_worker_gateway = ""
 
-// Terraform map of Worker node(s) Hostnames, Example: 
+// Terraform map of Worker node(s) Hostnames, Example:
 //   tectonic_vmware_worker_hostnames = {
 //   "0" = "mycluster-worker-0"
 //   "1" = "mycluster-worker-1"
 // }
 tectonic_vmware_worker_hostnames = ""
 
-// Terraform map of Worker node(s) IP Addresses, Example: 
+// Terraform map of Worker node(s) IP Addresses, Example:
 //   tectonic_vmware_worker_ip = {
 //   "0" = "192.168.246.30/24"
 //   "1" = "192.168.246.31/24"

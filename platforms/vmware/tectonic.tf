@@ -104,8 +104,8 @@ module "tectonic" {
   license_path     = "${var.tectonic_vanilla_k8s ? "/dev/null" : pathexpand(var.tectonic_license_path)}"
   pull_secret_path = "${var.tectonic_vanilla_k8s ? "/dev/null" : pathexpand(var.tectonic_pull_secret_path)}"
 
-  admin_email         = "${var.tectonic_admin_email}"
-  admin_password_hash = "${var.tectonic_admin_password_hash}"
+  admin_email    = "${var.tectonic_admin_email}"
+  admin_password = "${var.tectonic_admin_password}"
 
   update_channel = "${var.tectonic_update_channel}"
   update_app_id  = "${var.tectonic_update_app_id}"
@@ -164,6 +164,6 @@ data "archive_file" "assets" {
   #
   # Additionally, data sources do not support managing any lifecycle whatsoever,
   # and therefore, the archive is never deleted. To avoid cluttering the module
-  # folder, we write it in the Terraform managed hidden folder `.terraform`.  
+  # folder, we write it in the Terraform managed hidden folder `.terraform`.
   output_path = "./.terraform/generated_${sha1("${module.etcd_certs.id} ${module.tectonic.id} ${module.bootkube.id} ${module.flannel-vxlan.id} ${module.calico-network-policy.id}")}.zip"
 }
