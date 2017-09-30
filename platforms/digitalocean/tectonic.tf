@@ -1,6 +1,6 @@
 module "bootkube" {
   source = "../../modules/bootkube"
-  
+
   cloud_provider = ""
   cluster_name = "${var.tectonic_cluster_name}"
   kube_apiserver_url = "https://${module.masters.cluster_fqdn}:443"
@@ -50,7 +50,7 @@ module "tectonic" {
   license_path = "${var.tectonic_vanilla_k8s ? "/dev/null" : pathexpand(var.tectonic_license_path)}"
   pull_secret_path = "${var.tectonic_vanilla_k8s ? "/dev/null" : pathexpand(var.tectonic_pull_secret_path)}"
   admin_email = "${var.tectonic_admin_email}"
-  admin_password_hash = "${var.tectonic_admin_password_hash}"
+  admin_password = "${var.tectonic_admin_password}"
   update_channel = "${var.tectonic_update_channel}"
   update_app_id = "${var.tectonic_update_app_id}"
   update_server = "${var.tectonic_update_server}"
@@ -107,7 +107,7 @@ resource "null_resource" "master_nodes" {
     private_key = "${file("${var.tectonic_do_ssh_key_path}")}"
     timeout = "1m"
   }
-  
+
   provisioner "file" {
     content = "${module.bootkube.kubeconfig}"
     destination = "$HOME/kubeconfig"
@@ -134,7 +134,7 @@ resource "null_resource" "first_master" {
     private_key = "${file("${var.tectonic_do_ssh_key_path}")}"
     timeout = "1m"
   }
-  
+
   provisioner "file" {
     source = "${data.archive_file.assets.output_path}"
     destination = "$HOME/tectonic.zip"
@@ -169,7 +169,7 @@ resource "null_resource" "worker_nodes" {
     private_key = "${file("${var.tectonic_do_ssh_key_path}")}"
     timeout = "1m"
   }
-  
+
   provisioner "file" {
     content = "${module.bootkube.kubeconfig}"
     destination = "$HOME/kubeconfig"
