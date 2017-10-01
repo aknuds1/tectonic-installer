@@ -18,20 +18,18 @@ module "etcd" {
   droplet_image = "${var.tectonic_do_droplet_image}"
   swap_size = "${var.tectonic_do_etcd_swap}"
   tls_enabled = "${var.tectonic_etcd_tls_enabled}"
-  tls_zip = "${module.bootkube.etcd_tls_zip}"
+  tls_zip = "${module.etcd_certs.etcd_tls_zip}"
 }
 
 module "ignition_masters" {
   source = "../../modules/digitalocean/ignition"
 
-  kubelet_node_label = "node-role.kubernetes.io/master"
-  kubelet_node_taints = "node-role.kubernetes.io/master=:NoSchedule"
-  kube_dns_service_ip = "${module.bootkube.kube_dns_service_ip}"
   container_images = "${var.tectonic_container_images}"
-  bootkube_service = "${module.bootkube.systemd_service}"
   swap_size = "${var.tectonic_do_master_swap}"
   cluster_domain = "${var.tectonic_cluster_name}.k8s.${var.tectonic_base_domain}"
-  tectonic_service = "${module.tectonic.systemd_service}"
+  kube_dns_service_ip = "${module.bootkube.kube_dns_service_ip}"
+  kubelet_node_label = "node-role.kubernetes.io/master"
+  kubelet_node_taints = "node-role.kubernetes.io/master=:NoSchedule"
   tectonic_service_disabled = "${var.tectonic_vanilla_k8s}"
 }
 
