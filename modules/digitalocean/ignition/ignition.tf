@@ -21,7 +21,7 @@ data "ignition_config" "main" {
 data "template_file" "resolved_conf" {
   template = "${file("${path.module}/resources/resolved.conf.tpl")}"
   vars {
-    cluster_domain = "${var.cluster_domain}"
+    base_domain = "${var.base_domain}"
   }
 }
 
@@ -132,6 +132,6 @@ module "sshguard" {
 
 module "swap" {
   source = "../swap"
-  
+
   swap_size = "${var.swap_size}"
 }

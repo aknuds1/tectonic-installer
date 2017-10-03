@@ -29,7 +29,7 @@ variable "swap_size" {
   description = "The amount of swap memory to enable"
 }
 
-variable "cluster_domain" {
+variable "base_domain" {
   type = "string"
   description = "The cluster domain"
 }

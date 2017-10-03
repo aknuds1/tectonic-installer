@@ -6,7 +6,7 @@ resource "digitalocean_droplet" "master_node" {
   size = "${var.droplet_size}"
   ssh_keys = ["${var.ssh_keys}"]
   tags = ["${var.extra_tags}"]
-  user_data = "${var.user_data}"
+  #user_data = "${var.user_data}"
 }
 
 resource "digitalocean_loadbalancer" "console" {
@@ -40,12 +40,12 @@ resource "digitalocean_loadbalancer" "console" {
 }
 
 resource "digitalocean_domain" "cluster" {
-  name = "${var.cluster_domain}"
+  name = "cluster.${var.cluster_name}.${var.base_domain}"
   ip_address = "${digitalocean_droplet.master_node.*.ipv4_address[0]}"
 }
 
 resource "digitalocean_domain" "console" {
-  name = "console.${var.cluster_domain}"
+  name = "console.${var.cluster_name}.${var.base_domain}"
   ip_address = "${digitalocean_loadbalancer.console.ip}"
 }
 

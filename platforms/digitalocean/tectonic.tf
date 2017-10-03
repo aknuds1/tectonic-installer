@@ -1,6 +1,6 @@
 data "template_file" "etcd_hostname_list" {
   count    = "${var.tectonic_experimental ? 0 : max(var.tectonic_etcd_count, 1)}"
-  template = "${var.tectonic_cluster_name}-etcd-${count.index}.${var.tectonic_base_domain}"
+  template = "${var.tectonic_cluster_name}-etcd-${count.index}.etcd.${var.tectonic_base_domain}"
 }
 
 module "kube_certs" {
@@ -104,7 +104,6 @@ module "tectonic" {
   update_app_id = "${var.tectonic_update_app_id}"
   update_server = "${var.tectonic_update_server}"
   ca_generated = "${var.tectonic_ca_cert == "" ? false : true}"
-  #ca_generated = "${module.bootkube.ca_cert == "" ? false : true}"
   ca_cert = "${module.kube_certs.ca_cert_pem}"
 
   ingress_ca_cert_pem = "${module.ingress_certs.ca_cert_pem}"

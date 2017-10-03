@@ -26,10 +26,10 @@ variable "extra_tags" {
   type = "list"
 }
 
-variable "user_data" {
-  type = "string"
-}
+# variable "user_data" {
+#   type = "string"
+# }
 
-variable "cluster_domain" {
+variable "base_domain" {
   type = "string"
 }

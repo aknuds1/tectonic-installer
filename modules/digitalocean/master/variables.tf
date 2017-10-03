@@ -2,7 +2,7 @@ variable "cluster_name" {
   type = "string"
 }
 
-variable "cluster_domain" {
+variable "base_domain" {
   type = "string"
 }
 
@@ -27,6 +27,6 @@ variable "droplet_image" {
   type = "string"
 }
 
-variable "user_data" {
-  type = "string"
-}
+# variable "user_data" {
+#   type = "string"
+# }

@@ -1,7 +1,7 @@
 # Create separate domain for etcd nodes, because depending on main cluster domain would cause
 # a dependency cycle, as the latter must be instantiated with the API server IP address
 resource "digitalocean_domain" "etcd" {
-  name = "etcd.${var.cluster_domain}"
+  name = "etcd.${var.base_domain}"
   ip_address = "${digitalocean_droplet.etcd_node.*.ipv4_address[0]}"
 }
 
