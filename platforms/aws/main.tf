@@ -5,6 +5,13 @@ provider "aws" {
 
 data "aws_availability_zones" "azs" {}
 
+module "container_linux" {
+  source = "../../modules/container_linux"
+
+  channel = "${var.tectonic_container_linux_channel}"
+  version = "${var.tectonic_container_linux_version}"
+}
+
 module "vpc" {
   source = "../../modules/aws/vpc"
 
@@ -55,25 +62,26 @@ module "vpc" {
 module "etcd" {
   source = "../../modules/aws/etcd"
 
-  base_domain        = "${var.tectonic_base_domain}"
-  cl_channel         = "${var.tectonic_cl_channel}"
-  cluster_id         = "${module.tectonic.cluster_id}"
-  cluster_name       = "${var.tectonic_cluster_name}"
-  container_image    = "${var.tectonic_container_images["etcd"]}"
-  dns_enabled        = "${!var.tectonic_experimental && length(compact(var.tectonic_etcd_servers)) == 0}"
-  dns_zone_id        = "${var.tectonic_aws_private_endpoints ? data.null_data_source.zones.inputs["private"] : data.null_data_source.zones.inputs["public"]}"
-  ec2_type           = "${var.tectonic_aws_etcd_ec2_type}"
-  external_endpoints = "${compact(var.tectonic_etcd_servers)}"
-  extra_tags         = "${var.tectonic_aws_extra_tags}"
-  instance_count     = "${length(data.template_file.etcd_hostname_list.*.id)}"
-  root_volume_iops   = "${var.tectonic_aws_etcd_root_volume_iops}"
-  root_volume_size   = "${var.tectonic_aws_etcd_root_volume_size}"
-  root_volume_type   = "${var.tectonic_aws_etcd_root_volume_type}"
-  sg_ids             = "${concat(var.tectonic_aws_etcd_extra_sg_ids, list(module.vpc.etcd_sg_id))}"
-  ssh_key            = "${var.tectonic_aws_ssh_key}"
-  subnets            = "${module.vpc.worker_subnet_ids}"
-  tls_enabled        = "${var.tectonic_etcd_tls_enabled}"
-  tls_zip            = "${module.etcd_certs.etcd_tls_zip}"
+  base_domain             = "${var.tectonic_base_domain}"
+  cluster_id              = "${module.tectonic.cluster_id}"
+  cluster_name            = "${var.tectonic_cluster_name}"
+  container_image         = "${var.tectonic_container_images["etcd"]}"
+  container_linux_channel = "${var.tectonic_container_linux_channel}"
+  container_linux_version = "${module.container_linux.version}"
+  dns_enabled             = "${!var.tectonic_experimental && length(compact(var.tectonic_etcd_servers)) == 0}"
+  dns_zone_id             = "${var.tectonic_aws_private_endpoints ? data.null_data_source.zones.inputs["private"] : data.null_data_source.zones.inputs["public"]}"
+  ec2_type                = "${var.tectonic_aws_etcd_ec2_type}"
+  external_endpoints      = "${compact(var.tectonic_etcd_servers)}"
+  extra_tags              = "${var.tectonic_aws_extra_tags}"
+  instance_count          = "${length(data.template_file.etcd_hostname_list.*.id)}"
+  root_volume_iops        = "${var.tectonic_aws_etcd_root_volume_iops}"
+  root_volume_size        = "${var.tectonic_aws_etcd_root_volume_size}"
+  root_volume_type        = "${var.tectonic_aws_etcd_root_volume_type}"
+  sg_ids                  = "${concat(var.tectonic_aws_etcd_extra_sg_ids, list(module.vpc.etcd_sg_id))}"
+  ssh_key                 = "${var.tectonic_aws_ssh_key}"
+  subnets                 = "${module.vpc.worker_subnet_ids}"
+  tls_enabled             = "${var.tectonic_etcd_tls_enabled}"
+  tls_zip                 = "${module.etcd_certs.etcd_tls_zip}"
 
   ign_etcd_dropin_id_list = "${module.ignition_masters.etcd_dropin_id_list}"
 }
@@ -93,7 +101,7 @@ module "ignition_masters" {
   image_re                  = "${var.tectonic_image_re}"
   kube_dns_service_ip       = "${module.bootkube.kube_dns_service_ip}"
   kubeconfig_fetch_cmd      = "/opt/s3-puller.sh ${aws_s3_bucket_object.kubeconfig.bucket}/${aws_s3_bucket_object.kubeconfig.key} /etc/kubernetes/kubeconfig"
-  kubelet_cni_bin_dir       = "${var.tectonic_calico_network_policy ? "/var/lib/cni/bin" : "" }"
+  kubelet_cni_bin_dir       = "${var.tectonic_networking == "calico" || var.tectonic_networking == "canal" ? "/var/lib/cni/bin" : "" }"
   kubelet_node_label        = "node-role.kubernetes.io/master"
   kubelet_node_taints       = "node-role.kubernetes.io/master=:NoSchedule"
   tectonic_vanilla_k8s      = "${var.tectonic_vanilla_k8s}"
@@ -106,7 +114,8 @@ module "masters" {
   assets_s3_location           = "${aws_s3_bucket_object.tectonic_assets.bucket}/${aws_s3_bucket_object.tectonic_assets.key}"
   autoscaling_group_extra_tags = "${var.tectonic_autoscaling_group_extra_tags}"
   base_domain                  = "${var.tectonic_base_domain}"
-  cl_channel                   = "${var.tectonic_cl_channel}"
+  container_linux_channel      = "${var.tectonic_container_linux_channel}"
+  container_linux_version      = "${module.container_linux.version}"
   cluster_id                   = "${module.tectonic.cluster_id}"
   cluster_name                 = "${var.tectonic_cluster_name}"
   console_sg_ids               = ["${module.vpc.console_sg_id}"]
@@ -150,7 +159,7 @@ module "ignition_workers" {
   image_re             = "${var.tectonic_image_re}"
   kube_dns_service_ip  = "${module.bootkube.kube_dns_service_ip}"
   kubeconfig_fetch_cmd = "/opt/s3-puller.sh ${aws_s3_bucket_object.kubeconfig.bucket}/${aws_s3_bucket_object.kubeconfig.key} /etc/kubernetes/kubeconfig"
-  kubelet_cni_bin_dir  = "${var.tectonic_calico_network_policy ? "/var/lib/cni/bin" : "" }"
+  kubelet_cni_bin_dir  = "${var.tectonic_networking == "calico" || var.tectonic_networking == "canal" ? "/var/lib/cni/bin" : "" }"
   kubelet_node_label   = "node-role.kubernetes.io/node"
   kubelet_node_taints  = ""
   tectonic_vanilla_k8s = "${var.tectonic_vanilla_k8s}"
@@ -160,7 +169,8 @@ module "workers" {
   source = "../../modules/aws/worker-asg"
 
   autoscaling_group_extra_tags = "${var.tectonic_autoscaling_group_extra_tags}"
-  cl_channel                   = "${var.tectonic_cl_channel}"
+  container_linux_channel      = "${var.tectonic_container_linux_channel}"
+  container_linux_version      = "${module.container_linux.version}"
   cluster_id                   = "${module.tectonic.cluster_id}"
   cluster_name                 = "${var.tectonic_cluster_name}"
   ec2_type                     = "${var.tectonic_aws_worker_ec2_type}"

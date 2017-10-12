@@ -1,5 +1,5 @@
 terraform {
-  required_version = ">= 0.10.4"
+  required_version = ">= 0.10.7"
 }
 
 provider "archive" {
@@ -58,7 +58,7 @@ variable "tectonic_container_images" {
     bootkube                     = "quay.io/coreos/bootkube:v0.6.2"
     calico                       = "quay.io/calico/node:v2.4.1"
     calico_cni                   = "quay.io/calico/cni:v1.10.0"
-    console                      = "quay.io/coreos/tectonic-console:v2.0.3"
+    console                      = "quay.io/coreos/tectonic-console:v2.2.3"
     error_server                 = "quay.io/coreos/tectonic-error-server:1.0"
     etcd                         = "quay.io/coreos/etcd:v3.1.8"
     etcd_operator                = "quay.io/coreos/etcd-operator:v0.5.0"
@@ -67,13 +67,13 @@ variable "tectonic_container_images" {
     heapster                     = "gcr.io/google_containers/heapster:v1.4.1"
     hyperkube                    = "quay.io/coreos/hyperkube:v1.7.6_coreos.0"
     identity                     = "quay.io/coreos/dex:v2.7.1"
-    ingress_controller           = "gcr.io/google_containers/nginx-ingress-controller:0.9.0-beta.12"
+    ingress_controller           = "gcr.io/google_containers/nginx-ingress-controller:0.9.0-beta.15"
     kenc                         = "quay.io/coreos/kenc:0.0.2"
     kubedns                      = "gcr.io/google_containers/k8s-dns-kube-dns-amd64:1.14.5"
     kubednsmasq                  = "gcr.io/google_containers/k8s-dns-dnsmasq-nanny-amd64:1.14.5"
     kubedns_sidecar              = "gcr.io/google_containers/k8s-dns-sidecar-amd64:1.14.5"
     kube_version                 = "quay.io/coreos/kube-version:0.1.0"
-    kube_version_operator        = "quay.io/coreos/kube-version-operator:v1.7.5-kvo.6"
+    kube_version_operator        = "quay.io/coreos/kube-version-operator:v1.7.5-kvo.10"
     node_agent                   = "quay.io/coreos/node-agent:v1.7.5-kvo.3"
     pod_checkpointer             = "quay.io/coreos/pod-checkpointer:3517908b1a1837e78cfd041a0e51e61c7835d85f"
     stats_emitter                = "quay.io/coreos/tectonic-stats:6e882361357fe4b773adbf279cddf48cb50164c1"
@@ -117,6 +117,18 @@ variable "tectonic_versions" {
     tectonic-etcd = "0.0.1"
     cluo          = "0.2.1"
   }
+}
+
+variable "tectonic_aws_assets_s3_bucket_name" {
+  type    = "string"
+  default = ""
+
+  description = <<EOF
+(optional) Unique name under which the Amazon S3 bucket will be created. Bucket name must start with a lower case name and is limited to 63 characters.
+The Tectonic Installer uses the bucket to store tectonic assets and kubeconfig.
+
+If name is not provided the installer will construct the name using "tectonic_cluster_name", current AWS region and "tectonic_base_domain"
+EOF
 }
 
 variable "tectonic_service_cidr" {
@@ -291,7 +303,7 @@ Note: This field MUST be set manually prior to creating the cluster unless `tect
 EOF
 }
 
-variable "tectonic_cl_channel" {
+variable "tectonic_container_linux_channel" {
   type    = "string"
   default = "stable"
 
@@ -299,6 +311,17 @@ variable "tectonic_cl_channel" {
 (optional) The Container Linux update channel.
 
 Examples: `stable`, `beta`, `alpha`
+EOF
+}
+
+variable "tectonic_container_linux_version" {
+  type    = "string"
+  default = "latest"
+
+  description = <<EOF
+The Container Linux version to use. Set to `latest` to select the latest available version for the selected update channel.
+
+Examples: `latest`, `1465.6.0`
 EOF
 }
 
@@ -440,13 +463,17 @@ Specifies the RFC2136 Dynamic DNS server key secret.
 EOF
 }
 
-variable "tectonic_calico_network_policy" {
-  default = false
+variable "tectonic_networking" {
+  default = "flannel"
 
   description = <<EOF
-(optional) [ALPHA] If set to true, calico network policy support will be deployed.
-WARNING: Enabling an alpha feature means that future updates may become unsupported.
-This should only be enabled on clusters that are meant to be short-lived to begin validating the alpha feature.
+(optional) Configures the network to be used in Tectonic. One of the following values can be used:
+
+- "flannel": enables overlay networking only. This is implemented by flannel using VXLAN.
+
+- "canal": [ALPHA] enables overlay networking including network policy. Overlay is implemented by flannel using VXLAN. Network policy is implemented by Calico.
+
+- "calico": [ALPHA] enables BGP based networking. Routing and network policy is implemented by Calico. Note this has been tested on baremetal installations only.
 EOF
 }
 

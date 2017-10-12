@@ -6,7 +6,7 @@
 3. CoreOS does not ship with `make`, so Docker builds still have to use small scripts.
 */
 
-def creds = [
+creds = [
   file(credentialsId: 'tectonic-license', variable: 'TF_VAR_tectonic_license_path'),
   file(credentialsId: 'tectonic-pull', variable: 'TF_VAR_tectonic_pull_secret_path'),
   [
@@ -23,7 +23,7 @@ def creds = [
   ]
 ]
 
-def quay_creds = [
+quay_creds = [
   usernamePassword(
     credentialsId: 'quay-robot',
     passwordVariable: 'QUAY_ROBOT_SECRET',
@@ -31,8 +31,8 @@ def quay_creds = [
   )
 ]
 
-def default_builder_image = 'quay.io/coreos/tectonic-builder:v1.39'
-def tectonic_smoke_test_env_image = 'quay.io/coreos/tectonic-smoke-test-env:v5.4'
+default_builder_image = 'quay.io/coreos/tectonic-builder:v1.41'
+tectonic_smoke_test_env_image = 'quay.io/coreos/tectonic-smoke-test-env:v5.7'
 
 pipeline {
   agent none
@@ -53,7 +53,22 @@ pipeline {
       description: 'Hyperkube image. Please define the param like: {hyperkube="<HYPERKUBE_IMAGE>"}'
     )
     booleanParam(
-      name: 'run_smoke_tests',
+      name: 'RUN_SMOKE_TESTS',
+      defaultValue: true,
+      description: ''
+    )
+    booleanParam(
+      name: 'PLATFORM/AWS',
+      defaultValue: true,
+      description: ''
+    )
+    booleanParam(
+      name: 'PLATFORM/AZURE',
+      defaultValue: true,
+      description: ''
+    )
+    booleanParam(
+      name: 'PLATFORM/BARE_METAL',
       defaultValue: true,
       description: ''
     )
@@ -67,6 +82,7 @@ pipeline {
       }
       steps {
         node('worker && ec2') {
+          forcefullyCleanWorkspace()
           withDockerContainer(params.builder_image) {
             ansiColor('xterm') {
               checkout scm
@@ -113,6 +129,7 @@ pipeline {
         parallel (
           "IntegrationTest AWS Installer Gui": {
             node('worker && ec2') {
+              forcefullyCleanWorkspace()
               withCredentials(creds) {
                 withDockerContainer(params.builder_image) {
                   ansiColor('xterm') {
@@ -130,6 +147,7 @@ pipeline {
           },
           "IntegrationTest Baremetal Installer Gui": {
             node('worker && ec2') {
+              forcefullyCleanWorkspace()
               withCredentials(creds) {
                 withDockerContainer(image: params.builder_image, args: '-u root') {
                   ansiColor('xterm') {
@@ -165,7 +183,7 @@ pipeline {
     stage("Smoke Tests") {
       when {
         expression {
-          return params.run_smoke_tests
+          return params.RUN_SMOKE_TESTS
         }
       }
       environment {
@@ -174,228 +192,57 @@ pipeline {
         TF_VAR_tectonic_container_images = "${params.hyperkube_image}"
       }
       steps {
-        parallel (
-          "SmokeTest AWS RSpec": {
-            node('worker && ec2') {
-              withCredentials(creds) {
-                withDockerContainer(tectonic_smoke_test_env_image) {
-                  ansiColor('xterm') {
-                    unstash 'repository'
-                    sh """#!/bin/bash -ex
-                      cd tests/rspec
-                      bundler exec rspec spec/aws_spec.rb
-                    """
-                    cleanWs notFailBuild: true
-                  }
-                }
-              }
-            }
-          },
-          "SmokeTest AWS VPC RSpec": {
-            node('worker && ec2') {
-              withCredentials(creds) {
-                withDockerContainer(
-                    image: tectonic_smoke_test_env_image,
-                    args: '--device=/dev/net/tun --cap-add=NET_ADMIN -u root'
-                ) {
-                  ansiColor('xterm') {
-                    unstash 'repository'
-                    sh """#!/bin/bash -ex
-                      cd tests/rspec
-                      bundler exec rspec spec/aws_vpc_internal_spec.rb
-                    """
-                    cleanWs notFailBuild: true
-                  }
-                }
-              }
-            }
-          },
-          "SmokeTest AWS Network Policy RSpec": {
-            node('worker && ec2') {
-              withCredentials(creds) {
-                withDockerContainer(tectonic_smoke_test_env_image) {
-                  ansiColor('xterm') {
-                    unstash 'repository'
-                    sh """#!/bin/bash -ex
-                      cd tests/rspec
-                      bundler exec rspec spec/aws_network_policy_spec.rb
-                    """
-                    cleanWs notFailBuild: true
-                  }
-                }
-              }
-            }
-          },
-          "SmokeTest AWS Exp RSpec": {
-            node('worker && ec2') {
-              withCredentials(creds) {
-                withDockerContainer(tectonic_smoke_test_env_image) {
-                  ansiColor('xterm') {
-                    unstash 'repository'
-                    sh """#!/bin/bash -ex
-                      cd tests/rspec
-                      bundler exec rspec spec/aws_exp_spec.rb
-                    """
-                    cleanWs notFailBuild: true
-                  }
-                }
-              }
-            }
-          },
-          "SmokeTest AWS custom ca RSpec": {
-            node('worker && ec2') {
-              withCredentials(creds) {
-                withDockerContainer(tectonic_smoke_test_env_image) {
-                  ansiColor('xterm') {
-                    unstash 'repository'
-                    sh """#!/bin/bash -ex
-                      cd tests/rspec
-                      bundler exec rspec spec/aws_ca_spec.rb
-                    """
-                    cleanWs notFailBuild: true
-                  }
-                }
-              }
-            }
-          },
-          "SmokeTest Azure Basic": {
-            node('worker && ec2') {
-              withCredentials(creds) {
-                withDockerContainer(tectonic_smoke_test_env_image) {
-                  ansiColor('xterm') {
-                    unstash 'repository'
-                    sh """#!/bin/bash -ex
-                      cd tests/rspec
-                      bundle exec rspec spec/azure_basic_spec.rb
-                    """
-                    cleanWs notFailBuild: true
-                  }
-                }
-              }
-            }
-          },
-          "SmokeTest Azure (Experimental)": {
-            node('worker && ec2') {
-              withCredentials(creds) {
-                withDockerContainer(tectonic_smoke_test_env_image) {
-                  ansiColor('xterm') {
-                    unstash 'repository'
-                    sh """#!/bin/bash -ex
-                      cd tests/rspec
-                      bundle exec rspec spec/azure_experimental_spec.rb
-                    """
-                    cleanWs notFailBuild: true
-                  }
-                }
-              }
-            }
-          },
-          "SmokeTest Azure Private Cluster": {
-            node('worker && ec2') {
-              withCredentials(creds) {
-                withDockerContainer(
-                    image: tectonic_smoke_test_env_image,
-                    args: '--device=/dev/net/tun --cap-add=NET_ADMIN -u root'
-                ) {
-                  ansiColor('xterm') {
-                    unstash 'repository'
-                    sh """#!/bin/bash -ex
-                      cd tests/rspec
-                      bundle exec rspec spec/azure_private_external_spec.rb
-                    """
-                    cleanWs notFailBuild: true
-                  }
-                }
-              }
-            }
-          },
-/*
- * Test temporarily disabled
- *
-          "SmokeTest: Azure (existing DNS)": {
-            node('worker && ec2') {
-              withCredentials(creds) {
-                withDockerContainer(tectonic_smoke_test_env_image) {
-                    ansiColor('xterm') {
-                      unstash 'repository'
+        script {
+          def builds = [:]
+
+          if (params."PLATFORM/AWS") {
+            builds['aws'] = runRSpecTest('spec/aws_spec.rb', '')
+            builds['aws_vpc_internal'] = runRSpecTest(
+                'spec/aws_vpc_internal_spec.rb',
+                '--device=/dev/net/tun --cap-add=NET_ADMIN -u root'
+                )
+            builds['aws_canal'] = runRSpecTest('spec/aws_network_canal_spec.rb', '')
+            builds['aws_exp'] = runRSpecTest('spec/aws_exp_spec.rb', '')
+            builds['aws_ca'] = runRSpecTest('spec/aws_ca_spec.rb', '')
+          }
+
+          if (params."PLATFORM/AZURE") {
+            builds['azure_basic'] = runRSpecTest('spec/azure_basic_spec.rb', '')
+            builds['azure_experimental'] = runRSpecTest('spec/azure_experimental_spec.rb', '')
+            builds['azure_private_external'] = runRSpecTest('spec/azure_private_external_spec.rb', '--device=/dev/net/tun --cap-add=NET_ADMIN -u root')
+            /*
+            * Test temporarily disabled
+            builds['azure_dns'] = runRSpecTest('spec/azure_dns_spec.rb', '')
+            */
+            builds['azure_external'] = runRSpecTest('spec/azure_external_spec.rb', '')
+            builds['azure_external_experimental'] = runRSpecTest('spec/azure_external_experimental_spec.rb', '')
+            builds['azure_example'] = runRSpecTest('spec/azure_example_spec.rb', '')
+          }
+
+          if (params."PLATFORM/BARE_METAL") {
+            /* Temporarily disabled for consolidation
+            * Fails very often due to Packet flakiness
+            *
+            builds['bare_metal'] = {
+              node('worker && bare-metal') {
+                ansiColor('xterm') {
+                  unstash 'repository'
+                  withCredentials(creds) {
+                    timeout(35) {
                       sh """#!/bin/bash -ex
-                        cd tests/rspec
-                        bundle exec rspec spec/azure_dns_spec.rb
+                      ${WORKSPACE}/tests/smoke/bare-metal/smoke.sh vars/metal.tfvars
                       """
-                      cleanWs notFailBuild: true
                     }
-                }
-              }
-            }
-          },
-*/
-          "SmokeTest Azure External Network": {
-            node('worker && ec2') {
-              withCredentials(creds) {
-                withDockerContainer(tectonic_smoke_test_env_image) {
-                  ansiColor('xterm') {
-                    unstash 'repository'
-                    sh """#!/bin/bash -ex
-                      cd tests/rspec
-                      bundle exec rspec spec/azure_external_spec.rb
-                    """
                     cleanWs notFailBuild: true
                   }
                 }
               }
             }
-          },
-          "SmokeTest: Azure External Network, Experimental)": {
-            node('worker && ec2') {
-              withCredentials(creds) {
-                withDockerContainer(tectonic_smoke_test_env_image) {
-                  ansiColor('xterm') {
-                    unstash 'repository'
-                    sh """#!/bin/bash -ex
-                      cd tests/rspec
-                      bundle exec rspec spec/azure_external_experimental_spec.rb
-                    """
-                    cleanWs notFailBuild: true
-                  }
-                }
-              }
-            }
-          },
-          "SmokeTest: Azure Example File": {
-            node('worker && ec2') {
-              withCredentials(creds) {
-                withDockerContainer(tectonic_smoke_test_env_image) {
-                  ansiColor('xterm') {
-                    unstash 'repository'
-                    sh """#!/bin/bash -ex
-                      cd tests/rspec
-                      bundle exec rspec spec/azure_example_spec.rb
-                    """
-                    cleanWs notFailBuild: true
-                  }
-                }
-              }
-            }
-          },
-          /* Temporarily disabled for consolidation
-           * Fails very often due to Packet flakiness
-           *
-          "SmokeTest: Bare Metal": {
-            node('worker && bare-metal') {
-              ansiColor('xterm') {
-                unstash 'repository'
-                withCredentials(creds) {
-                  timeout(35) {
-                    sh """#!/bin/bash -ex
-                    ${WORKSPACE}/tests/smoke/bare-metal/smoke.sh vars/metal.tfvars
-                    """
-                  }
-                  cleanWs notFailBuild: true
-                }
-              }
-            }
-          }, */
-        )
+            */
+          }
+
+          parallel builds
+        }
       }
     }
 
@@ -405,6 +252,7 @@ pipeline {
       }
       steps {
         node('worker && ec2') {
+          forcefullyCleanWorkspace()
           withCredentials(quay_creds) {
             ansiColor('xterm') {
               unstash 'repository'
@@ -423,15 +271,41 @@ pipeline {
   }
 }
 
-def notifySlack() {
-    def link = "<${env.BUILD_URL}>"
-    def msg = "Tectonic Installer failed to destroy azure resources (${link})"
-    slackSend(
-        channel: '#tectonic-installer-ci',
-        color: "warning",
-        message: msg,
-        teamDomain: 'coreos',
-        tokenCredentialId: 'tectonic-slack-token',
-        failOnError: true,
-    )
+def forcefullyCleanWorkspace() {
+  return withDockerContainer(
+    image: tectonic_smoke_test_env_image,
+    args: '-u root'
+  ) {
+    ansiColor('xterm') {
+      sh """#!/bin/bash -ex
+        if [ -d "\$WORKSPACE" ]
+        then
+          rm -rfv \$WORKSPACE/*
+        fi
+      """
+    }
+  }
+}
+
+def runRSpecTest(testFilePath, dockerArgs) {
+  return {
+    node('worker && ec2') {
+      forcefullyCleanWorkspace()
+      withCredentials(creds) {
+        withDockerContainer(
+            image: tectonic_smoke_test_env_image,
+            args: dockerArgs
+        ) {
+          ansiColor('xterm') {
+            unstash 'repository'
+            sh """#!/bin/bash -ex
+              cd tests/rspec
+              bundler exec rspec ${testFilePath}
+            """
+            cleanWs notFailBuild: true
+          }
+        }
+      }
+    }
+  }
 }

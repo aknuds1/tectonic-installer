@@ -12,6 +12,12 @@ tectonic_admin_email = ""
 // also be escaped.
 tectonic_admin_password = ""
 
+// (optional) Unique name under which the Amazon S3 bucket will be created. Bucket name must start with a lower case name and is limited to 63 characters.
+// The Tectonic Installer uses the bucket to store tectonic assets and kubeconfig.
+// 
+// If name is not provided the installer will construct the name using "tectonic_cluster_name", current AWS region and "tectonic_base_domain"
+// tectonic_aws_assets_s3_bucket_name = ""
+
 // The base DNS domain of the cluster. It must NOT contain a trailing period. Some
 // DNS providers will automatically add this if necessary.
 // 
@@ -39,16 +45,6 @@ tectonic_base_domain = ""
 // This field is mandatory if `tectonic_ca_cert` is set.
 // tectonic_ca_key_alg = "RSA"
 
-// (optional) [ALPHA] If set to true, calico network policy support will be deployed.
-// WARNING: Enabling an alpha feature means that future updates may become unsupported.
-// This should only be enabled on clusters that are meant to be short-lived to begin validating the alpha feature.
-// tectonic_calico_network_policy = false
-
-// (optional) The Container Linux update channel.
-// 
-// Examples: `stable`, `beta`, `alpha`
-// tectonic_cl_channel = "stable"
-
 // (optional) This declares the IP range to assign Kubernetes pod IPs in CIDR notation.
 // tectonic_cluster_cidr = "10.2.0.0/16"
 
@@ -58,6 +54,16 @@ tectonic_base_domain = ""
 // Note: This field MUST be set manually prior to creating the cluster.
 // Warning: Special characters in the name like '.' may cause errors on OpenStack platforms due to resource name constraints.
 tectonic_cluster_name = ""
+
+// (optional) The Container Linux update channel.
+// 
+// Examples: `stable`, `beta`, `alpha`
+// tectonic_container_linux_channel = "stable"
+
+// The Container Linux version to use. Set to `latest` to select the latest available version for the selected update channel.
+// 
+// Examples: `latest`, `1465.6.0`
+tectonic_container_linux_version = "latest"
 
 // (optional) This only applies if you use the modules/dns/ddns module.
 // 
@@ -129,11 +135,10 @@ tectonic_license_path = ""
 // This applies only to cloud platforms.
 tectonic_master_count = "1"
 
-// CoreOS kernel/initrd version to PXE boot.
-// Must be present in Matchbox assets and correspond to `tectonic_cl_channel`.
+// (optional) Sets the MTU size for workload interfaces and the IP-in-IP tunnel device.
 // 
-// Example: `1298.7.0`
-tectonic_metal_cl_version = ""
+// Note: This setting is only effective, if tectonic_networking is set to `calico`.
+// tectonic_metal_calico_mtu = "1500"
 
 // The domain name which resolves to controller node(s)
 // 
@@ -227,6 +232,15 @@ tectonic_metal_worker_macs = ""
 // 
 // Example: `["node2", "node3"]`
 tectonic_metal_worker_names = ""
+
+// (optional) Configures the network to be used in Tectonic. One of the following values can be used:
+// 
+// - "flannel": enables overlay networking only. This is implemented by flannel using VXLAN.
+// 
+// - "canal": [ALPHA] enables overlay networking including network policy. Overlay is implemented by flannel using VXLAN. Network policy is implemented by Calico.
+// 
+// - "calico": [ALPHA] enables BGP based networking. Routing and network policy is implemented by Calico. Note this has been tested on baremetal installations only.
+// tectonic_networking = "flannel"
 
 // The path the pull secret file in JSON format.
 // This is known to be a "Docker pull secret" as produced by the docker login [1] command.

@@ -2,18 +2,23 @@ import React from 'react';
 import classNames from 'classnames';
 import { connect } from 'react-redux';
 
-import { configActionTypes, eventErrorsActionTypes } from '../actions';
+import { configActions, eventErrorsActionTypes } from '../actions';
+import { Field, Form } from '../form';
 import { compareVersions } from '../utils';
 import { validate } from '../validate';
 import { TectonicGA } from '../tectonic-ga';
 
-import { WithClusterConfig, Input } from './ui';
+import { Connect, Input } from './ui';
 import {
   DEFAULT_CLUSTER_CONFIG,
   BM_MATCHBOX_HTTP,
   BM_MATCHBOX_RPC,
   BM_OS_TO_USE,
 } from '../cluster-config';
+
+new Form('BM_MATCHBOX_ADDRESS', [
+  new Field(BM_MATCHBOX_RPC, {default: '', validator: validate.hostPort}),
+]);
 
 const COREOS_VERSIONS_ERROR_NAME = 'COREOS_VERSIONS_ERROR_NAME';
 
@@ -34,20 +39,14 @@ const dispatchToProps = dispatch => ({
         error: null,
       },
     });
-    dispatch({
-      type: configActionTypes.SET,
-      payload: {matchboxHTTP: value},
-    });
+    configActions.set({matchboxHTTP: value}, dispatch);
   },
   getOsToUse: matchboxHTTP => {
     if (validate.hostPort(matchboxHTTP)) {
       return;
     }
 
-    dispatch({
-      type: configActionTypes.SET,
-      payload: {bootCfgInfly: true},
-    });
+    configActions.set({bootCfgInfly: true}, dispatch);
 
     const endpointURL = `http://${matchboxHTTP}/assets/coreos`;
     return fetch(`/containerlinux/images/matchbox?endpoint=${encodeURIComponent(endpointURL)}`)
@@ -65,11 +64,7 @@ const dispatchToProps = dispatch => ({
         }
 
         const useVersion = available.map(v => v.version).sort(compareVersions).pop();
-
-        dispatch({
-          type: configActionTypes.SET,
-          payload: {[BM_OS_TO_USE]: useVersion},
-        });
+        configActions.set({[BM_OS_TO_USE]: useVersion}, dispatch);
 
         return Promise.resolve(true);
       })
@@ -81,12 +76,9 @@ const dispatchToProps = dispatch => ({
             error: err,
           },
         });
-        dispatch({
-          type: configActionTypes.SET,
-          payload: {[BM_OS_TO_USE]: DEFAULT_CLUSTER_CONFIG[BM_OS_TO_USE]},
-        });
+        configActions.set({[BM_OS_TO_USE]: DEFAULT_CLUSTER_CONFIG[BM_OS_TO_USE]}, dispatch);
       })
-      .then(() => dispatch({type: configActionTypes.SET, payload: {bootCfgInfly: false}}));
+      .then(() => configActions.set({bootCfgInfly: false}, dispatch));
   },
 });
 
@@ -154,12 +146,13 @@ export const BM_Matchbox = connect(stateToProps, dispatchToProps)(
                 <label htmlFor={BM_MATCHBOX_RPC}>API address</label>
               </div>
               <div className="col-xs-9">
-                <WithClusterConfig field={BM_MATCHBOX_RPC} validator={validate.hostPort}>
-                  <Input id={BM_MATCHBOX_RPC}
+                <Connect field={BM_MATCHBOX_RPC}>
+                  <Input
+                    id={BM_MATCHBOX_RPC}
                     className="wiz-inline-field wiz-inline-field--protocol"
                     prefix={<span className="input__prefix--protocol">https://</span>}
                     placeholder="matchbox.example.com:8081" />
-                </WithClusterConfig>
+                </Connect>
                 <p className="text-muted">Hostname and port of matchbox API endpoint</p>
               </div>
             </div>
@@ -167,7 +160,8 @@ export const BM_Matchbox = connect(stateToProps, dispatchToProps)(
         </div>
       </div>;
     }
-  });
+  }
+);
 
 BM_Matchbox.canNavigateForward = ({clusterConfig}) => {
   return !validate.hostPort(clusterConfig[BM_MATCHBOX_HTTP]) &&

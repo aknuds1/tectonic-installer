@@ -30,7 +30,7 @@ BIN_DIR="$ROOT/bin_test"
 
 MATCHBOX_VERSION=v0.6.1
 KUBECTL_VERSION=v1.6.4
-TERRAFORM_VERSION=0.10.4
+TERRAFORM_VERSION=0.10.7
 
 KUBECTL_URL="https://storage.googleapis.com/kubernetes-release/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl"
 TERRAFORM_URL="https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip"
@@ -160,8 +160,8 @@ configure() {
   make localconfig
   ln -sf ${CONFIG} ${ROOT}/build/${CLUSTER}/terraform.tfvars
 
-  COREOS_CHANNEL=$(awk -F "=" '/^tectonic_cl_channel/ {gsub(/[ \t"]/, "", $2); print $2}' ${CONFIG})
-  COREOS_VERSION=$(awk -F "=" '/^tectonic_metal_cl_version/ {gsub(/[ \t"]/, "", $2); print $2}' ${CONFIG})
+  COREOS_CHANNEL=$(awk -F "=" '/^tectonic_container_linux_channel/ {gsub(/[ \t"]/, "", $2); print $2}' ${CONFIG})
+  COREOS_VERSION=$(awk -F "=" '/^tectonic_container_linux_version/ {gsub(/[ \t"]/, "", $2); print $2}' ${CONFIG})
 
   export SMOKE_KUBECONFIG=${ROOT}/build/${CLUSTER}/generated/auth/kubeconfig
 }
@@ -281,7 +281,7 @@ test_cluster() {
   # shellcheck disable=SC2155
   export SMOKE_MANIFEST_EXPERIMENTAL=$(grep tectonic_experimental "$CONFIG" | awk -F "=" '{gsub(/"/, "", $2); print $2}' | tr -d ' ')
   # shellcheck disable=SC2155
-  export SMOKE_CALICO_NETWORK_POLICY=$(grep tectonic_calico_network_policy "$CONFIG" | awk -F "=" '{gsub(/"/, "", $2); print $2}' | tr -d ' ')
+  export SMOKE_NETWORKING=$(grep tectonic_networking "$CONFIG" | awk -F "=" '{gsub(/"/, "", $2); print $2}' | tr -d ' ')
   bin/smoke -test.v -test.parallel=1 --cluster
 }
 

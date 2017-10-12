@@ -1,11 +1,6 @@
-variable "flannel_image" {
-  description = "Container image for flanneld"
-  type        = "string"
-}
-
-variable "flannel_cni_image" {
-  description = "Container image for flannel cni"
-  type        = "string"
+variable "container_images" {
+  description = "Container images to use"
+  type        = "map"
 }
 
 variable "cluster_cidr" {
