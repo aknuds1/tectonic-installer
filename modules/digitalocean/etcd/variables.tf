@@ -15,7 +15,7 @@ variable "droplet_size" {
 }
 
 variable "extra_tags" {
-  type = "list"
+  type    = "list"
   default = []
 }
 
