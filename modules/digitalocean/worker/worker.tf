@@ -7,6 +7,8 @@ resource "digitalocean_droplet" "worker_node" {
   ssh_keys = ["${var.ssh_keys}"]
   tags = ["${var.extra_tags}"]
   #user_data = "${var.user_data}"
+  image     = "coreos-${var.container_linux_channel}"
+  image     = "coreos-${module.container_linux_channel}"
 }
 
 resource "digitalocean_record" "worker" {

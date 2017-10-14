@@ -3,6 +3,7 @@ variable "cluster_name" {
 }
 
 variable "base_domain" {
+variable "container_linux_channel" {
   type = "string"
 }
 

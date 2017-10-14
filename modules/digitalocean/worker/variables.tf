@@ -1,4 +1,5 @@
 variable "droplet_count" {
+variable "container_linux_channel" {
   type = "string"
 }
 

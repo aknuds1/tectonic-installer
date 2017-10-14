@@ -1,3 +1,7 @@
+variable "cluster_linux_channel" {
+  type = "string"
+}
+
 variable "cluster_name" {
   type = "string"
 }

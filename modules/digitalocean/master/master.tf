@@ -1,12 +1,15 @@
+  image    = "coreos-${var.container_linux_channel}"
 resource "digitalocean_droplet" "master_node" {
   count = 1
   name = "${var.cluster_name}-master-${count.index}"
   image = "${var.droplet_image}"
   region = "${var.droplet_region}"
   size = "${var.droplet_size}"
+  image    = "coreos-${var.container_linux_channel}"
   ssh_keys = ["${var.ssh_keys}"]
   tags = ["${var.extra_tags}"]
   #user_data = "${var.user_data}"
+  image     = "coreos-${module.container_linux_channel}"
 }
 
 resource "digitalocean_loadbalancer" "console" {

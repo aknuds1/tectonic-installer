@@ -2,6 +2,13 @@ provider "digitalocean" {
   token = "${var.tectonic_do_token}"
 }
 
+module "container_linux" {
+  source = "../../modules/container_linux"
+
+  channel = "${var.tectonic_container_linux_channel}"
+  version = "${var.tectonic_container_linux_version}"
+}
+
 module "etcd" {
   source = "../../modules/digitalocean/etcd"
 
@@ -19,6 +26,8 @@ module "etcd" {
   swap_size = "${var.tectonic_do_etcd_swap}"
   tls_enabled = "${var.tectonic_etcd_tls_enabled}"
   tls_zip = "${module.etcd_certs.etcd_tls_zip}"
+  container_linux_channel = "${module.tectonic_container_linux_channel}"
+  container_linux_version = "${module.tectonic_container_linux_version}"
 }
 
 module "ignition_masters" {
@@ -51,6 +60,8 @@ module "masters" {
   extra_tags = "${var.tectonic_do_extra_tags}"
   #user_data = "${module.ignition_masters.ignition}"
   base_domain = "${var.tectonic_base_domain}"
+  container_linux_channel = "${module.tectonic_container_linux_channel}"
+  container_linux_version = "${module.tectonic_container_linux_version}"
 }
 
 module "ignition_workers" {
@@ -79,4 +90,6 @@ module "workers" {
   #user_data = "${module.ignition_workers.ignition}"
   extra_tags = "${var.tectonic_do_extra_tags}"
   base_domain = "${var.tectonic_base_domain}"
+  container_linux_channel = "${module.tectonic_container_linux_channel}"
+  container_linux_version = "${module.tectonic_container_linux_version}"
 }
