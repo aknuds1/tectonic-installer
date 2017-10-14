@@ -35,12 +35,12 @@ variable "droplet_region" {
   type = "string"
 }
 
-variable "droplet_image" {
-  type = "string"
-}
+# variable "droplet_image" {
+#   type = "string"
+# }
 
 variable "swap_size" {
-  type = "string"
+  type        = "string"
   description = "Amount of swap memory to enable"
 }
 

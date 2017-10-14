@@ -42,13 +42,14 @@ module "identity_certs" {
 }
 
 module "bootkube" {
-  source = "../../modules/bootkube"
+  source         = "../../modules/bootkube"
   cloud_provider = "digitalocean"
 
   cluster_name = "${var.tectonic_cluster_name}"
 
+  ## TODO Add private endpoints
   kube_apiserver_url = "https://${module.masters.cluster_fqdn}:443"
-  oidc_issuer_url = "https://${module.masters.console_fqdn}:443/identity"
+  oidc_issuer_url    = "https://${module.masters.console_fqdn}:443/identity"
 
   # Platform-independent variables wiring, do not modify.
   container_images = "${var.tectonic_container_images}"
@@ -82,29 +83,33 @@ module "bootkube" {
   experimental_enabled = "${var.tectonic_experimental}"
   master_count         = "${var.tectonic_master_count}"
 
-  cloud_config_path    = ""
+  cloud_config_path = ""
 }
 
 module "tectonic" {
-  source = "../../modules/tectonic"
+  source   = "../../modules/tectonic"
   platform = "digitalocean"
 
-  cluster_name = "${var.tectonic_cluster_name}"
-  base_address = "${module.masters.console_fqdn}"
+  cluster_name       = "${var.tectonic_cluster_name}"
+  ## TODO Add private endpoints
+  base_address       = "${module.masters.console_fqdn}"
+  ## TODO Add private endpoints
   kube_apiserver_url = "https://${module.masters.cluster_fqdn}:443"
+  service_cidr       = "${var.tectonic_service_cidr}"
+
   # Platform-independent variables wiring, do not modify.
-  container_images = "${var.tectonic_container_images}"
+  container_images      = "${var.tectonic_container_images}"
   container_base_images = "${var.tectonic_container_base_images}"
-  versions = "${var.tectonic_versions}"
-  license_path = "${var.tectonic_vanilla_k8s ? "/dev/null" : pathexpand(var.tectonic_license_path)}"
-  pull_secret_path = "${var.tectonic_vanilla_k8s ? "/dev/null" : pathexpand(var.tectonic_pull_secret_path)}"
-  admin_email = "${var.tectonic_admin_email}"
-  admin_password = "${var.tectonic_admin_password}"
-  update_channel = "${var.tectonic_update_channel}"
-  update_app_id = "${var.tectonic_update_app_id}"
-  update_server = "${var.tectonic_update_server}"
-  ca_generated = "${var.tectonic_ca_cert == "" ? false : true}"
-  ca_cert = "${module.kube_certs.ca_cert_pem}"
+  versions              = "${var.tectonic_versions}"
+  license_path          = "${var.tectonic_vanilla_k8s ? "/dev/null" : pathexpand(var.tectonic_license_path)}"
+  pull_secret_path      = "${var.tectonic_vanilla_k8s ? "/dev/null" : pathexpand(var.tectonic_pull_secret_path)}"
+  admin_email           = "${var.tectonic_admin_email}"
+  admin_password        = "${var.tectonic_admin_password}"
+  update_channel        = "${var.tectonic_update_channel}"
+  update_app_id         = "${var.tectonic_update_app_id}"
+  update_server         = "${var.tectonic_update_server}"
+  ca_generated          = "${var.tectonic_ca_cert == "" ? false : true}"
+  ca_cert               = "${module.kube_certs.ca_cert_pem}"
 
   ingress_ca_cert_pem = "${module.ingress_certs.ca_cert_pem}"
   ingress_cert_pem    = "${module.ingress_certs.cert_pem}"
@@ -117,36 +122,47 @@ module "tectonic" {
 
   console_client_id = "tectonic-console"
   kubectl_client_id = "tectonic-kubectl"
-  ingress_kind = "NodePort"
-  experimental = "${var.tectonic_experimental}"
-  master_count = "${var.tectonic_master_count}"
-  stats_url = "${var.tectonic_stats_url}"
-  image_re = "${var.tectonic_image_re}"
+  ingress_kind      = "NodePort"
+  experimental      = "${var.tectonic_experimental}"
+  master_count      = "${var.tectonic_master_count}"
+  stats_url         = "${var.tectonic_stats_url}"
 
   image_re = "${var.tectonic_image_re}"
 }
 
-module "flannel-vxlan" {
+module "flannel_vxlan" {
   source = "../../modules/net/flannel-vxlan"
 
-  flannel_image = "${var.tectonic_container_images["flannel"]}"
-  flannel_cni_image = "${var.tectonic_container_images["flannel_cni"]}"
-  cluster_cidr = "${var.tectonic_cluster_cidr}"
+  cluster_cidr      = "${var.tectonic_cluster_cidr}"
+  enabled           = "${var.tectonic_networking == "flannel"}"
+  container_images = "${var.tectonic_container_images}"
+  #flannel_image     = "${var.tectonic_container_images["flannel"]}"
+  #flannel_cni_image = "${var.tectonic_container_images["flannel_cni"]}"
 }
 
-module "calico-network-policy" {
-  source = "../../modules/net/calico-network-policy"
+module "calico" {
+  source = "../../modules/net/calico"
 
-  kube_apiserver_url = "https://${module.masters.cluster_fqdn}:443"
-  calico_image       = "${var.tectonic_container_images["calico"]}"
-  calico_cni_image   = "${var.tectonic_container_images["calico_cni"]}"
+  #kube_apiserver_url = "https://${module.masters.cluster_fqdn}:443"
+  container_images   = "${var.tectonic_container_images}"
+  #calico_image       = "${var.tectonic_container_images["calico"]}"
+  #calico_cni_image   = "${var.tectonic_container_images["calico_cni"]}"
   cluster_cidr       = "${var.tectonic_cluster_cidr}"
-  enabled            = "${var.tectonic_calico_network_policy}"
+  enabled            = "${var.tectonic_networking == "calico"}"
+}
+
+module "canal" {
+  source = "../../modules/net/canal"
+
+  container_images = "${var.tectonic_container_images}"
+  cluster_cidr     = "${var.tectonic_cluster_cidr}"
+  enabled          = "${var.tectonic_networking == "canal"}"
 }
 
 data "archive_file" "assets" {
-  type = "zip"
+  type       = "zip"
   source_dir = "./generated/"
+
   # Because the archive_file provider is a data source, depends_on can't be
   # used to guarantee that the tectonic/bootkube modules have generated
   # all the assets on disk before trying to archive them. Instead, we use their
@@ -157,27 +173,28 @@ data "archive_file" "assets" {
   # Additionally, data sources do not support managing any lifecycle whatsoever,
   # and therefore, the archive is never deleted. To avoid cluttering the module
   # folder, we write it in the Terraform managed hidden folder `.terraform`.
-  output_path = "./.terraform/generated_${sha1("${module.etcd_certs.id} ${module.tectonic.id} ${module.bootkube.id} ${module.flannel-vxlan.id} ${module.calico-network-policy.id}")}.zip"
+  output_path = "./.terraform/generated_${sha1("${module.etcd_certs.id} ${module.tectonic.id} ${module.bootkube.id} ${module.flannel_vxlan.id} ${module.calico.id} ${module.canal.id}")}.zip"
 }
 
 # Copy kubeconfig to master nodes
 resource "null_resource" "master_nodes" {
   count = 1
+
   # Re-provision on changes to masters
   triggers {
-    master_address = "${element(module.masters.node_addresses, count.index)}",
+    master_address = "${element(module.masters.node_addresses, count.index)}"
   }
 
   connection {
-    type = "ssh"
-    host = "${element(module.masters.node_addresses, count.index)}"
-    user = "core"
+    type        = "ssh"
+    host        = "${element(module.masters.node_addresses, count.index)}"
+    user        = "core"
     private_key = "${file("${var.tectonic_do_ssh_key_path}")}"
-    timeout = "1m"
+    timeout     = "1m"
   }
 
   provisioner "file" {
-    content = "${module.bootkube.kubeconfig}"
+    content     = "${module.bootkube.kubeconfig}"
     destination = "$HOME/kubeconfig"
   }
 
@@ -196,20 +213,20 @@ resource "null_resource" "first_master" {
   }
 
   connection {
-    type = "ssh"
-    host = "${module.masters.first_node_address}"
-    user = "core"
+    type        = "ssh"
+    host        = "${module.masters.first_node_address}"
+    user        = "core"
     private_key = "${file("${var.tectonic_do_ssh_key_path}")}"
-    timeout = "1m"
+    timeout     = "1m"
   }
 
   provisioner "file" {
-    source = "${data.archive_file.assets.output_path}"
+    source      = "${data.archive_file.assets.output_path}"
     destination = "$HOME/tectonic.zip"
   }
 
   provisioner "file" {
-    source = "${path.root}/resources/bootstrap-first-master.sh"
+    source      = "${path.root}/resources/bootstrap-first-master.sh"
     destination = "$HOME/bootstrap-first-master.sh"
   }
 
@@ -225,21 +242,22 @@ resource "null_resource" "first_master" {
 # Copy kubeconfig to worker nodes
 resource "null_resource" "worker_nodes" {
   count = "${var.tectonic_worker_count}"
+
   # Re-provision on changes to workers
   triggers {
-    node_address = "${element(module.workers.node_addresses, count.index)}",
+    node_address = "${element(module.workers.node_addresses, count.index)}"
   }
 
   connection {
-    type = "ssh"
-    host = "${element(module.workers.node_addresses, count.index)}"
-    user = "core"
+    type        = "ssh"
+    host        = "${element(module.workers.node_addresses, count.index)}"
+    user        = "core"
     private_key = "${file("${var.tectonic_do_ssh_key_path}")}"
-    timeout = "1m"
+    timeout     = "1m"
   }
 
   provisioner "file" {
-    content = "${module.bootkube.kubeconfig}"
+    content     = "${module.bootkube.kubeconfig}"
     destination = "$HOME/kubeconfig"
   }
 
