@@ -1,6 +1,6 @@
 data "template_file" "etcd_hostname_list" {
   count    = "${var.tectonic_experimental ? 0 : max(var.tectonic_etcd_count, 1)}"
-  template = "${var.tectonic_cluster_name}-etcd-${count.index}.etcd.${var.tectonic_base_domain}"
+  template = "${var.tectonic_cluster_name}-etcd-${count.index}.${var.tectonic_base_domain}"
 }
 
 module "kube_certs" {
