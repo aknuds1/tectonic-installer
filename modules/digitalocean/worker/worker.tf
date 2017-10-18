@@ -12,11 +12,3 @@ resource "digitalocean_droplet" "worker_node" {
     create_before_destroy = true
   }
 }
-
-resource "digitalocean_record" "worker" {
-  count  = "${var.droplet_count}"
-  domain = "${var.base_domain}"
-  type   = "A"
-  name   = "${var.cluster_name}-worker-${count.index}"
-  value  = "${element(digitalocean_droplet.worker_node.*.ipv4_address, count.index)}"
-}

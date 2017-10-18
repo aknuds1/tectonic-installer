@@ -45,21 +45,3 @@ resource "digitalocean_loadbalancer" "console" {
     create_before_destroy = true
   }
 }
-
-resource "digitalocean_domain" "cluster" {
-  name       = "${var.cluster_name}.${var.base_domain}"
-  ip_address = "${digitalocean_droplet.master_node.*.ipv4_address[0]}"
-}
-
-resource "digitalocean_domain" "console" {
-  name       = "console.${var.cluster_name}.${var.base_domain}"
-  ip_address = "${digitalocean_loadbalancer.console.ip}"
-}
-
-resource "digitalocean_record" "master" {
-  count  = "${var.master_count}"
-  domain = "${digitalocean_domain.cluster.id}"
-  type   = "A"
-  name   = "${var.cluster_name}-master-${count.index}"
-  value  = "${element(digitalocean_droplet.master_node.*.ipv4_address, count.index)}"
-}
