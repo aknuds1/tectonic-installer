@@ -1,7 +1,7 @@
 resource "digitalocean_droplet" "worker_node" {
   count     = "${var.droplet_count}"
   name      = "${var.cluster_name}-worker-${count.index}"
-  image     = "coreos-${module.container_linux_channel}"
+  image     = "coreos-${var.container_linux_channel}"
   region    = "${var.droplet_region}"
   size      = "${var.droplet_size}"
   ssh_keys  = ["${var.ssh_keys}"]

@@ -1,6 +1,6 @@
 #!/bin/sh
 sudo unzip -o -d /opt/tectonic/ $HOME/tectonic.zip && \
-rm $HOME/tectonic.zip && \
+#rm $HOME/tectonic.zip && \
 sudo systemctl enable bootkube && \
 sudo systemctl start bootkube
 

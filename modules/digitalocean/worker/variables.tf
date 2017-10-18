@@ -1,5 +1,4 @@
-variable "droplet_count" {
-variable "container_linux_channel" {
+variable "base_domain" {
   type = "string"
 }
 
@@ -7,7 +6,15 @@ variable "cluster_name" {
   type = "string"
 }
 
-variable "droplet_image" {
+variable "container_linux_channel" {
+  type = "string"
+}
+
+variable "container_linux_version" {
+   type = "string"
+}
+
+variable "droplet_count" {
   type = "string"
 }
 
@@ -19,18 +26,10 @@ variable "droplet_size" {
   type = "string"
 }
 
-variable "ssh_keys" {
-  type = "list"
-}
-
 variable "extra_tags" {
   type = "list"
 }
 
-# variable "user_data" {
-#   type = "string"
-# }
-
-variable "base_domain" {
-  type = "string"
+variable "ssh_keys" {
+  type = "list"
 }

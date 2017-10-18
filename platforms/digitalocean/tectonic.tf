@@ -43,11 +43,9 @@ module "identity_certs" {
 
 module "bootkube" {
   source         = "../../modules/bootkube"
+
   cloud_provider = "digitalocean"
-
   cluster_name = "${var.tectonic_cluster_name}"
-
-  ## TODO Add private endpoints
   kube_apiserver_url = "https://${module.masters.cluster_fqdn}:443"
   oidc_issuer_url    = "https://${module.masters.console_fqdn}:443/identity"
 
@@ -136,17 +134,12 @@ module "flannel_vxlan" {
   cluster_cidr      = "${var.tectonic_cluster_cidr}"
   enabled           = "${var.tectonic_networking == "flannel"}"
   container_images = "${var.tectonic_container_images}"
-  #flannel_image     = "${var.tectonic_container_images["flannel"]}"
-  #flannel_cni_image = "${var.tectonic_container_images["flannel_cni"]}"
 }
 
 module "calico" {
   source = "../../modules/net/calico"
 
-  #kube_apiserver_url = "https://${module.masters.cluster_fqdn}:443"
   container_images   = "${var.tectonic_container_images}"
-  #calico_image       = "${var.tectonic_container_images["calico"]}"
-  #calico_cni_image   = "${var.tectonic_container_images["calico_cni"]}"
   cluster_cidr       = "${var.tectonic_cluster_cidr}"
   enabled            = "${var.tectonic_networking == "calico"}"
 }
@@ -178,7 +171,7 @@ data "archive_file" "assets" {
 
 # Copy kubeconfig to master nodes
 resource "null_resource" "master_nodes" {
-  count = 1
+  count = "${var.tectonic_master_count}"
 
   # Re-provision on changes to masters
   triggers {
@@ -203,22 +196,6 @@ resource "null_resource" "master_nodes" {
       "sudo mv $HOME/kubeconfig /etc/kubernetes/",
     ]
   }
-}
-
-# Copy assets to first master node
-resource "null_resource" "first_master" {
-  # Re-provision on changes to first master node
-  triggers {
-    node_address = "${module.masters.first_node_address}"
-  }
-
-  connection {
-    type        = "ssh"
-    host        = "${module.masters.first_node_address}"
-    user        = "core"
-    private_key = "${file("${var.tectonic_do_ssh_key_path}")}"
-    timeout     = "1m"
-  }
 
   provisioner "file" {
     source      = "${data.archive_file.assets.output_path}"
@@ -234,36 +211,72 @@ resource "null_resource" "first_master" {
     inline = [
       "chmod +x $HOME/bootstrap-first-master.sh",
       "$HOME/bootstrap-first-master.sh ${var.tectonic_vanilla_k8s ? "" : "--enable-tectonic"}",
-      "rm $HOME/bootstrap-first-master.sh",
+
     ]
+    # move up one
+    #"rm $HOME/bootstrap-first-master.sh",
   }
 }
 
-# Copy kubeconfig to worker nodes
-resource "null_resource" "worker_nodes" {
-  count = "${var.tectonic_worker_count}"
-
-  # Re-provision on changes to workers
-  triggers {
-    node_address = "${element(module.workers.node_addresses, count.index)}"
-  }
-
-  connection {
-    type        = "ssh"
-    host        = "${element(module.workers.node_addresses, count.index)}"
-    user        = "core"
-    private_key = "${file("${var.tectonic_do_ssh_key_path}")}"
-    timeout     = "1m"
-  }
-
-  provisioner "file" {
-    content     = "${module.bootkube.kubeconfig}"
-    destination = "$HOME/kubeconfig"
-  }
-
-  provisioner "remote-exec" {
-    inline = [
-      "sudo mv $HOME/kubeconfig /etc/kubernetes/",
-    ]
-  }
-}
+# Copy assets to first master node
+# resource "null_resource" "first_master" {
+#   # Re-provision on changes to first master node
+#   triggers {
+#     node_address = "${module.masters.first_node_address}"
+#   }
+#
+#   connection {
+#     type        = "ssh"
+#     host        = "${module.masters.first_node_address}"
+#     user        = "core"
+#     private_key = "${file("${var.tectonic_do_ssh_key_path}")}"
+#     timeout     = "1m"
+#   }
+#
+#   provisioner "file" {
+#     source      = "${data.archive_file.assets.output_path}"
+#     destination = "$HOME/tectonic.zip"
+#   }
+#
+#   provisioner "file" {
+#     source      = "${path.root}/resources/bootstrap-first-master.sh"
+#     destination = "$HOME/bootstrap-first-master.sh"
+#   }
+#
+#   provisioner "remote-exec" {
+#     inline = [
+#       "chmod +x $HOME/bootstrap-first-master.sh",
+#       "$HOME/bootstrap-first-master.sh ${var.tectonic_vanilla_k8s ? "" : "--enable-tectonic"}",
+#       "rm $HOME/bootstrap-first-master.sh",
+#     ]
+#   }
+# }
+#
+# # Copy kubeconfig to worker nodes
+# resource "null_resource" "worker_nodes" {
+#   count = "${var.tectonic_worker_count}"
+#
+#   # Re-provision on changes to workers
+#   triggers {
+#     node_address = "${element(module.workers.node_addresses, count.index)}"
+#   }
+#
+#   connection {
+#     type        = "ssh"
+#     host        = "${element(module.workers.node_addresses, count.index)}"
+#     user        = "core"
+#     private_key = "${file("${var.tectonic_do_ssh_key_path}")}"
+#     timeout     = "1m"
+#   }
+#
+#   provisioner "file" {
+#     content     = "${module.bootkube.kubeconfig}"
+#     destination = "$HOME/kubeconfig"
+#   }
+#
+#   provisioner "remote-exec" {
+#     inline = [
+#       "sudo mv $HOME/kubeconfig /etc/kubernetes/",
+#     ]
+#   }
+# }

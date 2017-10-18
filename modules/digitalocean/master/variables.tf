@@ -2,10 +2,6 @@ variable "base_domain" {
   type = "string"
 }
 
-variable "container_linux_channel" {
-  type = "string"
-}
-
 variable "cluster_name" {
   type = "string"
 }
@@ -15,11 +11,19 @@ variable "container_images" {
   type        = "map"
 }
 
-variable "droplet_size" {
+variable "container_linux_channel" {
   type = "string"
 }
 
+variable "container_linux_version" {
+   type = "string"
+}
+
 variable "droplet_region" {
+  type = "string"
+}
+
+variable "droplet_size" {
   type = "string"
 }
 
@@ -34,17 +38,12 @@ variable "image_re" {
 }
 
 variable "master_count" {
-  #type    = "string"
   default = 1
 }
 
 variable "ssh_keys" {
   type = "list"
 }
-
-# variable "user_data" {
-#    type = "string"
-# }
 
 variable "ign_init_assets_service_id" {
   type = "string"

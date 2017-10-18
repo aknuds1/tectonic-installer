@@ -111,8 +111,3 @@ variable "metadata_provider" {
 variable "use_metadata" {
   default = true
 }
-
-variable "swap_size" {
-  type = "string"
-  description = "Amount of swap memory to enable"
-}

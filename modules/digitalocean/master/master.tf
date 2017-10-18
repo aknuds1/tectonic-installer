@@ -1,7 +1,7 @@
 resource "digitalocean_droplet" "master_node" {
   count = "${var.master_count}"
   name      = "${var.cluster_name}-master-${count.index}"
-  image     = "coreos-${module.container_linux_channel}"
+  image     = "coreos-${var.container_linux_channel}"
   region    = "${var.droplet_region}"
   size      = "${var.droplet_size}"
   ssh_keys  = ["${var.ssh_keys}"]
@@ -47,7 +47,7 @@ resource "digitalocean_loadbalancer" "console" {
 }
 
 resource "digitalocean_domain" "cluster" {
-  name       = "cluster.${var.cluster_name}.${var.base_domain}"
+  name       = "${var.cluster_name}.${var.base_domain}"
   ip_address = "${digitalocean_droplet.master_node.*.ipv4_address[0]}"
 }
 

@@ -47,7 +47,7 @@ variable "tectonic_do_extra_tags" {
 }
 
 variable "tectonic_do_private_networking" {
-  type "string"
-  description = "Enable private networking for this cluster. Default: true"
-  default = "true"
+  type        =  "string"
+  description = "Enable private networking for this cluster. (Default) true"
+  default     = "true"
 }
