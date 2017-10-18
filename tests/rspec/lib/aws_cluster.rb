@@ -17,18 +17,30 @@ class AwsCluster < Cluster
       # AWSIAM.assume_role
     end
     @aws_region = tfvars_file.tectonic_aws_region
-    @aws_ssh_key = ENV['TF_VAR_tectonic_aws_ssh_key'] = AwsSupport.create_aws_key_pairs(@aws_region)
+
+    unless ssh_key_defined?
+      ENV['TF_VAR_tectonic_aws_ssh_key'] = AwsSupport.create_aws_key_pairs(@aws_region)
+    end
+
     super(tfvars_file)
   end
 
   def env_variables
     variables = super
     variables['PLATFORM'] = 'aws'
+
+    # Unless base domain is provided by the user:
+    unless ENV.key?('TF_VAR_tectonic_base_domain')
+      variables['TF_VAR_tectonic_base_domain'] = 'tectonic.dev.coreos.systems'
+    end
+
     variables
   end
 
   def stop
-    AwsSupport.delete_aws_key_pairs(@aws_ssh_key, @aws_region)
+    if ENV['TF_VAR_tectonic_aws_ssh_key'].include?('rspec-')
+      AwsSupport.delete_aws_key_pairs(ENV['TF_VAR_tectonic_aws_ssh_key'], @aws_region)
+    end
 
     super
   end
