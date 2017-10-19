@@ -1,6 +1,6 @@
-output "cluster_fqdn" {
-  value = "${digitalocean_domain.cluster.id}"
-}
+# output "api_fqdn" {
+#   value = "${digitalocean_domain.api.id}"
+# }
 
 output "console_fqdn" {
   value = "${digitalocean_domain.console.id}"

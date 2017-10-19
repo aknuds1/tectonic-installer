@@ -37,6 +37,10 @@ variable "image_re" {
   type        = "string"
 }
 
+variable "kubeconfig_content" {
+  type = "string"
+}
+
 variable "master_count" {
   default = 1
 }

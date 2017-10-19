@@ -9,7 +9,7 @@ module "kube_certs" {
   ca_cert_pem        = "${var.tectonic_ca_cert}"
   ca_key_alg         = "${var.tectonic_ca_key_alg}"
   ca_key_pem         = "${var.tectonic_ca_key}"
-  kube_apiserver_url = "https://${module.masters.cluster_fqdn}:443"
+  kube_apiserver_url = "https://${module.masters.first_node_address}:443"
   service_cidr       = "${var.tectonic_service_cidr}"
 }
 
@@ -46,7 +46,7 @@ module "bootkube" {
 
   cloud_provider = "digitalocean"
   cluster_name = "${var.tectonic_cluster_name}"
-  kube_apiserver_url = "https://${module.masters.cluster_fqdn}:443"
+  kube_apiserver_url = "https://${module.masters.first_node_address}:443"
   oidc_issuer_url    = "https://${module.masters.console_fqdn}:443/identity"
 
   # Platform-independent variables wiring, do not modify.
@@ -92,7 +92,7 @@ module "tectonic" {
   ## TODO Add private endpoints
   base_address       = "${module.masters.console_fqdn}"
   ## TODO Add private endpoints
-  kube_apiserver_url = "https://${module.masters.cluster_fqdn}:443"
+  kube_apiserver_url = "https://${module.masters.first_node_address}:443"
   service_cidr       = "${var.tectonic_service_cidr}"
 
   # Platform-independent variables wiring, do not modify.
@@ -131,9 +131,9 @@ module "tectonic" {
 module "flannel_vxlan" {
   source = "../../modules/net/flannel-vxlan"
 
+  container_images = "${var.tectonic_container_images}"
   cluster_cidr      = "${var.tectonic_cluster_cidr}"
   enabled           = "${var.tectonic_networking == "flannel"}"
-  container_images = "${var.tectonic_container_images}"
 }
 
 module "calico" {
@@ -188,34 +188,34 @@ resource "null_resource" "master_nodes" {
 
   provisioner "file" {
     content     = "${module.bootkube.kubeconfig}"
-    destination = "$HOME/kubeconfig"
+    destination = "/var/tmp/kubeconfig"
   }
-
-  provisioner "remote-exec" {
-    inline = [
-      "sudo mv $HOME/kubeconfig /etc/kubernetes/",
-    ]
-  }
+  #
+  # provisioner "remote-exec" {
+  #   inline = [
+  #     "sudo mv /var/tmp/kubeconfig /etc/kubernetes/",
+  #   ]
+  # }
 
   provisioner "file" {
     source      = "${data.archive_file.assets.output_path}"
-    destination = "$HOME/tectonic.zip"
+    destination = "/var/tmp/tectonic.zip"
   }
 
-  provisioner "file" {
-    source      = "${path.root}/resources/bootstrap-first-master.sh"
-    destination = "$HOME/bootstrap-first-master.sh"
-  }
+  # provisioner "file" {
+  #   source      = "${path.root}/resources/bootstrap-first-master.sh"
+  #   destination = "$HOME/bootstrap-first-master.sh"
+  # }
 
-  provisioner "remote-exec" {
-    inline = [
-      "chmod +x $HOME/bootstrap-first-master.sh",
-      "$HOME/bootstrap-first-master.sh ${var.tectonic_vanilla_k8s ? "" : "--enable-tectonic"}",
-
-    ]
-    # move up one
-    #"rm $HOME/bootstrap-first-master.sh",
-  }
+  # provisioner "remote-exec" {
+  #   inline = [
+  #     "chmod +x $HOME/bootstrap-first-master.sh",
+  #     "$HOME/bootstrap-first-master.sh ${var.tectonic_vanilla_k8s ? "" : "--enable-tectonic"}",
+  #
+  #   ]
+  #   # move up one
+  #   #"rm $HOME/bootstrap-first-master.sh",
+  # }
 }
 
 # Copy assets to first master node

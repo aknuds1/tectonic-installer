@@ -59,6 +59,8 @@ module "masters" {
   droplet_size            = "${var.tectonic_do_master_droplet_size}"
   droplet_region          = "${var.tectonic_do_droplet_region}"
   extra_tags              = "${var.tectonic_do_extra_tags}"
+  kubeconfig_content      = "${module.bootkube.kubeconfig}"
+  master_count            = "${var.tectonic_master_count}"
   ssh_keys                = "${var.tectonic_do_ssh_keys}"
 
   ign_bootkube_path_unit_id         = "${module.bootkube.systemd_path_unit_id}"

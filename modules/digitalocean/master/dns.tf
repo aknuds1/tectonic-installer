@@ -1,7 +1,7 @@
-resource "digitalocean_domain" "cluster" {
-  name       = "${var.cluster_name}.${var.base_domain}"
-  ip_address = "${digitalocean_droplet.master_node.*.ipv4_address[0]}"
-}
+# resource "digitalocean_domain" "api" {
+#   name   = "api.${var.cluster_name}.${var.base_domain}"
+#   ip_address  = "${digitalocean_loadbalancer.api.ip}"
+# }
 
 resource "digitalocean_domain" "console" {
   name       = "console.${var.cluster_name}.${var.base_domain}"

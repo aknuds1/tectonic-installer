@@ -3,7 +3,7 @@ data "ignition_config" "main" {
     "${data.ignition_file.init_assets.id}",
     "${var.ign_installer_kubelet_env_id}",
     "${var.ign_max_user_watches_id}",
-    "${data.ignition_file.init_assets.id}",
+
   ]
 
   systemd = ["${compact(list(
@@ -11,12 +11,22 @@ data "ignition_config" "main" {
     var.ign_locksmithd_service_id,
     var.ign_kubelet_service_id,
     var.ign_k8s_node_bootstrap_service_id,
-    var.ign_init_assets_service_id,
+    data.ignition_systemd_unit.init_assets.id,
     var.ign_bootkube_service_id,
     var.ign_tectonic_service_id,
     var.ign_bootkube_path_unit_id,
     var.ign_tectonic_path_unit_id
    ))}"]
+}
+
+data "ignition_file" "kubeconfig" {
+  filesystem = "root"
+  path       = "/etc/kubernetes/kubeconfig"
+  mode       = 0644
+
+  content {
+    content = "${var.kubeconfig_content}"
+  }
 }
 
 data "template_file" "init_assets" {
@@ -37,4 +47,9 @@ data "ignition_file" "init_assets" {
   content {
     content = "${data.template_file.init_assets.rendered}"
   }
+}
+
+data "ignition_systemd_unit" "init_assets" {
+  name    = "init-assets.service"
+  content = "${file("${path.module}/resources/services/init-assets.service")}"
 }
