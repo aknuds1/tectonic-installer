@@ -190,93 +190,14 @@ resource "null_resource" "master_nodes" {
     content     = "${module.bootkube.kubeconfig}"
     destination = "/var/tmp/kubeconfig"
   }
-  #
-  # provisioner "remote-exec" {
-  #   inline = [
-  #     "sudo mv /var/tmp/kubeconfig /etc/kubernetes/",
-  #   ]
-  # }
+
+  provisioner "remote-exec" {
+    inline = [
+      "sudo mv /var/tmp/kubeconfig /etc/kubernetes/",
+    ]
+  }
 
   provisioner "file" {
     source      = "${data.archive_file.assets.output_path}"
     destination = "/var/tmp/tectonic.zip"
   }
-
-  # provisioner "file" {
-  #   source      = "${path.root}/resources/bootstrap-first-master.sh"
-  #   destination = "$HOME/bootstrap-first-master.sh"
-  # }
-
-  # provisioner "remote-exec" {
-  #   inline = [
-  #     "chmod +x $HOME/bootstrap-first-master.sh",
-  #     "$HOME/bootstrap-first-master.sh ${var.tectonic_vanilla_k8s ? "" : "--enable-tectonic"}",
-  #
-  #   ]
-  #   # move up one
-  #   #"rm $HOME/bootstrap-first-master.sh",
-  # }
-}
-
-# Copy assets to first master node
-# resource "null_resource" "first_master" {
-#   # Re-provision on changes to first master node
-#   triggers {
-#     node_address = "${module.masters.first_node_address}"
-#   }
-#
-#   connection {
-#     type        = "ssh"
-#     host        = "${module.masters.first_node_address}"
-#     user        = "core"
-#     private_key = "${file("${var.tectonic_do_ssh_key_path}")}"
-#     timeout     = "1m"
-#   }
-#
-#   provisioner "file" {
-#     source      = "${data.archive_file.assets.output_path}"
-#     destination = "$HOME/tectonic.zip"
-#   }
-#
-#   provisioner "file" {
-#     source      = "${path.root}/resources/bootstrap-first-master.sh"
-#     destination = "$HOME/bootstrap-first-master.sh"
-#   }
-#
-#   provisioner "remote-exec" {
-#     inline = [
-#       "chmod +x $HOME/bootstrap-first-master.sh",
-#       "$HOME/bootstrap-first-master.sh ${var.tectonic_vanilla_k8s ? "" : "--enable-tectonic"}",
-#       "rm $HOME/bootstrap-first-master.sh",
-#     ]
-#   }
-# }
-#
-# # Copy kubeconfig to worker nodes
-# resource "null_resource" "worker_nodes" {
-#   count = "${var.tectonic_worker_count}"
-#
-#   # Re-provision on changes to workers
-#   triggers {
-#     node_address = "${element(module.workers.node_addresses, count.index)}"
-#   }
-#
-#   connection {
-#     type        = "ssh"
-#     host        = "${element(module.workers.node_addresses, count.index)}"
-#     user        = "core"
-#     private_key = "${file("${var.tectonic_do_ssh_key_path}")}"
-#     timeout     = "1m"
-#   }
-#
-#   provisioner "file" {
-#     content     = "${module.bootkube.kubeconfig}"
-#     destination = "$HOME/kubeconfig"
-#   }
-#
-#   provisioner "remote-exec" {
-#     inline = [
-#       "sudo mv $HOME/kubeconfig /etc/kubernetes/",
-#     ]
-#   }
-# }
