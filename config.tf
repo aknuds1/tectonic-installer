@@ -474,9 +474,3 @@ variable "tectonic_bootstrap_upgrade_cl" {
   default     = "true"
   description = "(internal) Whether to trigger a ContainerLinux upgrade on node bootstrap."
 }
-
-variable "tectonic_do_ssh_key_path" {
-  description = <<EOF
-The path to the private SSH key used to authenticate towards DigitalOcean.
-EOF
-}
