@@ -19,16 +19,6 @@ data "ignition_config" "main" {
    ))}"]
 }
 
-data "ignition_file" "kubeconfig" {
-  filesystem = "root"
-  path       = "/etc/kubernetes/kubeconfig"
-  mode       = 0644
-
-  content {
-    content = "${var.kubeconfig_content}"
-  }
-}
-
 data "template_file" "init_assets" {
   template = "${file("${path.module}/resources/init-assets.sh")}"
 
