@@ -52,6 +52,11 @@ pipeline {
       defaultValue: '',
       description: 'Hyperkube image. Please define the param like: {hyperkube="<HYPERKUBE_IMAGE>"}'
     )
+    string(
+      name: 'container_linux_version',
+      defaultValue: '1520.6.0',
+      description: 'container_linux_version version'
+    )
     booleanParam(
       name: 'RUN_SMOKE_TESTS',
       defaultValue: true,
@@ -124,6 +129,7 @@ pipeline {
         TECTONIC_INSTALLER_ROLE = 'tectonic-installer'
         GRAFITI_DELETER_ROLE = 'grafiti-deleter'
         TF_VAR_tectonic_container_images = "${params.hyperkube_image}"
+        TF_VAR_tectonic_container_linux_version = "${params.container_linux_version}"
       }
       steps {
         parallel (
@@ -190,6 +196,7 @@ pipeline {
         TECTONIC_INSTALLER_ROLE = 'tectonic-installer'
         GRAFITI_DELETER_ROLE = 'grafiti-deleter'
         TF_VAR_tectonic_container_images = "${params.hyperkube_image}"
+        TF_VAR_tectonic_container_linux_version = "${params.container_linux_version}"
       }
       steps {
         script {
@@ -220,25 +227,26 @@ pipeline {
           }
 
           if (params."PLATFORM/BARE_METAL") {
-            /* Temporarily disabled for consolidation
-            * Fails very often due to Packet flakiness
-            *
             builds['bare_metal'] = {
               node('worker && bare-metal') {
                 ansiColor('xterm') {
                   unstash 'repository'
                   withCredentials(creds) {
-                    timeout(35) {
                       sh """#!/bin/bash -ex
-                      ${WORKSPACE}/tests/smoke/bare-metal/smoke.sh vars/metal.tfvars
+                      cd tests/rspec
+                      export RBENV_ROOT=/usr/local/rbenv
+                      export PATH="/usr/local/rbenv/bin:$PATH"
+                      eval \"\$(rbenv init -)\"
+                      rbenv install -s
+                      gem install bundler
+                      bundler install
+                      bundler exec rspec spec/metal_basic_spec.rb
                       """
-                    }
                     cleanWs notFailBuild: true
                   }
                 }
               }
             }
-            */
           }
 
           parallel builds

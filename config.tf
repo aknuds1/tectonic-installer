@@ -3,7 +3,7 @@ terraform {
 }
 
 provider "archive" {
-  version = "0.1.0"
+  version = "1.0.0"
 }
 
 provider "external" {
@@ -15,23 +15,23 @@ provider "ignition" {
 }
 
 provider "local" {
-  version = "0.1.0"
+  version = "1.0.0"
 }
 
 provider "null" {
-  version = "0.1.0"
+  version = "1.0.0"
 }
 
 provider "random" {
-  version = "0.1.0"
+  version = "1.0.0"
 }
 
 provider "template" {
-  version = "0.1.1"
+  version = "1.0.0"
 }
 
 provider "tls" {
-  version = "0.1.0"
+  version = "1.0.0"
 }
 
 variable "tectonic_config_version" {
@@ -60,8 +60,8 @@ variable "tectonic_container_images" {
     addon_resizer                = "gcr.io/google_containers/addon-resizer:2.1"
     awscli                       = "quay.io/coreos/awscli:025a357f05242fdad6a81e8a6b520098aa65a600"
     bootkube                     = "quay.io/coreos/bootkube:v0.6.2"
-    calico                       = "quay.io/calico/node:v2.4.1"
-    calico_cni                   = "quay.io/calico/cni:v1.10.0"
+    calico                       = "quay.io/calico/node:v2.6.1"
+    calico_cni                   = "quay.io/calico/cni:v1.11.0"
     console                      = "quay.io/coreos/tectonic-console:v2.2.3"
     error_server                 = "quay.io/coreos/tectonic-error-server:1.0"
     etcd                         = "quay.io/coreos/etcd:v3.1.8"
@@ -69,7 +69,7 @@ variable "tectonic_container_images" {
     flannel                      = "quay.io/coreos/flannel:v0.8.0-amd64"
     flannel_cni                  = "quay.io/coreos/flannel-cni:v0.2.0"
     heapster                     = "gcr.io/google_containers/heapster:v1.4.1"
-    hyperkube                    = "quay.io/coreos/hyperkube:v1.7.6_coreos.0"
+    hyperkube                    = "quay.io/coreos/hyperkube:v1.7.9_coreos.0"
     identity                     = "quay.io/coreos/dex:v2.7.1"
     ingress_controller           = "gcr.io/google_containers/nginx-ingress-controller:0.9.0-beta.15"
     kenc                         = "quay.io/coreos/kenc:0.0.2"
@@ -77,15 +77,15 @@ variable "tectonic_container_images" {
     kubednsmasq                  = "gcr.io/google_containers/k8s-dns-dnsmasq-nanny-amd64:1.14.5"
     kubedns_sidecar              = "gcr.io/google_containers/k8s-dns-sidecar-amd64:1.14.5"
     kube_version                 = "quay.io/coreos/kube-version:0.1.0"
-    kube_version_operator        = "quay.io/coreos/kube-version-operator:v1.7.5-kvo.10"
+    kube_version_operator        = "quay.io/coreos/kube-version-operator:v1.7.5-kvo.12"
     node_agent                   = "quay.io/coreos/node-agent:v1.7.5-kvo.3"
     pod_checkpointer             = "quay.io/coreos/pod-checkpointer:3517908b1a1837e78cfd041a0e51e61c7835d85f"
     stats_emitter                = "quay.io/coreos/tectonic-stats:6e882361357fe4b773adbf279cddf48cb50164c1"
     stats_extender               = "quay.io/coreos/tectonic-stats-extender:487b3da4e175da96dabfb44fba65cdb8b823db2e"
     tectonic_channel_operator    = "quay.io/coreos/tectonic-channel-operator:0.5.4"
     tectonic_etcd_operator       = "quay.io/coreos/tectonic-etcd-operator:v0.0.2"
-    tectonic_prometheus_operator = "quay.io/coreos/tectonic-prometheus-operator:v1.6.1"
-    tectonic_cluo_operator       = "quay.io/coreos/tectonic-cluo-operator:v0.2.1"
+    tectonic_prometheus_operator = "quay.io/coreos/tectonic-prometheus-operator:v1.7.0"
+    tectonic_cluo_operator       = "quay.io/coreos/tectonic-cluo-operator:v0.2.2"
     tectonic_torcx               = "quay.io/coreos/tectonic-torcx:installer-latest"
   }
 }
@@ -116,10 +116,10 @@ variable "tectonic_versions" {
   default = {
     etcd          = "3.1.8"
     kubernetes    = "1.7.5+tectonic.1"
-    monitoring    = "1.6.1"
+    monitoring    = "1.7.0"
     tectonic      = "1.7.5-tectonic.1"
     tectonic-etcd = "0.0.1"
-    cluo          = "0.2.1"
+    cluo          = "0.2.2"
   }
 }
 

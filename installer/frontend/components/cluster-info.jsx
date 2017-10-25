@@ -3,12 +3,13 @@ import React from 'react';
 import jwt_decode from 'jwt-decode';
 
 import { validate } from '../validate';
-import { PULL_SECRET, TECTONIC_LICENSE, LICENSING } from '../cluster-config';
+import { CLUSTER_NAME, PULL_SECRET, TECTONIC_LICENSE, LICENSING } from '../cluster-config';
+import fields from '../fields';
 import { Field, Form } from '../form';
 import { readFile } from '../readfile';
 
 import { Alert } from './alert';
-import { Connect } from './ui';
+import { Connect, Input } from './ui';
 
 // eslint-disable-next-line react/jsx-no-target-blank
 const accountLink = <a href="https://account.coreos.com" rel="noopener" target="_blank">account.coreos.com</a>;
@@ -18,18 +19,15 @@ const licenseField = new Field(TECTONIC_LICENSE, {
   validator: token => {
     const err = validate.nonEmpty(token);
     if (err) {
-      return <p>{err}</p>;
+      return err;
     }
     try {
       const decoded = jwt_decode(token, {header: false});
       if (!decoded.license) {
-        return <p>Error parsing license.</p>;
+        return 'Error parsing license';
       }
     } catch (unused) {
-      return <div>
-        <b>Error parsing license</b>
-        <p>Please make sure you upload the "raw format" license from {accountLink}.</p>
-      </div>;
+      return 'Error parsing license';
     }
     return;
   },
@@ -41,21 +39,18 @@ const pullSecretField = new Field(PULL_SECRET, {
   validator: secret => {
     const err = validate.nonEmpty(secret);
     if (err) {
-      return <p>{err}</p>;
+      return err;
     }
     try {
       JSON.parse(secret);
     } catch (unused) {
-      return <div>
-        <b>Error parsing pull secret</b>
-        <p>Please make sure you upload the pull secret from {accountLink} in a valid JSON format.</p>
-      </div>;
+      return 'Error parsing pull secret';
     }
     return;
   },
 });
 
-new Form(LICENSING, [licenseField, pullSecretField]);
+new Form(LICENSING, [fields[CLUSTER_NAME], licenseField, pullSecretField]);
 
 const FileInput = ({id, onValue}) => {
   const upload = e => {
@@ -69,13 +64,14 @@ const FileInput = ({id, onValue}) => {
   return <input type="file" id={id} onChange={upload} style={{display: 'none'}} />;
 };
 
-const FileUpload = ({buttonTitle, description, field, id, onValue, value}) => {
+const FileUpload = ({buttonTitle, description, ErrorHelp, field, id, onValue, value}) => {
   const invalid = field.validator(value);
   if (invalid) {
     return <div style={{marginTop: 8}}>
       <i className="fa fa-ban wiz-error-fg"></i>&nbsp;&nbsp;Invalid {description}
       <Alert noIcon severity="error">
-        {invalid}
+        <b>{invalid}</b>
+        {ErrorHelp}
         <label className="btn btn-flat btn-warning">
           {buttonTitle}
           <FileInput id={id} onValue={onValue} />
@@ -94,14 +90,35 @@ const FileUpload = ({buttonTitle, description, field, id, onValue, value}) => {
 };
 
 const License = () => <Connect field={TECTONIC_LICENSE}>
-  <FileUpload buttonTitle={'Upload "coreos-license.txt"'} description="CoreOS license" field={licenseField} />
+  <FileUpload
+    buttonTitle={'Upload "coreos-license.txt"'}
+    description="CoreOS license"
+    ErrorHelp={<p>Please make sure you upload the "raw format" license from {accountLink}.</p>}
+    field={licenseField}
+  />
 </Connect>;
 
 const Secret = () => <Connect field={PULL_SECRET}>
-  <FileUpload buttonTitle={'Upload "config.json"'} description="pull secret" field={pullSecretField} />
+  <FileUpload
+    buttonTitle={'Upload "config.json"'}
+    description="pull secret"
+    ErrorHelp={<p>Please make sure you upload the pull secret from {accountLink} in a valid JSON format.</p>}
+    field={pullSecretField}
+  />
 </Connect>;
 
-export const TectonicLicense = () => <div>
+export const ClusterInfo = () => <div>
+  <div className="row form-group">
+    <div className="col-xs-3">
+      <label htmlFor={CLUSTER_NAME}>Cluster Name</label>
+    </div>
+    <div className="col-xs-9">
+      <Connect field={CLUSTER_NAME}>
+        <Input placeholder="production" autoFocus="true" />
+      </Connect>
+      <p className="text-muted">Give this cluster a name that will help you identify it.</p>
+    </div>
+  </div>
   <div className="row form-group">
     <div className="col-xs-3">
       <label htmlFor={TECTONIC_LICENSE}>CoreOS License</label>
@@ -120,5 +137,6 @@ export const TectonicLicense = () => <div>
   </div>
 </div>;
 
-TectonicLicense.canNavigateForward = ({clusterConfig: cc}) => !licenseField.validator(cc[TECTONIC_LICENSE]) &&
+ClusterInfo.canNavigateForward = ({clusterConfig: cc}) => !fields[CLUSTER_NAME].validator(cc[CLUSTER_NAME], cc) &&
+  !licenseField.validator(cc[TECTONIC_LICENSE]) &&
   !pullSecretField.validator(cc[PULL_SECRET]);

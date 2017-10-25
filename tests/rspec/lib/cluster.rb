@@ -9,9 +9,6 @@ require 'name_generator'
 require 'password_generator'
 require 'ssh'
 
-SSH_CMD_BOOTKUBE_DONE = 'systemctl is-active bootkube'
-SSH_CMD_TECTONIC_DONE = 'systemctl is-active tectonic'
-
 # Cluster represents a k8s cluster
 class Cluster
   attr_reader :tfvars_file, :kubeconfig, :manifest_path, :build_path,
@@ -76,7 +73,7 @@ class Cluster
 
   def tf_value(v)
     Dir.chdir(@build_path) do
-      `echo "#{v}" | terraform console ../../platforms/#{env_variables['PLATFORM']}`.chomp
+      `echo '#{v}' | terraform console ../../platforms/#{env_variables['PLATFORM']}`.chomp
     end
   end
 
@@ -102,15 +99,19 @@ class Cluster
   end
 
   def apply
-    3.times do
-      return if system(env_variables, 'make -C ../.. apply')
+    3.times do |idx|
+      env = env_variables
+      env['TF_LOG'] = 'TRACE' if idx.positive?
+      return true if system(env, 'make -C ../.. apply')
     end
     raise 'Applying cluster failed'
   end
 
   def destroy
-    3.times do
-      return if system(env_variables, 'make -C ../.. destroy')
+    3.times do |idx|
+      env = env_variables
+      env['TF_LOG'] = 'TRACE' if idx.positive?
+      return true if system(env, 'make -C ../.. destroy')
     end
 
     recover_from_failed_destroy
@@ -125,6 +126,8 @@ class Cluster
   end
 
   def wait_til_ready
+    wait_for_bootstrapping
+
     from = Time.now
     loop do
       begin
@@ -136,20 +139,70 @@ class Cluster
         sleep 10
       end
     end
-    wait_for_bootstrapping
   end
 
   def wait_for_bootstrapping
-    from = Time.now
-    loop do
-      _, _, bootkube_exitstatus = ssh_exec(master_ip_address, SSH_CMD_BOOTKUBE_DONE)
-      _, _, tectonic_exitstatus = ssh_exec(master_ip_address, SSH_CMD_TECTONIC_DONE)
-      break if bootkube_exitstatus.zero? && tectonic_exitstatus.zero?
-      elapsed = Time.now - from
-      puts 'Waiting for bootstrapping to complete...' if (elapsed.round % 5).zero?
-      raise 'timeout waiting for bootstrapping' if elapsed > 1200 # 20 mins timeout
-      sleep 2
-    end
+    wait_for_service('bootkube')
+    wait_for_service('tectonic')
     puts 'HOORAY! The cluster is up'
+  rescue
+    master_ip_addresses.each do |master_ip|
+      ['bootkube', 'tectonic', 'kubelet', 'k8s-node-bootstrap'].each do |s|
+        print_service_logs(master_ip, s)
+      end
+    end
+    raise
+  end
+
+  def wait_for_service(service)
+    from = Time.now
+    ips = []
+
+    180.times do # 180 * 10 = 1800 seconds = 30 minutes
+      ips = master_ip_addresses
+      return if service_finished_bootstrapping?(ips, service)
+
+      elapsed = Time.now - from
+      if (elapsed.round % 5).zero?
+        puts "Waiting for bootstrapping of #{service} service to complete..."
+        puts "Checked master nodes: #{ips}"
+      end
+      sleep 10
+    end
+
+    raise "timeout waiting for #{service} service to bootstrap on any of: #{ips}"
+  end
+
+  def service_finished_bootstrapping?(ips, service)
+    command = "test -e /opt/tectonic/init_#{service}.done"
+
+    ips.each do |ip|
+      finished = 1
+      begin
+        _, _, finished = ssh_exec(ip, command)
+      rescue => e
+        puts "failed to ssh exec on ip #{ip} with: #{e}"
+      end
+
+      if finished.zero?
+        puts "#{service} service finished successfully on ip #{ip}"
+        return true
+      end
+    end
+
+    false
+  end
+
+  def print_service_logs(ip, service)
+    command = "journalctl --no-pager -u '#{service}'"
+    begin
+      stdout, stderr, exitcode = ssh_exec(ip, command)
+      puts "Journal of #{service} service on #{ip} (exitcode #{exitcode})"
+      puts "Standard output: \n#{stdout}"
+      puts "Standard error: \n#{stderr}"
+      puts "End of journal of #{service} service on #{ip}"
+    rescue => e
+      puts "Cannot retrieve logs of service #{service} - failed to ssh exec on ip #{ip} with: #{e}"
+    end
   end
 end

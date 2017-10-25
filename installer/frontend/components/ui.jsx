@@ -177,12 +177,21 @@ const makeBooleanField = type => {
 // Handles error displays and boilerplate attributes.
 // <Input id:REQUIRED invalid="error message" placeholder value onValue />
 export const Input = props => <Field tag="input" type="text" {...props}>{props.children}</Field>;
+
+// If props.validator is specified, use it to override any existing props.invalid error
+export const CIDR = props => props.validator
+  ? <Input {...props} invalid={props.validator(props.value)} />
+  : <Input {...props} />;
+
 export const NumberInput = props => <Field tag="input" type="number" onChange={e => {
   const number = parseInt(e.target.value, 10);
   props.onValue(isNaN(number) ? 0 : number);
 }} {...props} />;
+
 export const Password = props => <Field tag="input" type="password" {...props} />;
+
 export const RadioBoolean = makeBooleanField('radio');
+
 export const Radio = props => {
   const renderField = (injectedProps, cleanedProps, classes) => {
     return <input type="radio" className={classes} {...cleanedProps}
@@ -197,7 +206,9 @@ export const Radio = props => {
   };
   return <Field {...props} renderField={renderField} />;
 };
+
 export const CheckBox = makeBooleanField('checkbox');
+
 export const ToggleButton = props => <button className={props.className} style={props.style} onClick={() => props.onValue(!props.value)}>
   {props.value ? 'Hide' : 'Show'}&nbsp;{props.children}
   <i style={{marginLeft: 7}} className={classNames('fa', {'fa-chevron-up': props.value, 'fa-chevron-down': !props.value})}></i>
@@ -562,7 +573,10 @@ export const Deselect = connect(
   <CheckBox id={field} value={!isDeselected} onValue={v => setField(field, !v)} />
 </span>);
 
-export const DeselectField = connect(stateToIsDeselected)(({children, isDeselected}) => React.cloneElement(React.Children.only(children), {disabled: isDeselected, selectable: true}));
+export const DeselectField = connect(stateToIsDeselected)(({children, isDeselected}) => React.cloneElement(
+  React.Children.only(children),
+  {disabled: isDeselected, selectable: true}
+));
 
 const certPlaceholder = `Paste your certificate here. It should start with:
 
@@ -572,15 +586,12 @@ It should end with:
 
 -----END CERTIFICATE-----`;
 
-export const CertArea = (props) => {
-  const invalid = validate.certificate(props.value);
-  const areaProps = Object.assign({}, props, {
-    className: props.className + ' wiz-tls-asset-field',
-    invalid: invalid,
-    placeholder: certPlaceholder,
-  });
-  return <FileArea {...areaProps} />;
-};
+export const CertArea = (props) => <FileArea
+  {...props}
+  className="wiz-tls-asset-field"
+  invalid={validate.certificate(props.value)}
+  placeholder={certPlaceholder}
+/>;
 
 const privateKeyPlaceholder = `Paste your private key here. It should start with:
 
@@ -590,15 +601,12 @@ It should end with:
 
 -----END RSA PRIVATE KEY-----`;
 
-export const PrivateKeyArea = (props) => {
-  const invalid = validate.privateKey(props.value);
-  const areaProps = Object.assign({}, props, {
-    className: props.className + ' wiz-tls-asset-field',
-    invalid: invalid,
-    placeholder: privateKeyPlaceholder,
-  });
-  return <FileArea {...areaProps} />;
-};
+export const PrivateKeyArea = (props) => <FileArea
+  {...props}
+  className="wiz-tls-asset-field"
+  invalid={validate.privateKey(props.value)}
+  placeholder={privateKeyPlaceholder}
+/>;
 
 export class AsyncSelect extends React.Component {
   componentDidMount () {

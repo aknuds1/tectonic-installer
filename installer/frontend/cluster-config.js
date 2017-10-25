@@ -52,7 +52,6 @@ export const PULL_SECRET = 'pullSecret';
 export const SSH_AUTHORIZED_KEY = 'sshAuthorizedKey';
 export const STS_ENABLED = 'sts_enabled';
 export const TECTONIC_LICENSE = 'tectonicLicense';
-export const UPDATER = 'updater';
 export const ADMIN_EMAIL = 'adminEmail';
 export const ADMIN_PASSWORD = 'adminPassword';
 export const ADMIN_PASSWORD2 = 'adminPassword2';
@@ -153,44 +152,14 @@ export const DEFAULT_CLUSTER_CONFIG = {
   inFly: {}, // to store inFly
   extra: {}, // extraneous, non-value data for this field
   bootCfgInfly: false, // TODO (ggreer): total hack. clean up after release
-  [ADMIN_EMAIL]: '',
-  [ADMIN_PASSWORD]: '',
-  [AWS_ACCESS_KEY_ID]: '',
-  [AWS_REGION]: '',
-  [AWS_SECRET_ACCESS_KEY]: '',
-  [AWS_SESSION_TOKEN]: '',
-  [AWS_SSH]: '',
   [AWS_VPC_ID]: '',
-  [AWS_VPC_CIDR]: '10.0.0.0/16',
-  [AWS_CONTROLLER_SUBNETS]: {},
   [AWS_CONTROLLER_SUBNET_IDS]: {},
   [DESELECTED_FIELDS]: {},
-  [AWS_WORKER_SUBNETS]: {},
   [AWS_WORKER_SUBNET_IDS]: {},
-  [BM_MATCHBOX_CA]: '',
-  [BM_MATCHBOX_CLIENT_CERT]: '',
-  [BM_MATCHBOX_CLIENT_KEY]: '',
   [BM_MATCHBOX_HTTP]: '',
-  [BM_MATCHBOX_RPC]: '',
   [BM_OS_TO_USE]: '',
-  [BM_TECTONIC_DOMAIN]: '',
-  [CA_CERTIFICATE]: '',
-  [CA_PRIVATE_KEY]: '',
-  [CA_TYPE]: '',
-  [CLUSTER_NAME]: '',
-  [CONTROLLER_DOMAIN]: '',
   [DRY_RUN]: false,
-  [PULL_SECRET]: '',
   [RETRY]: false, // whether we're retrying a terraform apply
-  [STS_ENABLED]: false,
-  [TECTONIC_LICENSE]: '',
-  [UPDATER]: {
-    server: 'https://tectonic.update.core-os.net',
-    channel: 'tectonic-1.6',
-    appID: '6bc7b986-4654-4a0f-94b3-84ce6feb1db4',
-  },
-  [POD_CIDR]: '10.2.0.0/16',
-  [SERVICE_CIDR]: '10.3.0.0/16',
 };
 
 export const toAWS_TF = (cc, FORMS) => {

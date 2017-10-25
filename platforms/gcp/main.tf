@@ -16,7 +16,7 @@ limitations under the License.
 
 provider "google" {
   region  = "${var.tectonic_gcp_region}"
-  version = "0.1.3"
+  version = "1.1.0"
 }
 
 module "network" {
@@ -76,7 +76,7 @@ module "etcd" {
   base_domain       = "${var.tectonic_base_domain}"
   container_image   = "${var.tectonic_container_images["etcd"]}"
 
-  cl_channel = "${var.tectonic_cl_channel}"
+  cl_channel = "${var.tectonic_container_linux_channel}"
 
   disk_type = "${var.tectonic_gcp_etcd_disktype}"
   disk_size = "${var.tectonic_gcp_etcd_disk_size}"
@@ -84,14 +84,15 @@ module "etcd" {
   master_subnetwork_name = "${module.network.master_subnetwork_name}"
   external_endpoints     = ["${compact(var.tectonic_etcd_servers)}"]
 
-  tls_enabled        = "${var.tectonic_etcd_tls_enabled}"
-  tls_ca_crt_pem     = "${module.etcd_certs.etcd_ca_crt_pem}"
-  tls_server_crt_pem = "${module.etcd_certs.etcd_server_crt_pem}"
-  tls_server_key_pem = "${module.etcd_certs.etcd_server_key_pem}"
-  tls_client_crt_pem = "${module.etcd_certs.etcd_client_crt_pem}"
-  tls_client_key_pem = "${module.etcd_certs.etcd_client_key_pem}"
-  tls_peer_crt_pem   = "${module.etcd_certs.etcd_peer_crt_pem}"
-  tls_peer_key_pem   = "${module.etcd_certs.etcd_peer_key_pem}"
+  tls_enabled             = "${var.tectonic_etcd_tls_enabled}"
+  tls_ca_crt_pem          = "${module.etcd_certs.etcd_ca_crt_pem}"
+  tls_server_crt_pem      = "${module.etcd_certs.etcd_server_crt_pem}"
+  tls_server_key_pem      = "${module.etcd_certs.etcd_server_key_pem}"
+  tls_client_crt_pem      = "${module.etcd_certs.etcd_client_crt_pem}"
+  tls_client_key_pem      = "${module.etcd_certs.etcd_client_key_pem}"
+  tls_peer_crt_pem        = "${module.etcd_certs.etcd_peer_crt_pem}"
+  tls_peer_key_pem        = "${module.etcd_certs.etcd_peer_key_pem}"
+  ign_etcd_dropin_id_list = "${module.ignition_masters.etcd_dropin_id_list}"
 }
 
 module "masters" {
@@ -107,7 +108,7 @@ module "masters" {
   master_subnetwork_name      = "${module.network.master_subnetwork_name}"
   master_targetpool_self_link = "${module.network.master_targetpool_self_link}"
 
-  cl_channel = "${var.tectonic_cl_channel}"
+  cl_channel = "${var.tectonic_container_linux_channel}"
 
   disk_type = "${var.tectonic_gcp_master_disktype}"
   disk_size = "${var.tectonic_gcp_master_disk_size}"
@@ -140,7 +141,7 @@ module "workers" {
   worker_subnetwork_name      = "${module.network.worker_subnetwork_name}"
   worker_targetpool_self_link = "${module.network.worker_targetpool_self_link}"
 
-  cl_channel = "${var.tectonic_cl_channel}"
+  cl_channel = "${var.tectonic_container_linux_channel}"
 
   disk_type = "${var.tectonic_gcp_worker_disktype}"
   disk_size = "${var.tectonic_gcp_worker_disk_size}"
@@ -158,21 +159,27 @@ module "workers" {
 module "ignition_masters" {
   source = "../../modules/ignition"
 
-  bootstrap_upgrade_cl = "${var.tectonic_bootstrap_upgrade_cl}"
-  tectonic_vanilla_k8s = "${var.tectonic_vanilla_k8s}"
-  container_images     = "${var.tectonic_container_images}"
-  image_re             = "${var.tectonic_image_re}"
-  kube_dns_service_ip  = "${module.bootkube.kube_dns_service_ip}"
-  kubeconfig_fetch_cmd = "/opt/gcs-puller.sh ${google_storage_bucket.tectonic.name}/${google_storage_bucket_object.kubeconfig.name} /etc/kubernetes/kubeconfig"
-  kubelet_cni_bin_dir  = "${var.tectonic_networking == "calico" || var.tectonic_networking == "canal" ? "/var/lib/cni/bin" : "" }"
-  kubelet_node_label   = "node-role.kubernetes.io/master"
-  kubelet_node_taints  = "node-role.kubernetes.io/master=:NoSchedule"
-  assets_location      = "${google_storage_bucket.tectonic.name}/${google_storage_bucket_object.tectonic-assets.name}"
+  cluster_name              = "${var.tectonic_cluster_name}"
+  bootstrap_upgrade_cl      = "${var.tectonic_bootstrap_upgrade_cl}"
+  tectonic_vanilla_k8s      = "${var.tectonic_vanilla_k8s}"
+  container_images          = "${var.tectonic_container_images}"
+  image_re                  = "${var.tectonic_image_re}"
+  kube_dns_service_ip       = "${module.bootkube.kube_dns_service_ip}"
+  kubeconfig_fetch_cmd      = "/opt/gcs-puller.sh ${google_storage_bucket.tectonic.name}/${google_storage_bucket_object.kubeconfig.name} /etc/kubernetes/kubeconfig"
+  kubelet_cni_bin_dir       = "${var.tectonic_networking == "calico" || var.tectonic_networking == "canal" ? "/var/lib/cni/bin" : "" }"
+  kubelet_node_label        = "node-role.kubernetes.io/master"
+  kubelet_node_taints       = "node-role.kubernetes.io/master=:NoSchedule"
+  assets_location           = "${google_storage_bucket.tectonic.name}/${google_storage_bucket_object.tectonic-assets.name}"
+  etcd_advertise_name_list  = "${data.template_file.etcd_hostname_list.*.rendered}"
+  etcd_count                = "${length(data.template_file.etcd_hostname_list.*.id)}"
+  etcd_initial_cluster_list = "${data.template_file.etcd_hostname_list.*.rendered}"
+  etcd_tls_enabled          = "${var.tectonic_etcd_tls_enabled}"
 }
 
 module "ignition_workers" {
   source = "../../modules/ignition"
 
+  cluster_name         = "${var.tectonic_cluster_name}"
   bootstrap_upgrade_cl = "${var.tectonic_bootstrap_upgrade_cl}"
   tectonic_vanilla_k8s = "${var.tectonic_vanilla_k8s}"
   container_images     = "${var.tectonic_container_images}"
