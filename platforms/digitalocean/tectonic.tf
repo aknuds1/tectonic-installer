@@ -201,3 +201,4 @@ resource "null_resource" "master_nodes" {
     source      = "${data.archive_file.assets.output_path}"
     destination = "/var/tmp/tectonic.zip"
   }
+}
