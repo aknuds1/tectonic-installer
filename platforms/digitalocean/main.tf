@@ -1,5 +1,5 @@
 provider "digitalocean" {
-  version = "~> 0.1"
+  version = "~> 0.1.2"
 
   token = "${var.tectonic_do_token}"
 }
