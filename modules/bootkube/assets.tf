@@ -25,8 +25,6 @@ resource "template_dir" "bootkube" {
     etcd_ca_cert     = "${base64encode(var.etcd_ca_cert_pem)}"
     etcd_client_cert = "${base64encode(var.etcd_client_cert_pem)}"
     etcd_client_key  = "${base64encode(var.etcd_client_key_pem)}"
-
-    apiserver_secure_port = "${var.apiserver_secure_port}"
   }
 }
 
