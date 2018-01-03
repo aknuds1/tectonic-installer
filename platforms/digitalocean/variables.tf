@@ -67,3 +67,9 @@ variable "tectonic_do_spaces_region" {
   default     = "nyc3"
   description = "Spaces region"
 }
+
+variable "tectonic_do_worker_volume_size" {
+  type        = "string"
+  description = "Size of block storage volume in GiB to assign per worker"
+  default     = "0"
+}

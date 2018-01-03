@@ -37,3 +37,7 @@ variable "ign_do_puller_id" {
 variable "ign_resolved_conf_id" {
   type = "string"
 }
+
+variable "volume_size" {
+  type = "string"
+}

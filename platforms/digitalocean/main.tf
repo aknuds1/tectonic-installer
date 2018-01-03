@@ -170,4 +170,5 @@ module "workers" {
   ign_update_ca_certificates_dropin_id = "${module.ignition_workers.update_ca_certificates_dropin_id}"
   ign_do_puller_id                     = "${data.ignition_file.do_puller.id}"
   ign_resolved_conf_id                 = "${data.ignition_file.resolved_conf.id}"
+  volume_size                          = "${var.tectonic_do_worker_volume_size}"
 }
