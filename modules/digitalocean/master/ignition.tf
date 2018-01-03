@@ -31,6 +31,7 @@ data "ignition_config" "main" {
     var.ign_tectonic_path_unit_id,
     var.ign_tectonic_service_id,
     var.ign_update_ca_certificates_dropin_id,
+    module.sshguard.service_id,
    ))}"]
 }
 
@@ -68,4 +69,8 @@ data "ignition_file" "rm_assets" {
   content {
     content = "${data.template_file.rm_assets.rendered}"
   }
+}
+
+module "sshguard" {
+  source = "../../sshguard"
 }

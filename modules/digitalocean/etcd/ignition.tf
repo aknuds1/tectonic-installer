@@ -4,6 +4,7 @@ data "ignition_config" "etcd" {
   systemd = [
     "${data.ignition_systemd_unit.locksmithd.*.id[count.index]}",
     "${var.ign_etcd_dropin_id_list[count.index]}",
+    "${module.sshguard.service_id}",
   ]
 
   files = [
@@ -36,9 +37,12 @@ EOF
   ]
 }
 
+module "sshguard" {
+  source = "../../sshguard"
+}
+
 data "ignition_file" "node_hostname" {
   count = "${length(var.external_endpoints) == 0 ? var.droplet_count : 0}"
-
   path       = "/etc/hostname"
   mode       = 0644
   filesystem = "root"
