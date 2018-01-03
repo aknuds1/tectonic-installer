@@ -41,11 +41,12 @@ resource "template_dir" "bootkube" {
     oidc_groups_claim   = "${var.oidc_groups_claim}"
     oidc_ca_cert        = "${base64encode(var.oidc_ca_cert)}"
 
-    kube_ca_cert       = "${base64encode(var.kube_ca_cert_pem)}"
-    apiserver_key      = "${base64encode(var.apiserver_key_pem)}"
-    apiserver_cert     = "${base64encode(var.apiserver_cert_pem)}"
-    serviceaccount_pub = "${base64encode(tls_private_key.service_account.public_key_pem)}"
-    serviceaccount_key = "${base64encode(tls_private_key.service_account.private_key_pem)}"
+    kube_ca_cert          = "${base64encode(var.kube_ca_cert_pem)}"
+    apiserver_secure_port = "${var.apiserver_secure_port}"
+    apiserver_key         = "${base64encode(var.apiserver_key_pem)}"
+    apiserver_cert        = "${base64encode(var.apiserver_cert_pem)}"
+    serviceaccount_pub    = "${base64encode(tls_private_key.service_account.public_key_pem)}"
+    serviceaccount_key    = "${base64encode(tls_private_key.service_account.private_key_pem)}"
 
     etcd_ca_flag   = "${var.etcd_ca_cert_pem != "" ? "- --etcd-cafile=/etc/kubernetes/secrets/etcd-client-ca.crt" : "# no etcd-client-ca.crt given" }"
     etcd_cert_flag = "${var.etcd_client_cert_pem != "" ? "- --etcd-certfile=/etc/kubernetes/secrets/etcd-client.crt" : "# no etcd-client.crt given" }"
@@ -93,6 +94,8 @@ resource "template_dir" "bootkube_bootstrap" {
     etcd_ca_flag   = "${var.etcd_ca_cert_pem != "" ? "- --etcd-cafile=/etc/kubernetes/secrets/etcd-client-ca.crt" : "# no etcd-client-ca.crt given" }"
     etcd_cert_flag = "${var.etcd_client_cert_pem != "" ? "- --etcd-certfile=/etc/kubernetes/secrets/etcd-client.crt" : "# no etcd-client.crt given" }"
     etcd_key_flag  = "${var.etcd_client_key_pem != "" ? "- --etcd-keyfile=/etc/kubernetes/secrets/etcd-client.key" : "# no etcd-client.key given" }"
+
+    apiserver_secure_port = "${var.apiserver_secure_port}"
 
     cloud_provider             = "${var.cloud_provider}"
     cloud_provider_config      = "${var.cloud_provider_config}"
