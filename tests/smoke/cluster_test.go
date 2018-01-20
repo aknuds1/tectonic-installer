@@ -35,22 +35,16 @@ const (
 	nodeCountEnv = "SMOKE_NODE_COUNT"
 	// manifestPathsEnv is the environment variable that defines the paths to the manifests that are deployed on the cluster.
 	manifestPathsEnv = "SMOKE_MANIFEST_PATHS"
-	// manifestExperimentalEnv is the environment variable that specifies whether or not to test for experimental manifests.
-	manifestExperimentalEnv = "SMOKE_MANIFEST_EXPERIMENTAL"
 )
 
 var (
 	// defaultIgnoredManifests represents the manifests that are ignored by
 	// testAllResourcesCreated by default.
-	defaultIgnoredManifests = []string{"bootstrap"}
-
-	// experimentalManifests represents the manifests that are ignored by
-	// testAllResourcesCreated when manifestExperimentalEnv isn't set to 'true'.
-	experimentalManifests = []string{
-		// Generated all the time but only deployed when experimental is enabled.
+	defaultIgnoredManifests = []string{
 		"tectonic/updater/cluster-config.yaml",
 		"tectonic/updater/app_versions/app-version-tectonic-etcd.yaml",
 		"tectonic/updater/operators/tectonic-etcd-operator.yaml",
+		"bootstrap",
 	}
 
 	// equivalentKindRemapping is used by resourceIdentifier to map different
@@ -59,6 +53,8 @@ var (
 	equivalentKindRemapping = map[string]string{
 		"extensions/v1beta1:DaemonSet":  "extensions/v1beta1:DeploymentOrDaemonSet",
 		"extensions/v1beta1:Deployment": "extensions/v1beta1:DeploymentOrDaemonSet",
+		"apps/v1beta2:DaemonSet":        "apps/v1beta2:DeploymentOrDaemonSet",
+		"apps/v1beta2:Deployment":       "apps/v1beta2:DeploymentOrDaemonSet",
 	}
 
 	// decodeErrorRegexp defines the format of the error returned by Kubernetes' resource mapper.
@@ -348,13 +344,8 @@ func testAllResourcesCreated(t *testing.T) {
 		t.Skipf("no manifest paths in environment variable %s, skipping", manifestPathsEnv)
 	}
 
-	ignoredManifests := defaultIgnoredManifests
-	if manifestExperimental := os.Getenv(manifestExperimentalEnv); manifestExperimental != "true" {
-		ignoredManifests = append(ignoredManifests, experimentalManifests...)
-	}
-
 	max := 10 * time.Minute
-	err := retry(allResourcesCreated(manifestsPathsSp, ignoredManifests), t, 30*time.Second, max)
+	err := retry(allResourcesCreated(manifestsPathsSp, defaultIgnoredManifests), t, 30*time.Second, max)
 	if err != nil {
 		t.Fatalf("timed out waiting for all manifests to be created after %v", max)
 	}

@@ -1,14 +1,14 @@
 #!/bin/bash
 set -e
+set -o pipefail
 
+# Download the assets from Spaces
+# shellcheck disable=SC2154
+/opt/do-puller.sh ${spaces_bucket}/assets.zip /var/tmp/tectonic.zip
+/opt/do-puller.sh ${spaces_bucket}/kubeconfig /etc/kubernetes/kubeconfig
 unzip -o -d /var/tmp/tectonic/ /var/tmp/tectonic.zip
 rm /var/tmp/tectonic.zip
 # make files in /opt/tectonic available atomically
 mv /var/tmp/tectonic /opt/tectonic
-
-# Populate the kubelet.env file
-mkdir -p /etc/kubernetes
-echo "KUBELET_IMAGE_URL=${kubelet_image_url}" > /etc/kubernetes/kubelet.env
-echo "KUBELET_IMAGE_TAG=${kubelet_image_tag}" >> /etc/kubernetes/kubelet.env
 
 exit 0

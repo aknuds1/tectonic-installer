@@ -1,3 +1,10 @@
+locals {
+  calico_config_yaml   = "${var.tectonic_networking == "calico" ? "calicoConfig:\n    mtu: ${var.calico_mtu}" : ""}"
+  network_config_yaml  = "${join("\n", compact(list(local.network_profile_yaml, local.pod_cidr_yaml, local.calico_config_yaml)))}"
+  network_profile_yaml = "networkProfile: ${var.tectonic_networking}"
+  pod_cidr_yaml        = "${var.tectonic_networking != "none" ? "podCIDR: ${var.cluster_cidr}" : ""}"
+}
+
 # Unique Cluster ID (uuid)
 resource "random_id" "cluster_id" {
   byte_length = 16
@@ -10,20 +17,17 @@ resource "template_dir" "tectonic" {
 
   vars {
     addon_resizer_image                = "${var.container_images["addon_resizer"]}"
-    console_image                      = "${var.container_images["console"]}"
-    error_server_image                 = "${var.container_images["error_server"]}"
-    heapster_image                     = "${var.container_images["heapster"]}"
-    identity_image                     = "${var.container_images["identity"]}"
-    ingress_controller_image           = "${var.container_images["ingress_controller"]}"
     kube_version_operator_image        = "${var.container_images["kube_version_operator"]}"
+    kubernetes_addon_operator_image    = "${var.container_images["kubernetes_addon_operator"]}"
     node_agent_image                   = "${var.container_images["node_agent"]}"
     etcd_operator_image                = "${var.container_images["etcd_operator"]}"
-    stats_emitter_image                = "${var.container_images["stats_emitter"]}"
-    stats_extender_image               = "${var.container_images["stats_extender"]}"
     tectonic_channel_operator_image    = "${var.container_images["tectonic_channel_operator"]}"
     tectonic_prometheus_operator_image = "${var.container_images["tectonic_prometheus_operator"]}"
     tectonic_etcd_operator_image       = "${var.container_images["tectonic_etcd_operator"]}"
     tectonic_cluo_operator_image       = "${var.container_images["tectonic_cluo_operator"]}"
+    tectonic_alm_operator_image        = "${var.container_images["tectonic_alm_operator"]}"
+    tectonic_utility_operator_image    = "${var.container_images["tectonic_utility_operator"]}"
+    tectonic_network_operator_image    = "${var.container_images["tectonic_network_operator"]}"
 
     tectonic_monitoring_auth_base_image = "${var.container_base_images["tectonic_monitoring_auth"]}"
     config_reload_base_image            = "${var.container_base_images["config_reload"]}"
@@ -37,12 +41,16 @@ resource "template_dir" "tectonic" {
     grafana_base_image                  = "${var.container_base_images["grafana"]}"
     grafana_watcher_base_image          = "${var.container_base_images["grafana_watcher"]}"
 
-    kubernetes_version             = "${var.versions["kubernetes"]}"
-    monitoring_version             = "${var.versions["monitoring"]}"
-    tectonic_version               = "${var.versions["tectonic"]}"
-    etcd_version                   = "${var.versions["etcd"]}"
-    tectonic_etcd_operator_version = "${var.versions["tectonic-etcd"]}"
-    tectonic_cluo_operator_version = "${var.versions["cluo"]}"
+    kubernetes_version                = "${var.versions["kubernetes"]}"
+    monitoring_version                = "${var.versions["monitoring"]}"
+    tectonic_version                  = "${var.versions["tectonic"]}"
+    etcd_version                      = "${var.versions["etcd"]}"
+    tectonic_etcd_operator_version    = "${var.versions["tectonic-etcd"]}"
+    tectonic_cluo_operator_version    = "${var.versions["cluo"]}"
+    kubernetes_addon_operator_version = "${var.versions["kubernetes_addon"]}"
+    tectonic_alm_operator_version     = "${var.versions["alm"]}"
+    tectonic_utility_version          = "${var.versions["tectonic-utility"]}"
+    tectonic_network_operator_version = "${var.versions["tno"]}"
 
     etcd_cluster_size = "${var.master_count > 2 ? 3 : 1}"
 
@@ -98,6 +106,8 @@ resource "template_dir" "tectonic" {
 
     image_re            = "${var.image_re}"
     kube_dns_service_ip = "${cidrhost(var.service_cidr, 10)}"
+
+    network_config = "${indent(6, local.network_config_yaml)}"
   }
 }
 
@@ -115,19 +125,18 @@ resource "local_file" "tectonic" {
   filename = "./generated/tectonic.sh"
 }
 
-# tectonic.sh (resources/generated/tectonic-rkt.sh)
-data "template_file" "tectonic_rkt" {
-  template = "${file("${path.module}/resources/tectonic-rkt.sh")}"
+# tectonic.sh (resources/generated/tectonic-wrapper.sh)
+data "template_file" "tectonic_wrapper" {
+  template = "${file("${path.module}/resources/tectonic-wrapper.sh")}"
 
   vars {
     hyperkube_image = "${var.container_images["hyperkube"]}"
-    experimental    = "${var.experimental ? "true" : "false"}"
   }
 }
 
-resource "local_file" "tectonic_rkt" {
-  content  = "${data.template_file.tectonic_rkt.rendered}"
-  filename = "./generated/tectonic-rkt.sh"
+resource "local_file" "tectonic_wrapper" {
+  content  = "${data.template_file.tectonic_wrapper.rendered}"
+  filename = "./generated/tectonic-wrapper.sh"
 }
 
 # tectonic.service (available as output variable)
@@ -137,7 +146,7 @@ data "template_file" "tectonic_service" {
 
 data "ignition_systemd_unit" "tectonic_service" {
   name    = "tectonic.service"
-  enable  = false
+  enabled = false
   content = "${data.template_file.tectonic_service.rendered}"
 }
 
@@ -148,6 +157,6 @@ data "template_file" "tectonic_path" {
 
 data "ignition_systemd_unit" "tectonic_path" {
   name    = "tectonic.path"
-  enable  = true
+  enabled = true
   content = "${data.template_file.tectonic_path.rendered}"
 }

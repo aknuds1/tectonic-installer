@@ -41,9 +41,6 @@ resource "google_compute_instance" "etcd-node" {
 
   metadata = {
     user-data = "${data.ignition_config.etcd.*.rendered[count.index]}"
-  }
-
-  service_account {
-    scopes = ["cloud-platform"]
+    sshKeys   = "core:${file(var.public_ssh_key)}"
   }
 }

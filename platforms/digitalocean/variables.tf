@@ -4,7 +4,7 @@ variable "tectonic_do_config_version" {
 It has no impact on generated assets but declares the version contract of the configuration.
 EOF
 
-  default = "0.1"
+  default = "1.0"
 }
 
 variable "tectonic_do_token" {
@@ -12,15 +12,15 @@ variable "tectonic_do_token" {
   description = "DigitalOcean API token."
 }
 
-variable "tectonic_do_droplet_region" {
-  type        = "string"
-  default     = "nyc1"
-  description = "The droplet region."
-}
-
 variable "tectonic_do_ssh_keys" {
   type        = "list"
   description = "A list of DigitalOcean SSH IDs to enable."
+}
+
+variable "tectonic_do_droplet_image" {
+  type        = "string"
+  description = "Droplet image."
+  default     = "coreos-stable"
 }
 
 variable "tectonic_do_master_droplet_size" {
@@ -35,6 +35,12 @@ variable "tectonic_do_worker_droplet_size" {
   default     = "512mb"
 }
 
+variable "tectonic_do_droplet_region" {
+  type        = "string"
+  default     = "nyc1"
+  description = "The droplet region."
+}
+
 variable "tectonic_do_etcd_droplet_size" {
   type        = "string"
   description = "Droplet size for the etcd node(s). Example: `512mb`."
@@ -46,8 +52,18 @@ variable "tectonic_do_extra_tags" {
   default = []
 }
 
-variable "tectonic_do_private_networking" {
-  type        =  "string"
-  description = "Enable private networking for this cluster. (Default) true"
-  default     = "true"
+variable "tectonic_do_spaces_access_key_id" {
+  type        = "string"
+  description = "Spaces access key ID"
+}
+
+variable "tectonic_do_spaces_secret_access_key" {
+  type        = "string"
+  description = "Spaces secret access key"
+}
+
+variable "tectonic_do_spaces_region" {
+  type        = "string"
+  default     = "nyc3"
+  description = "Spaces region"
 }

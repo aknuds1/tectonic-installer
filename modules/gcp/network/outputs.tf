@@ -15,7 +15,7 @@ limitations under the License.
 */
 
 output "master_ip" {
-  value = "${google_compute_address.masters-ip.address}"
+  value = "${google_compute_global_address.masters-ip.address}"
 }
 
 output "ingress_ip" {

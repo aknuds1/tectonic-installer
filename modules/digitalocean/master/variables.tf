@@ -1,4 +1,16 @@
-variable "base_domain" {
+variable "do_token" {
+  type = "string"
+}
+
+variable "assets_id" {
+  type = "string"
+}
+
+variable "assets_path" {
+  type = "string"
+}
+
+variable "kubeconfig_id" {
   type = "string"
 }
 
@@ -6,20 +18,7 @@ variable "cluster_name" {
   type = "string"
 }
 
-variable "container_images" {
-  description = "Container images to use"
-  type        = "map"
-}
-
-variable "container_linux_channel" {
-  type = "string"
-}
-
-variable "container_linux_version" {
-   type = "string"
-}
-
-variable "droplet_region" {
+variable "base_domain" {
   type = "string"
 }
 
@@ -32,28 +31,19 @@ variable "extra_tags" {
   default = []
 }
 
-variable "image_re" {
-  description = "(internal) Regular expression used to extract repo and tag components from image strings"
-  type        = "string"
-}
-
-variable "kubeconfig_content" {
-  type = "string"
-}
-
-variable "master_count" {
-  default = 1
-}
-
 variable "ssh_keys" {
   type = "list"
 }
 
-variable "ign_init_assets_service_id" {
+variable "droplet_region" {
   type = "string"
 }
 
-variable "ign_bootkube_path_unit_id" {
+variable "droplet_image" {
+  type = "string"
+}
+
+variable "ign_do_puller_id" {
   type = "string"
 }
 
@@ -62,11 +52,50 @@ variable "ign_bootkube_service_id" {
   description = "The ID of the bootkube systemd service unit"
 }
 
-variable "ign_tectonic_path_unit_id" {
+variable "ign_bootkube_path_unit_id" {
   type = "string"
 }
 
 variable "ign_tectonic_service_id" {
   type        = "string"
   description = "The ID of the tectonic installer systemd service unit"
+}
+
+variable "ign_tectonic_path_unit_id" {
+  type = "string"
+}
+
+variable "spaces_bucket" {
+  type        = "string"
+  description = "Spaces bucket containing files"
+}
+
+variable "container_images" {
+  description = "Container images to use"
+  type        = "map"
+}
+
+variable "image_re" {
+  description = "(internal) Regular expression used to extract repo and tag components from image strings"
+  type        = "string"
+}
+
+variable "ign_resolved_conf_id" {
+  type = "string"
+}
+
+variable "ign_init_assets_service_id" {
+  type = "string"
+}
+
+variable "ign_rm_assets_service_id" {
+  type = "string"
+}
+
+variable "ign_rm_assets_path_unit_id" {
+  type = "string"
+}
+
+variable "do_pusher_id" {
+  type = "string"
 }

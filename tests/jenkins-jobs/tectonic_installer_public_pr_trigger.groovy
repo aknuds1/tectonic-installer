@@ -48,7 +48,7 @@ job("triggers/tectonic-installer-pr-trigger") {
       allowMembersOfWhitelistedOrgsAsAdmin(true)
       msgSuccess("")
       msgFailure("")
-      commitStatusContext("Jenkins-Tectonic-Installer")
+      commitStatusContext("pr-trigger")
       buildDescTemplate("#\$pullId: \$abbrTitle")
       blackListLabels("")
       whiteListLabels("")
@@ -59,7 +59,7 @@ job("triggers/tectonic-installer-pr-trigger") {
 
   steps {
     shell """#!/bin/bash -ex
-      curl "https://api.github.com/repos/coreos/tectonic-installer/labels" > repoLabels
+      curl "https://api.github.com/repos/coreos/tectonic-installer/labels?per_page=100" > repoLabels
       repoLabels=\$(jq ".[] | .name" repoLabels)
       repoLabels=\$(echo \$repoLabels | tr -d "\\"" | tr [a-z] [A-Z] | tr - _)
       for label in \$repoLabels
@@ -84,7 +84,7 @@ job("triggers/tectonic-installer-pr-trigger") {
         }
       }
     }
-    shell "sleep 5"
+    shell "sleep 10"
   }
 
   publishers {
@@ -115,7 +115,7 @@ def PRNum = resolver.resolve("ghprbPullId")
 
 
 // sleep a bit to wait jenkins refresh the jobs
-sleep(5000);
+sleep(10000);
 
 def params = [ ];
 
@@ -135,6 +135,12 @@ manager.listener.logger.println("Job Num: " + prBuild.getNumber().toInteger());
 manager.listener.logger.println("Job is building?: " + prBuild.isBuilding());
   if (prBuild.getNumber().toInteger() == 1 && prBuild.isBuilding()) {
     manager.listener.logger.println("Build 1 is running, will try to kill...");
+
+    // giving some time to job run and after that kill
+    // we add this because we saw if kill right away sometime jenkins did not refresh
+    // the build parameters status.
+    sleep(60000);
+
     WorkflowRun run = (WorkflowRun) prBuild;
     //hard kill
     run.doKill();

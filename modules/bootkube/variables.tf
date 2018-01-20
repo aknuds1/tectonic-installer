@@ -18,6 +18,12 @@ variable "apiserver_key_pem" {
   description = "The API server key in PEM format."
 }
 
+variable "apiserver_secure_port" {
+  type        = "string"
+  description = "The secure port of the API server."
+  default     = 6443
+}
+
 variable "cloud_provider" {
   description = "The provider for cloud services (empty string for no provider)"
   type        = "string"
@@ -41,6 +47,10 @@ variable "cluster_name" {
 variable "container_images" {
   description = "Container images to use"
   type        = "map"
+}
+
+variable "etcd_tls_enabled" {
+  default = true
 }
 
 variable "etcd_ca_cert_pem" {
@@ -81,11 +91,6 @@ variable "etcd_server_cert_pem" {
 variable "etcd_server_key_pem" {
   type        = "string"
   description = "The etcd server key in PEM format."
-}
-
-variable "experimental_enabled" {
-  description = "If set to true, provision experimental assets, like self-hosted etcd."
-  default     = false
 }
 
 variable "kube_apiserver_url" {
@@ -154,6 +159,16 @@ variable "cloud_config_path" {
   type        = "string"
 }
 
+variable "etcd_backup_size" {
+  type        = "string"
+  description = "The size of the PersistentVolume used to handle etcd backups"
+}
+
+variable "etcd_backup_storage_class" {
+  type        = "string"
+  description = "The name of the Kubernetes StorageClass that will be used to handle etcd backups"
+}
+
 variable "service_cidr" {
   description = "A CIDR notation IP range from which to assign service cluster IPs"
   type        = "string"
@@ -162,4 +177,20 @@ variable "service_cidr" {
 variable "versions" {
   description = "Container versions to use"
   type        = "map"
+}
+
+variable "pull_secret_path" {
+  type        = "string"
+  description = "Path on disk to your Tectonic pull secret. Obtain this from your Tectonic Account: https://account.coreos.com."
+  default     = "/Users/coreos/Desktop/config.json"
+}
+
+variable "calico_mtu" {
+  description = "sets the MTU size for workload interfaces and the IP-in-IP tunnel device"
+  type        = "string"
+}
+
+variable "tectonic_networking" {
+  description = "configures the network to be used in the cluster"
+  type        = "string"
 }

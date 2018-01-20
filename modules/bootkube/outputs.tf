@@ -20,11 +20,6 @@ output "id" {
   ${local_file.kubeconfig.id}
   ${local_file.bootkube_sh.id}
   ${template_dir.bootkube.id} ${template_dir.bootkube_bootstrap.id}
-  ${join(" ",
-    template_dir.experimental.*.id,
-    template_dir.bootstrap_experimental.*.id,
-    template_dir.etcd_experimental.*.id,
-    )}
   ")}"
 }
 

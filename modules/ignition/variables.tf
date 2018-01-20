@@ -11,8 +11,10 @@ EOF
   type = "string"
 }
 
-variable "kubelet_cni_bin_dir" {
-  type = "string"
+variable "kubelet_debug_config" {
+  type        = "string"
+  default     = ""
+  description = "internal debug flags for the kubelet (used in CI only)"
 }
 
 variable "kube_dns_service_ip" {
@@ -61,12 +63,6 @@ variable "torcx_store_url" {
   default     = ""
 }
 
-variable "tectonic_vanilla_k8s" {
-  description = <<EOF
-If set to true, a vanilla Kubernetes cluster will be deployed, omitting any Tectonic assets.
-EOF
-}
-
 variable "assets_location" {
   type        = "string"
   description = "(optional) The storing location to retrieve the assets."
@@ -110,4 +106,48 @@ variable "metadata_provider" {
 
 variable "use_metadata" {
   default = true
+}
+
+variable "kube_ca_cert_pem" {
+  type        = "string"
+  description = "The public kube CA certificate in PEM format."
+}
+
+variable "ingress_ca_cert_pem" {
+  type        = "string"
+  description = "The ingress kube CA certificate in PEM format."
+}
+
+variable "etcd_ca_cert_pem" {
+  type        = "string"
+  description = "The etcd kube CA certificate in PEM format."
+}
+
+variable "etcd_client_key_pem" {
+  default = ""
+}
+
+variable "etcd_client_crt_pem" {
+  default = ""
+}
+
+variable "etcd_server_key_pem" {
+  default = ""
+}
+
+variable "etcd_server_crt_pem" {
+  default = ""
+}
+
+variable "etcd_peer_key_pem" {
+  default = ""
+}
+
+variable "etcd_peer_crt_pem" {
+  default = ""
+}
+
+variable "custom_ca_cert_pem_list" {
+  type        = "list"
+  description = "(optional) A list of custom CAs in PEM format."
 }

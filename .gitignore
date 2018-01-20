@@ -15,5 +15,4 @@ modules/update-payload/generated/
 bin_test/
 matchbox/
 modules/update-payload/generated/
-# Allow for user configuration
-custom.tf
+/contrib/govcloud/vpn.conf
