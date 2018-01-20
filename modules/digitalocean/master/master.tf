@@ -34,11 +34,3 @@ resource "digitalocean_droplet" "master_node" {
     command = "${path.module}/resources/register-master.sh ${var.do_token} ${digitalocean_droplet.master_node.id} ${digitalocean_floating_ip.master.ip_address} ${digitalocean_loadbalancer.console.id}"
   }
 }
-
-resource "digitalocean_record" "master" {
-  count  = 1
-  domain = "${var.base_domain}"
-  type   = "A"
-  name   = "${var.cluster_name}-master-${count.index}"
-  value  = "${digitalocean_droplet.master_node.ipv4_address}"
-}
