@@ -9,12 +9,12 @@ EOF
 
 variable "tectonic_do_token" {
   type        = "string"
-  description = "DigitalOcean API token."
+  description = "(REQUIRED) DigitalOcean API token."
 }
 
 variable "tectonic_do_ssh_keys" {
   type        = "list"
-  description = "A list of DigitalOcean SSH IDs to enable."
+  description = "A list of DigitalOcean SSH IDs to enable. Retrieve via `doctl compute ssh-key list` or `tugboat keys`. Example: `[\"123456\", \"987654\"]`"
 }
 
 variable "tectonic_do_droplet_image" {
@@ -23,28 +23,28 @@ variable "tectonic_do_droplet_image" {
   default     = "coreos-stable"
 }
 
+variable "tectonic_do_droplet_region" {
+  type        = "string"
+  default     = "nyc3"
+  description = "Slug of region to create cluster in. See: `doctl compute region list` or `tugboat regions` for available region slugs.  Default: `nyc3`."
+}
+
 variable "tectonic_do_master_droplet_size" {
   type        = "string"
-  description = "Instance size for the master node(s). Example: `512mb`."
   default     = "1gb"
+  description = "Instance slug to use for the master node(s). See `doctl compute size list`  or `tugboat sizes` for available slugs. Default: `1gb`."
 }
 
 variable "tectonic_do_worker_droplet_size" {
   type        = "string"
-  description = "Instance size for the worker node(s). Example: `512mb`."
   default     = "512mb"
-}
-
-variable "tectonic_do_droplet_region" {
-  type        = "string"
-  default     = "nyc1"
-  description = "The droplet region."
+  description = "Instance slug to use for the worker node(s). See `doctl compute size list` or `tugboat sizes` for available slugs.  Default: `512mb`."
 }
 
 variable "tectonic_do_etcd_droplet_size" {
   type        = "string"
-  description = "Droplet size for the etcd node(s). Example: `512mb`."
   default     = "512mb"
+  description = "Instance slug to use for the worker node(s). See `doctl compute size list` or `tugboat sizes` for available slugs.  Default: `512mb`."
 }
 
 variable "tectonic_do_extra_tags" {
