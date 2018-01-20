@@ -9,7 +9,7 @@ module "bootkube" {
   cloud_provider        = ""
   cluster_name          = "${var.tectonic_cluster_name}"
   kube_apiserver_url    = "https://${module.masters.cluster_fqdn}:443"
-  oidc_issuer_url       = "https://${module.masters.console_fqdn}:443/identity"
+  oidc_issuer_url       = "https://${module.masters.console_fqdn}/identity"
   apiserver_secure_port = 443
 
   # Platform-independent variables wiring, do not modify.
