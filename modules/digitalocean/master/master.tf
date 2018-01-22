@@ -1,5 +1,6 @@
 resource "digitalocean_floating_ip" "master" {
   region = "${var.droplet_region}"
+  droplet_id = "${digitalocean_droplet.master_node.id}"
 }
 
 resource "null_resource" "tectonic_assets" {
@@ -20,8 +21,9 @@ resource "null_resource" "kubeconfig" {
 }
 
 resource "digitalocean_droplet" "master_node" {
-  count      = 1
-  depends_on = ["null_resource.tectonic_assets", "null_resource.kubeconfig"]
+# Can we do this a better way?
+# What Tectonic Assets does this resource depend on that others do not?
+# depends_on = ["null_resource.tectonic_assets", "null_resource.kubeconfig"]
   name       = "${var.cluster_name}-master-${count.index}"
   image      = "${var.droplet_image}"
   region     = "${var.droplet_region}"
@@ -30,7 +32,4 @@ resource "digitalocean_droplet" "master_node" {
   tags       = ["${var.extra_tags}"]
   user_data  = "${data.ignition_config.main.rendered}"
 
-  provisioner "local-exec" {
-    command = "${path.module}/resources/register-master.sh ${var.do_token} ${digitalocean_droplet.master_node.id} ${digitalocean_floating_ip.master.ip_address} ${digitalocean_loadbalancer.console.id}"
-  }
 }
