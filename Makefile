@@ -12,7 +12,7 @@ TF_DOCS := $(shell which terraform-docs 2> /dev/null)
 TF_EXAMPLES := $(shell which terraform-examples 2> /dev/null)
 TF_CMD = terraform
 TEST_COMMAND = /bin/bash -c "bundler exec rspec spec/${TEST}"
-
+export TF_VAR_tectonic_cluster_name = $(CLUSTER)
 include ./makelib/*.mk
 
 $(info Using build directory [${BUILD_DIR}])
@@ -151,6 +151,7 @@ structure-check:
 	@if $(MAKE) examples && ! git diff --exit-code; then echo "outdated examples (run 'make examples' to fix)"; exit 1; fi
 
 SMOKE_SOURCES := $(shell find $(TOP_DIR)/tests/smoke -name '*.go')
+.PHONY: bin/smoke
 bin/smoke: $(SMOKE_SOURCES)
 	@CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go test ./tests/smoke/ -c -o bin/smoke
 
@@ -201,8 +202,6 @@ tests/smoke: bin/smoke smoke-test-env-docker-image
 	-e TF_VAR_tectonic_license_path \
 	-e TF_VAR_tectonic_pull_secret_path \
 	-e TF_VAR_tectonic_base_domain \
-	-e TF_VAR_tectonic_admin_email \
-	-e TF_VAR_tectonic_admin_password \
 	-e TECTONIC_TESTS_DONT_CLEAN_UP \
 	-e RUN_SMOKE_TESTS \
 	-e RUN_CONFORMANCE_TESTS \

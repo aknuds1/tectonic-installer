@@ -11,6 +11,7 @@ terraform.tfstate*
 terraform.tfvars
 build/
 bin/
+modules/update-payload/generated/
 bin_test/
 matchbox/
 modules/update-payload/generated/

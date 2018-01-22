@@ -1,5 +1,5 @@
 data "ignition_config" "etcd" {
-  count = "${var.droplet_count}"
+  count = "${var.etcd_count}"
 
   systemd = [
     "${data.ignition_systemd_unit.locksmithd.*.id[count.index]}",
@@ -13,7 +13,7 @@ data "ignition_config" "etcd" {
 }
 
 data "ignition_file" "node_hostname" {
-  count      = "${var.droplet_count}"
+  count      = "${var.etcd_count}"
   path       = "/etc/hostname"
   mode       = 0644
   filesystem = "root"
@@ -24,7 +24,7 @@ data "ignition_file" "node_hostname" {
 }
 
 data "ignition_systemd_unit" "locksmithd" {
-  count   = "${var.droplet_count}"
+  count   = "${var.etcd_count}"
   name    = "locksmithd.service"
   enabled = true
 

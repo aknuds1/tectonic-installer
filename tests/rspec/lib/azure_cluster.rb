@@ -2,7 +2,6 @@
 
 require 'cluster'
 require 'azure_support'
-require 'json'
 
 # AzureCluster represents a k8s cluster on Azure cloud provider
 #
@@ -15,10 +14,9 @@ class AzureCluster < Cluster
     super(tfvars_file)
   end
 
-  def master_ip_addresses
+  def master_ip_address
     Dir.chdir(@build_path) do
-      ips_raw = `echo 'jsonencode(module.vnet.api_ip_addresses)' | terraform console ../../platforms/azure`.chomp
-      JSON.parse(ips_raw)
+      `echo 'module.vnet.api_ip_addresses[0]' | terraform console ../../platforms/azure`.chomp
     end
   end
 

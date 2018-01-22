@@ -6,11 +6,19 @@ variable "cluster_name" {
   type = "string"
 }
 
-variable "droplet_count" {
+variable "droplet_image" {
+  type = "string"
+}
+
+variable "droplet_region" {
   type = "string"
 }
 
 variable "droplet_size" {
+  type = "string"
+}
+
+variable "etcd_count" {
   type = "string"
 }
 
@@ -19,26 +27,18 @@ variable "extra_tags" {
   default = []
 }
 
-variable "ssh_keys" {
+variable "ign_etcd_crt_id_list" {
   type = "list"
-}
-
-variable "droplet_region" {
-  type = "string"
-}
-
-variable "droplet_image" {
-  type = "string"
-}
-
-variable "tls_enabled" {
-  default = false
 }
 
 variable "ign_etcd_dropin_id_list" {
   type = "list"
 }
 
-variable "ign_etcd_crt_id_list" {
+variable "ssh_keys" {
   type = "list"
+}
+
+variable "tls_enabled" {
+  default = false
 }

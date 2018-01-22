@@ -1,0 +1,1 @@
+${etcd-name}=${tls-enabled ? "https" : "http"}://${etcd-address}:2380
