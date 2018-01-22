@@ -17,12 +17,6 @@ variable "tectonic_do_ssh_keys" {
   description = "A list of DigitalOcean SSH IDs to enable. Retrieve via `doctl compute ssh-key list` or `tugboat keys`. Example: `[\"123456\", \"987654\"]`"
 }
 
-variable "tectonic_do_droplet_image" {
-  type        = "string"
-  description = "Droplet image."
-  default     = "coreos-stable"
-}
-
 variable "tectonic_do_droplet_region" {
   type        = "string"
   default     = "nyc3"

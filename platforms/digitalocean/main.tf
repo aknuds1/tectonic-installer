@@ -22,10 +22,9 @@ module "etcd" {
   tls_enabled             = "${var.tectonic_etcd_tls_enabled}"
   droplet_size            = "${var.tectonic_do_etcd_droplet_size}"
   droplet_region          = "${var.tectonic_do_droplet_region}"
-  droplet_image           = "${var.tectonic_do_droplet_image}"
+  droplet_image           = "coreos-${var.tectonic_container_linux_channel}"
   extra_tags              = "${var.tectonic_do_extra_tags}"
   droplet_region          = "${var.tectonic_do_droplet_region}"
-  droplet_image           = "${var.tectonic_do_droplet_image}"
 }
 
 module "ignition_masters" {
@@ -68,7 +67,7 @@ module "masters" {
   spaces_bucket                        = "${local.do_spaces_bucket}"
   droplet_size                         = "${var.tectonic_do_master_droplet_size}"
   droplet_region                       = "${var.tectonic_do_droplet_region}"
-  droplet_image                        = "${var.tectonic_do_droplet_image}"
+  droplet_image                        = "coreos-${var.tectonic_container_linux_channel}"
   cluster_name                         = "${var.tectonic_cluster_name}"
   ssh_keys                             = "${var.tectonic_do_ssh_keys}"
   extra_tags                           = "${var.tectonic_do_extra_tags}"
@@ -122,7 +121,7 @@ module "workers" {
   cluster_name                         = "${var.tectonic_cluster_name}"
   droplet_size                         = "${var.tectonic_do_worker_droplet_size}"
   droplet_region                       = "${var.tectonic_do_droplet_region}"
-  droplet_image                        = "${var.tectonic_do_droplet_image}"
+  droplet_image                        = "coreos-${var.tectonic_container_linux_channel}"
   ssh_keys                             = "${var.tectonic_do_ssh_keys}"
   extra_tags                           = "${var.tectonic_do_extra_tags}"
   base_domain                          = "${var.tectonic_base_domain}"
