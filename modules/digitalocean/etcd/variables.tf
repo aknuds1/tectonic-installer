@@ -6,10 +6,6 @@ variable "cluster_name" {
   type = "string"
 }
 
-variable "droplet_count" {
-  type = "string"
-}
-
 variable "droplet_image" {
   type = "string"
 }
@@ -19,6 +15,10 @@ variable "droplet_region" {
 }
 
 variable "droplet_size" {
+  type = "string"
+}
+
+variable "etcd_count" {
   type = "string"
 }
 

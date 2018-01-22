@@ -21,9 +21,10 @@ resource "null_resource" "kubeconfig" {
 }
 
 resource "digitalocean_droplet" "master_node" {
-# Can we do this a better way?
-# What Tectonic Assets does this resource depend on that others do not?
+  count      = "${var.master_count}"
 # depends_on = ["null_resource.tectonic_assets", "null_resource.kubeconfig"]
+#  Can we do this a better way?
+#  What Tectonic Assets does this resource depend on that others do not?
   name       = "${var.cluster_name}-master-${count.index}"
   image      = "${var.droplet_image}"
   region     = "${var.droplet_region}"

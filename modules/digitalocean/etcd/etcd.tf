@@ -1,5 +1,5 @@
 resource "digitalocean_droplet" "etcd_node" {
-  count     = "${var.droplet_count}"
+  count     = "${var.etcd_count}"
   name      = "${var.cluster_name}-etcd-${count.index}"
   image     = "${var.droplet_image}"
   region    = "${var.droplet_region}"

@@ -1,5 +1,5 @@
 resource "digitalocean_record" "etcd_nodes" {
-  count  = "${var.droplet_count}"
+  count  = "${var.etcd_count}"
   type   = "A"
   domain = "${var.base_domain}"
   name   = "${var.cluster_name}-etcd-${count.index}"

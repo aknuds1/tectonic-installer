@@ -17,7 +17,7 @@ module "etcd" {
   cluster_name            = "${var.tectonic_cluster_name}"
   ign_etcd_crt_id_list    = "${module.ignition_masters.etcd_crt_id_list}"
   ign_etcd_dropin_id_list = "${module.ignition_masters.etcd_dropin_id_list}"
-  droplet_count           = "${length(data.template_file.etcd_hostname_list.*.id)}"
+  etcd_count              = "${length(data.template_file.etcd_hostname_list.*.id)}"
   ssh_keys                = "${var.tectonic_do_ssh_keys}"
   tls_enabled             = "${var.tectonic_etcd_tls_enabled}"
   droplet_size            = "${var.tectonic_do_etcd_droplet_size}"
@@ -59,7 +59,7 @@ module "ignition_masters" {
 
 module "masters" {
   source = "../../modules/digitalocean/master"
-
+  master_count                         = "${var.tectonic_master_count}"
   do_token                             = "${var.tectonic_do_token}"
   assets_id                            = "${data.archive_file.assets.id}"
   kubeconfig_id                        = "${null_resource.kubeconfig.id}"
@@ -117,7 +117,7 @@ module "ignition_workers" {
 module "workers" {
   source = "../../modules/digitalocean/worker"
 
-  droplet_count                        = "${var.tectonic_worker_count}"
+  worker_count                         = "${var.tectonic_worker_count}"
   cluster_name                         = "${var.tectonic_cluster_name}"
   droplet_size                         = "${var.tectonic_do_worker_droplet_size}"
   droplet_region                       = "${var.tectonic_do_droplet_region}"

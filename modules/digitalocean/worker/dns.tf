@@ -1,5 +1,5 @@
 resource "digitalocean_record" "worker" {
-  count  = "${var.droplet_count}"
+  count  = "${var.worker_count}"
   domain = "${var.base_domain}"
   name   = "${var.cluster_name}-worker-${count.index}"
   type   = "A"

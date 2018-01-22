@@ -6,10 +6,6 @@ variable "cluster_name" {
   type = "string"
 }
 
-variable "droplet_count" {
-  type = "string"
-}
-
 variable "droplet_image" {
   type = "string"
 }
@@ -36,4 +32,8 @@ variable "ign_resolved_conf_id" {
 
 variable "ssh_keys" {
   type = "list"
+}
+
+variable "worker_count" {
+  type = "string"
 }

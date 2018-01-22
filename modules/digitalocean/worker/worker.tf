@@ -1,5 +1,5 @@
 resource "digitalocean_droplet" "worker_node" {
-  count     = "${var.droplet_count}"
+  count     = "${var.worker_count}"
   name      = "${var.cluster_name}-worker-${count.index}"
   image     = "${var.droplet_image}"
   region    = "${var.droplet_region}"
