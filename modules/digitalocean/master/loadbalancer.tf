@@ -1,13 +1,7 @@
-resource "digitalocean_record" "api" {
-  domain = "${var.base_domain}"
-  type   = "A"
-  name   = "${var.cluster_name}-api"
-  value  = "${digitalocean_floating_ip.master.ip_address}"
-}
-
 resource "digitalocean_loadbalancer" "console" {
-  name   = "${var.cluster_name}-con"
-  region = "${var.droplet_region}"
+  name        = "${var.cluster_name}-console"
+  region      = "${var.droplet_region}"
+  droplet_ids = ["${digitalocean_droplet.master_node.*.id}"]
 
   forwarding_rule {
     entry_port      = 80
@@ -32,11 +26,4 @@ resource "digitalocean_loadbalancer" "console" {
     healthy_threshold        = 2
     unhealthy_threshold      = 2
   }
-}
-
-resource "digitalocean_record" "console" {
-  domain = "${var.base_domain}"
-  type   = "A"
-  name   = "${var.cluster_name}"
-  value  = "${digitalocean_loadbalancer.console.ip}"
 }
