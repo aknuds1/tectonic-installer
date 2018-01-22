@@ -25,20 +25,20 @@ variable "tectonic_do_droplet_region" {
 
 variable "tectonic_do_master_droplet_size" {
   type        = "string"
-  default     = "1gb"
-  description = "Instance slug to use for the master node(s). See `doctl compute size list`  or `tugboat sizes` for available slugs. Default: `1gb`."
+  default     = "s-1vcpu-2gb"
+  description = "Instance slug to use for the master node(s). See `doctl compute size list`  or `tugboat sizes` for available slugs. Default: `s-1vcpu-2gb`."
 }
 
 variable "tectonic_do_worker_droplet_size" {
   type        = "string"
-  default     = "512mb"
-  description = "Instance slug to use for the worker node(s). See `doctl compute size list` or `tugboat sizes` for available slugs.  Default: `512mb`."
+  default     = "s-1vcpu-1gb"
+  description = "Instance slug to use for the worker node(s). See `doctl compute size list` or `tugboat sizes` for available slugs.  Default: `s-1vcpu-1gb`."
 }
 
 variable "tectonic_do_etcd_droplet_size" {
   type        = "string"
-  default     = "512mb"
-  description = "Instance slug to use for the worker node(s). See `doctl compute size list` or `tugboat sizes` for available slugs.  Default: `512mb`."
+  default     = "s-1vcpu-1gb"
+  description = "Instance slug to use for the worker node(s). See `doctl compute size list` or `tugboat sizes` for available slugs.  Default: `s-1vcpu-1gb`."
 }
 
 variable "tectonic_do_extra_tags" {
