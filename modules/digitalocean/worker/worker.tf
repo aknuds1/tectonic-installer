@@ -7,6 +7,10 @@ resource "digitalocean_droplet" "worker_node" {
   ssh_keys  = ["${var.ssh_keys}"]
   tags      = ["${var.extra_tags}"]
   user_data = "${data.ignition_config.main.rendered}"
+
+  volume_ids = [
+    "${element(concat(digitalocean_volume.worker.*.id, list("")), count.index)}",
+  ]
 }
 
 resource "digitalocean_record" "worker" {
@@ -15,4 +19,11 @@ resource "digitalocean_record" "worker" {
   type   = "A"
   name   = "${var.cluster_name}-worker-${count.index}"
   value  = "${element(digitalocean_droplet.worker_node.*.ipv4_address, count.index)}"
+}
+
+resource "digitalocean_volume" "worker" {
+  count  = "${var.volume_size != 0 ? var.droplet_count : 0}"
+  region = "${var.droplet_region}"
+  name   = "${var.cluster_name}-worker-${count.index}"
+  size   = "${var.volume_size}"
 }
